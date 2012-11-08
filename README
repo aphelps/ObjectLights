@@ -1,0 +1,5 @@
+This code powers Adam's lit Umbrella sign.
+
+It is coded for the Arduino IDE and relies on the TLC5940 library:
+* http://www.arduino.cc/playground/Learning/TLC5940
+* http://code.google.com/p/tlc5940arduino/
