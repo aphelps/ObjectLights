@@ -1,19 +1,9 @@
 /*
-    A circular light buffer.  If you manage to construct a circle of LEDs,
-    definitely send in pictures.  What this sketch does is take an analog
-    reading off of analog pin 0 and add it to the current value of the last LED.
-    If the resultant sum is greater than 4095, it turns the LED off,
-    otherwise sets LED 0 to the value of the sum.
-
-    If you ground pin 12, it will set LED 0 to zero.
-
-    Then it shifts all the LED values up one (so LED 0 becomes LED 1) and sets
-    LED 0 to the value shifted off the last LED (so if one LED is on, it will
-    go in a circle forever).
-
-    See the BasicUse example for hardware setup.
-
-    Alex Leone <acleone ~AT~ gmail.com>, 2009-02-04 */
+ * This code drive's Adam's Umbrella sign.
+ *
+ * Internal to the sign is an Arduino Nano v3 driving two serially connected
+ * TLC5940 LED drivers for the individual pixels of the sign.
+ */
 
 #include "Arduino.h"
 
@@ -28,6 +18,7 @@
 #define CLEAR_PIN      12
 
 #if NUM_TLCS != 2
+  /* NUM_TLCS must be set to 2 in tlc_config.h */
   NUM_TLCS must equal 2;
 #endif
 
@@ -130,7 +121,7 @@ void loop()
       }
       case MODE_ALL_ON:
       {
-        /* Update all TLC */
+        /* Set all LEDs to their max value */
         for (int led = 0; led < NUM_LEDS; led++) {
           ledValues[led] = MAX_VALUE;
           Tlc.set(led, ledValues[led]);
