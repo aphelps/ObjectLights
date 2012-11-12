@@ -30,26 +30,104 @@
   NUM_TLCS must equal 2;
 #endif
 
-// how many millis for one full revolution over all the LEDs
-#define SCOPE_PERIOD    (2000 * NUM_TLCS)
-#define LED_PERIOD      SCOPE_PERIOD / (NUM_TLCS * 16)
+/* Array to map the light positions in the sign to the LED driver pins */
+#define XX 0 // XXX: Remove when actual mapping is determined
+uint8_t signTLCPin[] =
+{
+  XX, XX, XX, XX, XX, -1, -1, -1,
+  -1, -1, XX, XX, XX, XX, XX, -1,
+  -1, -1, -1, XX, XX, XX, XX, -1,
+  -1, -1, -1, -1, XX, XX, XX, XX,
+  -1, -1, -1, -1, -1, XX, XX, XX,
+  -1, -1, XX, -1, -1, -1, XX, XX
+  -1, XX, -1, -1, -1, -1, -1, XX,
+  XX, -1, -1, -1, -1, -1, -1, XX,
+};
+
+/* Mapping of LEDs into rows along the diaginal axis */
+uint8_t signRows[] =
+{
+   5,  4,  3,  2,  1, -1, -1, -1,
+  -1, -1,  4,  3,  2,  1,  0, -1,
+  -1, -1, -1,  4,  3,  2,  1, -1,
+  -1, -1, -1, -1,  4,  3,  2,  1,
+  -1, -1, -1, -1, -1,  4,  3,  2,
+  -1, -1,  6, -1, -1, -1,  4,  3
+  -1,  7, -1, -1, -1, -1, -1,  4,
+   8, -1, -1, -1, -1, -1, -1,  5,
+};
+
+/* TCL Pin values */
+#define MAX_VALUE 4095
+#define NUM_LEDS 28
+uint16_t ledValues[NUM_LEDS] = {
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+};
+
+#define MODE_EXAMPLE_CODE 1
+#define MODE_ALL_ON       2
+#define MODE_SWAP_ONE     3
+int mode = MODE_SWAP_ONE;
 
 void setup()
 {
-  pinMode(CLEAR_PIN, INPUT);
-  digitalWrite(CLEAR_PIN, HIGH); // enable pull-up
-  Tlc.init();
+  /* Initialize the LED drivers with all-on */ 
+  Tlc.init(MAX_VALUE);
+
+  /* Initialize the LED values */
+  for (int led = 0; led < NUM_LEDS; led++) {
+    ledValues[led] = MAX_VALUE;
+  }
+
+  randomSeed(analogRead(0));
 }
+
 
 void loop()
 {
-  // shiftUp returns the value shifted off the last pin
-  uint16_t sum = tlc_shiftUp() + 512 * 4;
-//  if (digitalRead(CLEAR_PIN) == LOW || sum > 4095)
-  if (sum > 4095)
-    sum = 0;
-  Tlc.set(0, sum);
-  Tlc.update();
-  delay(LED_PERIOD);
+  int led_period = 0;
+
+  /* Modify the LED values based on the current mode */
+  switch (mode) {
+      case MODE_EXAMPLE_CODE: 
+      {
+        uint16_t sum = tlc_shiftUp() + 512 * 4;
+        if (sum > MAX_VALUE)
+          sum = 0;
+        Tlc.set(0, sum);
+        led_period = (2000 / 16);
+        break;
+      }
+      case MODE_ALL_ON:
+      {
+        /* Update all TLC */
+        for (int led = 0; led < NUM_LEDS; led++) {
+          ledValues[led] = MAX_VALUE;
+          Tlc.set(led, ledValues[led]);
+        }
+        led_period = 1000;
+        break;
+      }
+      case MODE_SWAP_ONE:
+      {
+        /* Swap the state of a single LED */
+        int led = random(NUM_LEDS);
+        if (ledValues[led]) ledValues[led] = 0;
+        else ledValues[led] = MAX_VALUE;
+        Tlc.set(led, ledValues[led]);
+        led_period = 100;
+        break;
+      }
+  }
+
+  while (Tlc.update()) // Wait until the data has been sent to the TLCs;
+
+  delay(led_period);
 }
 
