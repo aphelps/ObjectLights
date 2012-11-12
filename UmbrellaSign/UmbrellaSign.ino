@@ -19,6 +19,7 @@
 
 #include "Tlc5940.h"
 #include "tlc_shifts.h"
+#include "tlc_fades.h"
 
 // which analog pin to use
 #define ANALOG_PIN      0
@@ -70,9 +71,11 @@ uint16_t ledValues[NUM_LEDS] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
 };
 
-#define MODE_EXAMPLE_CODE 1
-#define MODE_ALL_ON       2
-#define MODE_SWAP_ONE     3
+/* Mode for lights */
+#define MODE_EXAMPLE_CIRCULAR 1
+#define MODE_EXAMPLE_FADES    2
+#define MODE_ALL_ON           3
+#define MODE_SWAP_ONE         4
 int mode = MODE_SWAP_ONE;
 
 void setup()
@@ -95,14 +98,35 @@ void loop()
 
   /* Modify the LED values based on the current mode */
   switch (mode) {
-      case MODE_EXAMPLE_CODE: 
+      case MODE_EXAMPLE_CIRCULAR: 
       {
+        /* From TCL5940 Library's CircularLightBuffer example */
         uint16_t sum = tlc_shiftUp() + 512 * 4;
         if (sum > MAX_VALUE)
           sum = 0;
         Tlc.set(0, sum);
         led_period = (2000 / 16);
         break;
+      }
+      case MODE_EXAMPLE_FADES:
+      {
+        /* From TCL5940 Library's Fades example */
+        static TLC_CHANNEL_TYPE channel;
+        if (tlc_fadeBufferSize < TLC_FADE_BUFFER_LENGTH - 2) {
+          if (!tlc_isFading(channel)) {
+            uint16_t duration = analogRead(0) * 2;
+            int maxValue = analogRead(0) * 2;
+            uint32_t startMillis = millis() + 50;
+            uint32_t endMillis = startMillis + duration;
+            tlc_addFade(channel, 0, maxValue, startMillis, endMillis);
+            tlc_addFade(channel, maxValue, 0, endMillis, endMillis + duration);
+          }
+          if (channel++ == NUM_TLCS * 16) {
+            channel = 0;
+          }
+        }
+        tlc_updateFades();
+        return;
       }
       case MODE_ALL_ON:
       {
