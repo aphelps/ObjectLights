@@ -8,14 +8,8 @@
 #include "Arduino.h"
 
 #include "Tlc5940.h"
-#include "tlc_shifts.h"
-#include "tlc_fades.h"
 
-// which analog pin to use
-#define ANALOG_PIN      0
-
-// which pin to clear the LEDs with
-#define CLEAR_PIN      12
+#include "UmbrellaSign.h"
 
 #if NUM_TLCS != 2
   /* NUM_TLCS must be set to 2 in tlc_config.h */
@@ -50,8 +44,6 @@ uint8_t signRows[] =
 };
 
 /* TCL Pin values */
-#define MAX_VALUE 4095
-#define NUM_LEDS 28
 uint16_t ledValues[NUM_LEDS] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
@@ -62,13 +54,17 @@ uint16_t ledValues[NUM_LEDS] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
 };
 
-/* Mode for lights */
-#define MODE_EXAMPLE_CIRCULAR 1
-#define MODE_EXAMPLE_FADES    2
-#define MODE_ALL_ON           3
-#define MODE_SWAP_ONE         4
-int mode = MODE_SWAP_ONE;
+mode_function_t modeFunctions[] = {
+  mode_example_circular, // MODE_EXAMPLE_CIRCULAR
+  mode_example_fades,    // MODE_EXAMPLE_FADES
+  mode_all_on,           // MODE_ALL_ON
+  mode_swap_one,         // MODE_SWAP_ONE
+  mode_fade_one          // MODE_FADE_ONE
+};
 
+/******************************************************************************
+ * Initialization
+ *****************************************************************************/
 void setup()
 {
   /* Initialize the LED drivers with all-on */ 
@@ -82,67 +78,18 @@ void setup()
   randomSeed(analogRead(0));
 }
 
-
+/******************************************************************************
+ * Action loop
+ *****************************************************************************/
 void loop()
 {
-  int led_period = 0;
+  /* Get the current mode */
+  int mode = get_current_mode();
 
-  /* Modify the LED values based on the current mode */
-  switch (mode) {
-      case MODE_EXAMPLE_CIRCULAR: 
-      {
-        /* From TCL5940 Library's CircularLightBuffer example */
-        uint16_t sum = tlc_shiftUp() + 512 * 4;
-        if (sum > MAX_VALUE)
-          sum = 0;
-        Tlc.set(0, sum);
-        led_period = (2000 / 16);
-        break;
-      }
-      case MODE_EXAMPLE_FADES:
-      {
-        /* From TCL5940 Library's Fades example */
-        static TLC_CHANNEL_TYPE channel;
-        if (tlc_fadeBufferSize < TLC_FADE_BUFFER_LENGTH - 2) {
-          if (!tlc_isFading(channel)) {
-            uint16_t duration = analogRead(0) * 2;
-            int maxValue = analogRead(0) * 2;
-            uint32_t startMillis = millis() + 50;
-            uint32_t endMillis = startMillis + duration;
-            tlc_addFade(channel, 0, maxValue, startMillis, endMillis);
-            tlc_addFade(channel, maxValue, 0, endMillis, endMillis + duration);
-          }
-          if (channel++ == NUM_TLCS * 16) {
-            channel = 0;
-          }
-        }
-        tlc_updateFades();
-        return;
-      }
-      case MODE_ALL_ON:
-      {
-        /* Set all LEDs to their max value */
-        for (int led = 0; led < NUM_LEDS; led++) {
-          ledValues[led] = MAX_VALUE;
-          Tlc.set(led, ledValues[led]);
-        }
-        led_period = 1000;
-        break;
-      }
-      case MODE_SWAP_ONE:
-      {
-        /* Swap the state of a single LED */
-        int led = random(NUM_LEDS);
-        if (ledValues[led]) ledValues[led] = 0;
-        else ledValues[led] = MAX_VALUE;
-        Tlc.set(led, ledValues[led]);
-        led_period = 100;
-        break;
-      }
-  }
+  /* Call the action function for the current mode */
+  int delay_period = modeFunctions[mode](NULL);
 
-  while (Tlc.update()) // Wait until the data has been sent to the TLCs;
-
-  delay(led_period);
+  /* Wait for the specifided interval */
+  delay(delay_period);
 }
 
