@@ -18,7 +18,7 @@
 
 /* Array to map the light positions in the sign to the LED driver pins */
 #define XX 0 // XXX: Remove when actual mapping is determined
-uint8_t signTLCPin[] =
+int8_t signToIndex[] =
 {
   XX, XX, XX, XX, XX, -1, -1, -1,
   -1, -1, XX, XX, XX, XX, XX, -1,
@@ -31,7 +31,7 @@ uint8_t signTLCPin[] =
 };
 
 /* Mapping of LEDs into rows along the diaginal axis */
-uint8_t signRows[] =
+int8_t signRows[] =
 {
    5,  4,  3,  2,  1, -1, -1, -1,
   -1, -1,  4,  3,  2,  1,  0, -1,
@@ -41,6 +41,12 @@ uint8_t signRows[] =
   -1, -1,  6, -1, -1, -1,  4,  3
   -1,  7, -1, -1, -1, -1, -1,  4,
    8, -1, -1, -1, -1, -1, -1,  5,
+};
+
+int8_t ledRow[NUM_LEDS];
+uint16_t rowValues[MAX_ROW] = {
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
 };
 
 /* TCL Pin values */
@@ -76,6 +82,13 @@ void setup()
   }
 
   randomSeed(analogRead(0));
+
+  /* Populate the ledRowArray */
+  for (uint32_t i = 0; i < sizeof (signRows); i++) {
+    int8_t led = signToIndex[i];
+    if (led < 0) continue;
+    ledRow[led] = signRows[i];
+  }
 }
 
 /******************************************************************************

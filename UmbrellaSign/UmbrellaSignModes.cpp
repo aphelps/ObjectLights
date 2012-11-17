@@ -12,9 +12,11 @@ int mode = MODE_SWAP_ONE; // Starting mode
 #define MODE_CHANGE_PERIOD (5 * 60 * 1000) // Period between mode changes
 int get_current_mode(void) 
 {
-  static uint32_t lastChange = millis();
-  if (lastChange +  MODE_CHANGE_PERIOD > millis())
+  static unsigned long lastChange = millis();
+
+  if (lastChange < (millis() - MODE_CHANGE_PERIOD)) {
     mode = (mode + 1) % MODE_TOTAL;
+  }
 
   return mode;
 }
@@ -106,6 +108,43 @@ int mode_fade_one(void *arg)
   while (tlc_updateFades()); /* Updae until the fade completes */
 
   ledValues[led] = endValue;
+
+  return 0;
+}
+
+/*
+ * This mode fades the rows of the sign one at a time
+ */
+#define FADE_ROW_DURATION 2000
+int mode_fade_row(void *arg) 
+{
+  static uint8_t row = 0;
+
+  /* Fade to the opposite value */
+  uint32_t startValue = rowValues[row];
+  uint32_t endValue;
+  if (startValue) endValue = 0;
+  else endValue = MAX_VALUE;
+
+  uint32_t startMillis = millis() + 50;
+  uint32_t endMillis = startMillis + FADE_ROW_DURATION;
+
+  /* Start a fade for each led of the row */
+  for (int led = 0; led < NUM_LEDS; led++) {
+    if (ledRow[led] == row) {
+      tlc_addFade(led, startValue, endValue,
+                  startMillis, endMillis);
+      ledValues[led] = endValue;
+    }
+  }
+
+  while (tlc_updateFades()); /* Update until the fade completes */
+
+  /* Store the new row value */
+  rowValues[row] = endValue;
+
+  /* Move to the next row */
+  row = (row + 1) % MAX_ROW;
 
   return 0;
 }
