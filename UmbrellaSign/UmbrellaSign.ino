@@ -65,7 +65,8 @@ mode_function_t modeFunctions[] = {
   mode_example_fades,    // MODE_EXAMPLE_FADES
   mode_all_on,           // MODE_ALL_ON
   mode_swap_one,         // MODE_SWAP_ONE
-  mode_fade_one          // MODE_FADE_ONE
+  mode_fade_one,         // MODE_FADE_ONE
+  mode_fade_row,         // MODE_FADE_ROW
 };
 
 /******************************************************************************
