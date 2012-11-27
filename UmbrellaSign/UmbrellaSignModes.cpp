@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
 #include "Tlc5940.h"
 #include "tlc_shifts.h"
@@ -6,17 +6,44 @@
 
 #include "UmbrellaSign.h"
 
-int mode = MODE_SWAP_ONE; // Starting mode
+int mode = MODE_FADE_ROW; // Starting mode
+
+/* Check the state of the push button and keep a press count */
+void checkButtonState(void) 
+{
+  static uint16_t button_value = mode;
+  static byte last_value = LOW;
+
+  int value = digitalRead(PUSH_BUTTON_PIN);
+  if (value == LOW) {
+    if (last_value == HIGH) {
+      /* Increment button's value on transition from up to pressed) */
+      button_value++;
+    }
+  }
+  last_value = value;
+  DEBUG_PRINT(value);
+  DEBUG_PRINT("-");
+  DEBUG_PRINT(button_value);
+  DEBUG_PRINT("\n");
+
+  return button_value;
+}
 
 /* Return the current mode value */
 #define MODE_CHANGE_PERIOD (5 * 60 * 1000) // Period between mode changes
 int get_current_mode(void) 
 {
+  
+#if 0
   static unsigned long lastChange = millis();
-
   if (lastChange < (millis() - MODE_CHANGE_PERIOD)) {
     mode = (mode + 1) % MODE_TOTAL;
   }
+#endif
+
+  /* Increment the mode on button push */
+  mode =  checkButtonState() % MODE_TOTAL;
 
   return mode;
 }
@@ -59,10 +86,7 @@ int mode_example_fades(void *arg)
 /* Set all LEDs to their max value */
 int mode_all_on(void *arg) 
 {
-  for (int led = 0; led < NUM_LEDS; led++) {
-    ledValues[led] = MAX_VALUE;
-    Tlc.set(led, ledValues[led]);
-  }
+  Tlc.setAll(MAX_VALUE);
 
   while (Tlc.update());
 
@@ -86,7 +110,7 @@ int mode_swap_one(void *arg)
 
 /* Fade the state of a single LED from high-to-low or vice versa*/
 #define FADE_ONE_MIN_DURATION 500
-#define FADE_ONE_MAX_DURATION 4000
+#define FADE_ONE_MAX_DURATION 1000
 int mode_fade_one(void *arg)
 {
   /* Get a random LED and determine the start and end values for the fade */
@@ -115,7 +139,7 @@ int mode_fade_one(void *arg)
 /*
  * This mode fades the rows of the sign one at a time
  */
-#define FADE_ROW_DURATION 2000
+#define FADE_ROW_DURATION 1000
 int mode_fade_row(void *arg) 
 {
   static uint8_t row = 0;
@@ -147,4 +171,65 @@ int mode_fade_row(void *arg)
   row = (row + 1) % MAX_ROW;
 
   return 0;
+}
+
+/* Set and updated a single LED value */
+void updateChannel(int channel, int value) 
+{
+  Tlc.set(channel, value);
+  while(Tlc.update());
+}
+
+/* Flash a single LED */
+int flashChannel(int channel, int count, int flash_delay)
+{
+  for (int i = 0; i < count; i++) {
+    updateChannel(channel, MAX_VALUE);
+    delay(flash_delay);
+
+    updateChannel(channel, 0);
+    delay(flash_delay);
+  }
+
+  return count * FLASH_DELAY;
+}
+
+/* Sequencially flash the LEDs */
+int mode_count_up(void *arg) 
+{
+  for (int i = 0; i < NUM_LEDS; i++) {
+    updateChannel(i, 0);
+    delay(5000);
+    flashChannel(i, i + 1, 400);
+    delay(1000);
+    flashChannel(i, i + 1, 400);
+    updateChannel(i, 1);
+    delay(1000);
+  }
+  return 0;
+}
+
+
+/* Blink the LEDs in left-right/top-down order */
+uint8_t orderedLeds[] = {
+  19, 10, 8, 18, 12,
+         11, 16,  7,  9, 17,
+             20, 22, 21,  4,
+                 23,  5, 13,  3,
+                     25,  6,  1,
+         26,             15, 24,
+       0,                    14,
+  27,                         2,
+};
+int mode_flash_ordered(void *arg) 
+{
+  static int led = -1;
+  led = (led + 1) % NUM_LEDS;
+  if (ledValues[orderedLeds[led]]) {
+    ledValues[orderedLeds[led]] = 0;
+  } else {
+    ledValues[orderedLeds[led]] = MAX_VALUE;
+  }
+  updateChannel(orderedLeds[led], ledValues[orderedLeds[led]]);
+  return 250;
 }
