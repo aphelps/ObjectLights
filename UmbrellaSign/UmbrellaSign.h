@@ -3,7 +3,7 @@
 
 /* Push button */
 #define PUSH_BUTTON_PIN 2
-
+void buttonInterrupt(void);
 
 /* TLC Output Values */
 #define MAX_VALUE 4095

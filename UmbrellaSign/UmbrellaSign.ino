@@ -109,13 +109,15 @@ void setup()
     }
   }
 
-  DEBUG_PRINT("ledRow:")
+  DEBUG_PRINT("ledRow:");
   for (int i = 0; i < NUM_LEDS; i++) {
     DEBUG_PRINT(ledRow[i]);
     DEBUG_PRINT(", ");
   }
+  DEBUG_PRINT("\n");
 
   pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(0, buttonInterrupt, CHANGE);
 }
 
 /******************************************************************************

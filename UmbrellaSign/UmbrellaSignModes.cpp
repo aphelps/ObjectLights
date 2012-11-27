@@ -6,35 +6,43 @@
 
 #include "UmbrellaSign.h"
 
-int mode = MODE_FADE_ROW; // Starting mode
+/* Array of modes that are valid for normal use */
+uint8_t validModes[] = {
+  MODE_ALL_ON,
+  MODE_SWAP_ONE,
+  MODE_FADE_ONE,
+  MODE_FADE_ROW,  
+  MODE_FLASH_ORDERED,
+};
 
-/* Check the state of the push button and keep a press count */
-void checkButtonState(void) 
+volatile uint16_t buttonValue = 0;
+void buttonInterrupt(void) 
 {
-  static uint16_t button_value = mode;
-  static byte last_value = LOW;
-
+  static unsigned long prevTime = 0;
+  static int prevValue = LOW;
   int value = digitalRead(PUSH_BUTTON_PIN);
-  if (value == LOW) {
-    if (last_value == HIGH) {
-      /* Increment button's value on transition from up to pressed) */
-      button_value++;
-    }
-  }
-  last_value = value;
-  DEBUG_PRINT(value);
-  DEBUG_PRINT("-");
-  DEBUG_PRINT(button_value);
-  DEBUG_PRINT("\n");
 
-  return button_value;
+  /* Provide a debounce to only change on the first interrupt */
+  if ((value == HIGH) && (prevValue == LOW) && (millis() - prevTime > 500)) {
+    buttonValue++;
+    prevTime = millis();
+    
+    DEBUG_PRINT(value);
+    DEBUG_PRINT("->");
+    DEBUG_PRINT(buttonValue);
+    DEBUG_PRINT("->");
+    DEBUG_PRINT(prevTime);
+    DEBUG_PRINT("\n");
+  }
+
+  prevValue = value;
 }
 
 /* Return the current mode value */
 #define MODE_CHANGE_PERIOD (5 * 60 * 1000) // Period between mode changes
 int get_current_mode(void) 
 {
-  
+  static int prevMode = 0;
 #if 0
   static unsigned long lastChange = millis();
   if (lastChange < (millis() - MODE_CHANGE_PERIOD)) {
@@ -43,7 +51,15 @@ int get_current_mode(void)
 #endif
 
   /* Increment the mode on button push */
-  mode =  checkButtonState() % MODE_TOTAL;
+  int mode = validModes[buttonValue % sizeof(validModes)];
+  if (mode != prevMode) {
+    DEBUG_PRINT("New mode: ");
+    DEBUG_PRINT(mode);
+    DEBUG_PRINT("\n");
+    prevMode = mode;
+
+    Tlc.setAll(0);
+  }
 
   return mode;
 }
@@ -191,7 +207,7 @@ int flashChannel(int channel, int count, int flash_delay)
     delay(flash_delay);
   }
 
-  return count * FLASH_DELAY;
+  return count * flash_delay;
 }
 
 /* Sequencially flash the LEDs */
