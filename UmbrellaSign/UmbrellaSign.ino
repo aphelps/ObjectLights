@@ -43,11 +43,34 @@ int8_t signRows[] =
    8, -1, -1, -1, -1, -1, -1,  5,
 };
 
+// XXX - A row (or 2) is skipped because its blank
+
 int8_t ledRow[NUM_LEDS];
 uint16_t rowValues[MAX_ROW] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE,
+};
+
+/* Mapping of LEDs into columns along the diaginal axis */
+int8_t signColumns[] =
+{
+   0,  1,  2,  3,  4, -1, -1, -1,
+  -1, -1,  3,  4,  5,  6,  7, -1,
+  -1, -1, -1,  5,  6,  7,  8, -1,
+  -1, -1, -1, -1,  7,  8,  9, 10,
+  -1, -1, -1, -1, -1,  9, 10, 11,
+  -1, -1,  7, -1, -1, -1, 11, 12,
+  -1,  7, -1, -1, -1, -1, -1, 13,
+   7, -1, -1, -1, -1, -1, -1, 14,
+};
+
+int8_t ledColumn[NUM_LEDS];
+uint16_t columnValues[MAX_COLUMN] = {
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
+  MAX_VALUE, MAX_VALUE, MAX_VALUE,
 };
 
 /* TCL Pin values */
@@ -68,10 +91,13 @@ mode_function_t modeFunctions[] = {
   mode_swap_one,         // MODE_SWAP_ONE
   mode_fade_one,         // MODE_FADE_ONE
   mode_fade_row,         // MODE_FADE_ROW
+  mode_fade_column,      // MODE_FADE_COLUMN
   mode_count_up,         // MODE_COUNT_UP
   mode_flash_ordered,    // MODE_FLASH_ORDERED
+  mode_cross_fade,       // MODE_CROSS_FADE
 };
 
+#define INITIAL_VALUE
 
 /******************************************************************************
  * Initialization
@@ -80,12 +106,12 @@ void setup()
 {
   Serial.begin(9600);
 
-  /* Initialize the LED drivers with all-on */ 
-  Tlc.init(MAX_VALUE);
+  /* Initialize the LED drivers with all-off */ 
+  Tlc.init(0);
 
   /* Initialize the LED values */
   for (int led = 0; led < NUM_LEDS; led++) {
-    ledValues[led] = MAX_VALUE;
+    ledValues[led] = 0;
   }
 
   randomSeed(analogRead(0));
@@ -112,6 +138,33 @@ void setup()
   DEBUG_PRINT("ledRow:");
   for (int i = 0; i < NUM_LEDS; i++) {
     DEBUG_PRINT(ledRow[i]);
+    DEBUG_PRINT(", ");
+  }
+  DEBUG_PRINT("\n");
+
+
+   /* Populate the ledColumnArray */
+  DEBUG_PRINT("ledColumnArray:\n");
+  for (uint32_t i = 0; i < sizeof (signColumns); i++) {
+    int8_t led = signToIndex[i];
+    if (led < 0) {
+      DEBUG_PRINT("X/X");
+    } else {
+      ledColumn[led] = signColumns[i];
+      DEBUG_PRINT(led);
+      DEBUG_PRINT("/");
+      DEBUG_PRINT(ledColumn[led]);
+    }
+    if (i % 8 == 7) {
+      DEBUG_PRINT("\n");
+    } else {
+      DEBUG_PRINT(", ");
+    }
+  }
+
+  DEBUG_PRINT("ledColumn:");
+  for (int i = 0; i < NUM_LEDS; i++) {
+    DEBUG_PRINT(ledColumn[i]);
     DEBUG_PRINT(", ");
   }
   DEBUG_PRINT("\n");
