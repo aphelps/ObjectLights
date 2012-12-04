@@ -17,7 +17,6 @@
 #endif
 
 /* Array to map the light positions in the sign to the LED driver pins */
-#define XX 0 // XXX: Remove when actual mapping is determined
 int8_t signToIndex[] =
 {
   19, 10, 8,  18, 12, -1, -1, -1,
@@ -46,7 +45,7 @@ int8_t signRows[] =
 // XXX - A row (or 2) is skipped because its blank
 
 int8_t ledRow[NUM_LEDS];
-uint16_t rowValues[MAX_ROW] = {
+int16_t rowValues[MAX_ROW] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE,
@@ -66,7 +65,7 @@ int8_t signColumns[] =
 };
 
 int8_t ledColumn[NUM_LEDS];
-uint16_t columnValues[MAX_COLUMN] = {
+int16_t columnValues[MAX_COLUMN] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
@@ -74,7 +73,7 @@ uint16_t columnValues[MAX_COLUMN] = {
 };
 
 /* TCL Pin values */
-uint16_t ledValues[NUM_LEDS] = {
+int16_t ledValues[NUM_LEDS] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
@@ -95,6 +94,7 @@ mode_function_t modeFunctions[] = {
   mode_count_up,         // MODE_COUNT_UP
   mode_flash_ordered,    // MODE_FLASH_ORDERED
   mode_cross_fade,       // MODE_CROSS_FADE
+  mode_random_fades,     // MODE_RANDOM_FADES
 };
 
 #define INITIAL_VALUE

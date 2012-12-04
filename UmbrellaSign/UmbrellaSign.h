@@ -15,10 +15,10 @@ void buttonInterrupt(void);
 #define TLC_DEBUG_LED2 31
 
 extern int8_t ledRow[];
-extern uint16_t rowValues[];
+extern int16_t rowValues[];
 extern int8_t ledColumn[];
-extern uint16_t columnValues[];
-extern uint16_t ledValues[];
+extern int16_t columnValues[];
+extern int16_t ledValues[];
 extern int8_t signToIndex[];
 
 /* Definition of sign modes */
@@ -35,8 +35,9 @@ typedef int (*mode_function_t)(void *arg);
 #define MODE_COUNT_UP         7
 #define MODE_FLASH_ORDERED    8
 #define MODE_CROSS_FADE       9
+#define MODE_RANDOM_FADES     10
 
-#define MODE_TOTAL            10
+#define MODE_TOTAL            11
 
 /* Mode functions */
 int mode_example_circular(void *arg);
@@ -49,6 +50,8 @@ int mode_fade_column(void *arg);
 int mode_count_up(void *arg);
 int mode_flash_ordered(void *arg);
 int mode_cross_fade(void *arg);
+int mode_random_fades(void *arg);
+
 
 /* Return the current mode value */
 int get_current_mode(void);

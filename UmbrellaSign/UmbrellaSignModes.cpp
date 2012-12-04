@@ -9,11 +9,12 @@
 /* Array of modes that are valid for normal use */
 uint8_t validModes[] = {
 //  MODE_CROSS_FADE,
+  MODE_RANDOM_FADES,
   MODE_SWAP_ONE,
-  MODE_FADE_COLUMN,  
-  MODE_ALL_ON,
+//  MODE_FADE_COLUMN,  
   MODE_FADE_ONE,
   MODE_FADE_ROW,  
+  MODE_ALL_ON,
   MODE_FLASH_ORDERED,
 };
 
@@ -157,7 +158,7 @@ int mode_fade_one(void *arg)
 /*
  * This mode fades the rows of the sign one at a time
  */
-#define FADE_ROW_DURATION 1000
+#define FADE_ROW_DURATION 500
 int mode_fade_row(void *arg) 
 {
   static uint8_t row = 0;
@@ -194,7 +195,7 @@ int mode_fade_row(void *arg)
 /*
  * This mode fades the columns of the sign one at a time
  */
-#define FADE_COLUMN_DURATION 1000
+#define FADE_COLUMN_DURATION 500
 int mode_fade_column(void *arg) 
 {
   static uint8_t column = 0;
@@ -358,3 +359,34 @@ int mode_cross_fade(void *arg)
   return 10;
 }
 
+/*
+ * Set a random trajectory for each LED
+ */
+#define RANDOM_FADES_RANGE 64
+int16_t random_fades_vectors[NUM_LEDS];
+boolean random_fades_initialized = false;
+int mode_random_fades(void *arg)
+{
+  if (!random_fades_initialized) {
+    for (int led = 0; led < NUM_LEDS; led++) {
+        random_fades_vectors[led] = -1 * (16 + random(RANDOM_FADES_RANGE));
+    }
+    random_fades_initialized = true;
+  }
+
+  for (int led = 0; led < NUM_LEDS; led++) {
+    ledValues[led] += random_fades_vectors[led];
+    if (ledValues[led] <= 0) {
+      ledValues[led] = 0;
+      random_fades_vectors[led] = 16 + random(RANDOM_FADES_RANGE);
+    } else if (ledValues[led] >= MAX_VALUE) {
+      ledValues[led] = MAX_VALUE;
+      random_fades_vectors[led] *= -1;
+    } 
+    Tlc.set(led, ledValues[led]);
+  }
+
+  while (Tlc.update());
+
+  return 10;
+}
