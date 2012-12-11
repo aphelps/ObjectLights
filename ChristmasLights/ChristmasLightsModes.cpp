@@ -4,10 +4,11 @@
 #include "tlc_shifts.h"
 #include "tlc_fades.h"
 
-#include "UmbrellaSign.h"
+#include "ChristmasLights.h"
 
 /* Array of modes that are valid for normal use */
 uint8_t validModes[] = {
+  MODE_SENSE_DISTANCE,
 //  MODE_CROSS_FADE,
   MODE_RANDOM_FADES,
   MODE_SWAP_ONE,
@@ -389,4 +390,13 @@ int mode_random_fades(void *arg)
   while (Tlc.update());
 
   return 10;
+}
+
+int mode_sense_distance(void *arg) 
+{
+  long led_value = side_values[0];
+  if (led_value > MAX_VALUE) led_value = MAX_VALUE;
+  Tlc.setAll(led_value);
+  while (Tlc.update());
+  return 1;
 }

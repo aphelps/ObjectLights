@@ -6,10 +6,10 @@
  */
 
 #include <Arduino.h>
-
+#include <CapacitiveSensor.h>
 #include "Tlc5940.h"
 
-#include "UmbrellaSign.h"
+#include "ChristmasLights.h"
 
 #if NUM_TLCS != 2
   /* NUM_TLCS must be set to 2 in tlc_config.h */
@@ -95,9 +95,21 @@ mode_function_t modeFunctions[] = {
   mode_flash_ordered,    // MODE_FLASH_ORDERED
   mode_cross_fade,       // MODE_CROSS_FADE
   mode_random_fades,     // MODE_RANDOM_FADES
+  mode_sense_distance,
 };
 
-#define INITIAL_VALUE
+#define INITIAL_VALUE 0
+
+CapacitiveSensor side_sensors[NUM_SIDE_SENSORS] = {
+  CapacitiveSensor(4,5),
+  CapacitiveSensor(4,6),
+};
+long side_values[NUM_SIDE_SENSORS];
+long side_min[NUM_SIDE_SENSORS];
+long side_max[NUM_SIDE_SENSORS];
+
+#define PING_TRIG 2
+#define PING_ECHO 12
 
 /******************************************************************************
  * Initialization
@@ -106,12 +118,18 @@ void setup()
 {
   Serial.begin(9600);
 
+  for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
+    side_sensors[side].set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
+    side_min[side] = 0xFFFF;
+    side_max[side] = 0;
+  }
+
   /* Initialize the LED drivers with all-off */ 
-  Tlc.init(0);
+  Tlc.init(INITIAL_VALUE);
 
   /* Initialize the LED values */
   for (int led = 0; led < NUM_LEDS; led++) {
-    ledValues[led] = 0;
+    ledValues[led] = INITIAL_VALUE;
   }
 
   randomSeed(analogRead(0));
@@ -171,13 +189,66 @@ void setup()
 
   pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(0, buttonInterrupt, CHANGE);
+
+  pinMode(PING_TRIG, OUTPUT);
+  pinMode(PING_ECHO,INPUT);
 }
+
+void ping_read() 
+{
+  static long distance;
+  static long cm;
+  
+  digitalWrite(PING_TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(PING_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(PING_TRIG, LOW);   
+  // the distance is proportional to the time interval
+  // between HIGH and LOW
+  distance = pulseIn(PING_ECHO, HIGH, 10000); 
+  if (distance) cm = distance/58;
+
+  Serial.print(distance);
+  Serial.print(" - ");
+  Serial.print(cm);
+  Serial.print("\n");
+}
+
 
 /******************************************************************************
  * Action loop
  *****************************************************************************/
 void loop()
 {
+
+#if 1
+  /* Read the side sensors */
+  long start = millis();
+  long sense_delay;
+  for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
+    long value = side_sensors[side].capacitiveSensor(10);
+    if (value < side_min[side]) side_min[side] = value;
+    if (value > side_max[side]) side_max[side] = value;
+    side_values[side] = map(value,
+                            side_min[side], side_max[side],
+                            0, MAX_VALUE);
+  }
+  Serial.print("Cap: ");
+  sense_delay = millis() - start;
+  Serial.print(sense_delay);        // check on performance in milliseconds
+  Serial.print("\t");                    // tab character for debug windown spacing
+  for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
+    Serial.print(side_values[side]);
+    Serial.print("-");
+    Serial.print(log(side_values[side]));
+    Serial.print("    ");
+  }
+  Serial.print("\n");
+#endif
+
+//  ping_read();
+  
   /* Get the current mode */
   int mode = get_current_mode();
 

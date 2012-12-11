@@ -36,8 +36,9 @@ typedef int (*mode_function_t)(void *arg);
 #define MODE_FLASH_ORDERED    8
 #define MODE_CROSS_FADE       9
 #define MODE_RANDOM_FADES     10
+#define MODE_SENSE_DISTANCE   11
 
-#define MODE_TOTAL            11
+#define MODE_TOTAL            12
 
 /* Mode functions */
 int mode_example_circular(void *arg);
@@ -51,10 +52,16 @@ int mode_count_up(void *arg);
 int mode_flash_ordered(void *arg);
 int mode_cross_fade(void *arg);
 int mode_random_fades(void *arg);
+int mode_sense_distance(void *arg);
 
 
 /* Return the current mode value */
 int get_current_mode(void);
+
+
+/* Capacitive side sensors */
+#define NUM_SIDE_SENSORS 2
+extern long side_values[];
 
 //#define DEBUG
 #ifdef DEBUG
