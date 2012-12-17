@@ -8,65 +8,59 @@
 
 /* Array of modes that are valid for normal use */
 uint8_t validModes[] = {
-  MODE_SENSE_DISTANCE,
-//  MODE_CROSS_FADE,
-  MODE_RANDOM_FADES,
+//  MODE_SENSE_DISTANCE,
+//  MODE_RANDOM_FADES,
   MODE_SWAP_ONE,
-//  MODE_FADE_COLUMN,  
-  MODE_FADE_ONE,
-  MODE_FADE_ROW,  
+//  MODE_FADE_ONE,
   MODE_ALL_ON,
-  MODE_FLASH_ORDERED,
+//  MODE_FLASH_ORDERED,
 };
+uint8_t current_mode = validModes[0];
+uint8_t previous_mode = 0;
 
-volatile uint16_t buttonValue = 0;
-void buttonInterrupt(void) 
-{
-  static unsigned long prevTime = 0;
-  static int prevValue = LOW;
-  int value = digitalRead(PUSH_BUTTON_PIN);
-
-  /* Provide a debounce to only change on the first interrupt */
-  if ((value == HIGH) && (prevValue == LOW) && (millis() - prevTime > 500)) {
-    buttonValue++;
-    prevTime = millis();
-    
-    DEBUG_PRINT(value);
-    DEBUG_PRINT("->");
-    DEBUG_PRINT(buttonValue);
-    DEBUG_PRINT("->");
-    DEBUG_PRINT(prevTime);
-    DEBUG_PRINT("\n");
-  }
-
-  prevValue = value;
-}
 
 /* Return the current mode value */
 #define MODE_CHANGE_PERIOD (5 * 60 * 1000) // Period between mode changes
-int get_current_mode(void) 
+int get_current_mode(void)
 {
-  static int prevMode = 0;
 #if 0
-  static unsigned long lastChange = millis();
+    static unsigned long lastChange = millis();
   if (lastChange < (millis() - MODE_CHANGE_PERIOD)) {
     mode = (mode + 1) % MODE_TOTAL;
   }
 #endif
-
-  /* Increment the mode on button push */
-  int mode = validModes[buttonValue % sizeof(validModes)];
-  if (mode != prevMode) {
+  
+  //int mode = validModes[buttonValue % sizeof(validModes)];
+  if (current_mode != previous_mode) {
     DEBUG_PRINT("New mode: ");
-    DEBUG_PRINT(mode);
+    DEBUG_PRINT(current_mode);
     DEBUG_PRINT("\n");
-    prevMode = mode;
+    previous_mode = current_mode;
 
     Tlc.setAll(0);
   }
 
-  return mode;
+  return current_mode;
 }
+
+boolean restorable = false;
+void set_current_mode(uint8_t new_mode) 
+{
+  if (current_mode != new_mode) {
+    restorable = true;
+    current_mode = new_mode;
+  }
+}
+
+void restore_current_mode(void) 
+{
+  if (restorable) {
+    restorable = false;
+    current_mode = previous_mode;
+  }
+}
+
+
 
 /* From TCL5940 Library's CircularLightBuffer example */
 int mode_example_circular(void *arg) 
@@ -106,12 +100,29 @@ int mode_example_fades(void *arg)
 /* Set all LEDs to their max value */
 int mode_all_on(void *arg) 
 {
-  Tlc.setAll(MAX_VALUE);
+  int new_value;
+  if (arg != NULL) {
+    new_value = (int)arg - 1;
+    if (new_value < 0) new_value = 0;
+    if (new_value > MAX_VALUE) new_value = MAX_VALUE;
+    Serial.print("AllOn:");
+    Serial.println(new_value);
+  } else {
+    new_value = MAX_VALUE;
+  }
+  if (ledValues[0] != new_value) {
+    for (int led = 0; led < NUM_LEDS; led++) {
+      ledValues[led] = new_value;
+    }
+    Tlc.setAll(new_value);
 
-  while (Tlc.update());
-
-  return 1000;
+    while (Tlc.update());
+  }
+  
+  return 0;
 }
+
+
 
 /* Swap the state of a single LED */
 int mode_swap_one(void *arg) 
@@ -392,11 +403,30 @@ int mode_random_fades(void *arg)
   return 10;
 }
 
+#define MIN_DISTANCE 5
+#define MAX_DISTANCE 20
 int mode_sense_distance(void *arg) 
 {
-  long led_value = side_values[0];
-  if (led_value > MAX_VALUE) led_value = MAX_VALUE;
+//  long led_value = side_values[0];
+//  if (led_value > MAX_VALUE) led_value = MAX_VALUE;
+
+  int led_value;
+  if (range_cm >= MAX_DISTANCE) {
+    led_value = 0;
+  } else if (range_cm <= MIN_DISTANCE) {
+    led_value = MAX_VALUE;
+  } else {
+    led_value = (MAX_DISTANCE - range_cm) * MAX_VALUE /
+      (MAX_DISTANCE - MIN_DISTANCE);
+  }
+
+#if 0
+  Serial.print(range_cm);
+  Serial.print("-");
+  Serial.println(led_value);
+#endif
+
   Tlc.setAll(led_value);
   while (Tlc.update());
-  return 1;
+  return 0;
 }

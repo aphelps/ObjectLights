@@ -4,16 +4,16 @@
  * Internal to the sign is an Arduino Nano v3 driving two serially connected
  * TLC5940 LED drivers for the individual pixels of the sign.
  */
-
 #include <Arduino.h>
 #include <CapacitiveSensor.h>
+#include <NewPing.h>
 #include "Tlc5940.h"
 
 #include "ChristmasLights.h"
 
-#if NUM_TLCS != 2
+#if NUM_TLCS != 1
   /* NUM_TLCS must be set to 2 in tlc_config.h */
-  NUM_TLCS must equal 2;
+  NUM_TLCS must equal 1;
 #endif
 
 /* Array to map the light positions in the sign to the LED driver pins */
@@ -77,10 +77,6 @@ int16_t ledValues[NUM_LEDS] = {
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
   MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
 };
 
 mode_function_t modeFunctions[] = {
@@ -100,6 +96,7 @@ mode_function_t modeFunctions[] = {
 
 #define INITIAL_VALUE 0
 
+#define CAP_DELAY_MS 250
 CapacitiveSensor side_sensors[NUM_SIDE_SENSORS] = {
   CapacitiveSensor(4,5),
   CapacitiveSensor(4,6),
@@ -110,16 +107,23 @@ long side_max[NUM_SIDE_SENSORS];
 
 #define PING_TRIG 2
 #define PING_ECHO 12
+#define PING_MAX_CM 200
+#define PING_DELAY_MS 250 /* Frequency (in ms) to trigger the range finder */
+NewPing sonar(PING_TRIG, PING_ECHO, PING_MAX_CM);
+
+#define PHOTO_PIN A0
 
 /******************************************************************************
  * Initialization
  *****************************************************************************/
 void setup()
 {
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  Serial.begin(115200);
 
   for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
     side_sensors[side].set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
+    side_sensors[side].set_CS_Timeout_Millis(100);
     side_min[side] = 0xFFFF;
     side_max[side] = 0;
   }
@@ -187,47 +191,61 @@ void setup()
   }
   DEBUG_PRINT("\n");
 
-  pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
-  attachInterrupt(0, buttonInterrupt, CHANGE);
+  /* Initialize the range sensor */
+//  pinMode(PING_TRIG, OUTPUT);
+//  pinMode(PING_ECHO,INPUT);
 
-  pinMode(PING_TRIG, OUTPUT);
-  pinMode(PING_ECHO,INPUT);
+  /* Turn on input pullup on analog photo pin */
+  digitalWrite(PHOTO_PIN, HIGH); 
 }
 
-void ping_read() 
+uint16_t range_cm = 10;
+void check_ping() 
 {
-  static long distance;
-  static long cm;
+  if (sonar.check_timer()) {
+    range_cm = sonar.ping_result / US_ROUNDTRIP_CM;
+    Serial.print("Ping: ");
+    Serial.print(range_cm); // Ping returned, uS result in ping_result, convert to cm with US_ROUNDTRIP_CM.
+    Serial.println("cm");
+  }
+}
+
+void check_ping_2() 
+{
+  range_cm = sonar.ping() / US_ROUNDTRIP_CM;
+  Serial.print("Ping: ");
+  Serial.print(range_cm);
+  Serial.print("cm - photo:");
+
+  Serial.print(analogRead(PHOTO_PIN));
+}
+
+void range_finder_check(void) 
+{
+  static long nextPing = millis();
+  long now = millis();
+  if (now >= nextPing) {
+    nextPing = now + PING_DELAY_MS;
+    //sonar.ping_timer(check_ping);
+    check_ping_2();
+  }
+}
+
+
+void cap_sensor_check(void) 
+{
+  /* Determine if its time to perform a check */
+  static long next_check = millis();
+  long now = millis();
+  if (now < next_check) return;
+  next_check = now + CAP_DELAY_MS;
   
-  digitalWrite(PING_TRIG, LOW);
-  delayMicroseconds(2);
-  digitalWrite(PING_TRIG, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(PING_TRIG, LOW);   
-  // the distance is proportional to the time interval
-  // between HIGH and LOW
-  distance = pulseIn(PING_ECHO, HIGH, 10000); 
-  if (distance) cm = distance/58;
-
-  Serial.print(distance);
-  Serial.print(" - ");
-  Serial.print(cm);
-  Serial.print("\n");
-}
-
-
-/******************************************************************************
- * Action loop
- *****************************************************************************/
-void loop()
-{
-
-#if 1
   /* Read the side sensors */
   long start = millis();
   long sense_delay;
   for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
-    long value = side_sensors[side].capacitiveSensor(10);
+    //long value = side_sensors[side].capacitiveSensor(10);
+    long value = side_sensors[side].capacitiveSensorRaw(1);
     if (value < side_min[side]) side_min[side] = value;
     if (value > side_max[side]) side_max[side] = value;
     side_values[side] = map(value,
@@ -244,17 +262,40 @@ void loop()
     Serial.print(log(side_values[side]));
     Serial.print("    ");
   }
-  Serial.print("\n");
-#endif
+}
 
-//  ping_read();
-  
+/******************************************************************************
+ * Action loop
+ *****************************************************************************/
+void loop()
+{
+
+//  cap_sensor_check();
+
+//  range_finder_check();
+
+  void *mode_arg = NULL;
+  if (analogRead(PHOTO_PIN) < 85) {
+    set_current_mode(MODE_ALL_ON);
+    mode_arg = (void *)1;
+  } else {
+    restore_current_mode();
+    mode_arg = NULL;
+  }
+
   /* Get the current mode */
   int mode = get_current_mode();
 
   /* Call the action function for the current mode */
-  int delay_period = modeFunctions[mode](NULL);
+  int delay_period = modeFunctions[mode](mode_arg);
 
+  Serial.print("Mode:");
+  Serial.print(mode);
+  Serial.print("-");
+  Serial.print(delay_period);
+
+  Serial.print("\n");
+  
   /* Wait for the specifided interval */
   delay(delay_period);
 }

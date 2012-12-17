@@ -7,7 +7,7 @@ void buttonInterrupt(void);
 
 /* TLC Output Values */
 #define MAX_VALUE 4095
-#define NUM_LEDS 28
+#define NUM_LEDS 12
 #define MAX_ROW 9
 #define MAX_COLUMN 15
 
@@ -58,10 +58,16 @@ int mode_sense_distance(void *arg);
 /* Return the current mode value */
 int get_current_mode(void);
 
+/* Set the mode */
+void set_current_mode(uint8_t new_mode);
+void restore_current_mode(void);
 
 /* Capacitive side sensors */
 #define NUM_SIDE_SENSORS 2
 extern long side_values[];
+
+/* Range finder */
+extern uint16_t range_cm;
 
 //#define DEBUG
 #ifdef DEBUG
