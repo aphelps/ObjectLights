@@ -26,7 +26,7 @@ void set_current_mode(uint8_t new_mode);
 void restore_current_mode(void);
 
 /* Mode for lights */
-#define MODE_ALL_ON           0
+#define MODE_SET_ALL          0
 #define MODE_SWAP_ONE         1
 #define MODE_FADE_ONE         2
 #define MODE_COUNT_UP         3
@@ -40,7 +40,7 @@ void restore_current_mode(void);
 typedef int (*mode_function_t)(void *arg);
 
 /* Mode functions */
-int mode_all_on(void *arg);
+int mode_set_all(void *arg);
 int mode_swap_one(void *arg);
 int mode_fade_one(void *arg);
 int mode_count_up(void *arg);

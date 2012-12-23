@@ -28,13 +28,23 @@ int16_t ledValues[NUM_LEDS] = {
 };
 
 mode_function_t modeFunctions[] = {
-  mode_all_on,           // MODE_ALL_ON
+  mode_set_all,          // MODE_SET_ALL
   mode_swap_one,         // MODE_SWAP_ONE
   mode_fade_one,         // MODE_FADE_ONE
   mode_count_up,         // MODE_COUNT_UP
   mode_flash_ordered,    // MODE_FLASH_ORDERED
   mode_random_fades,     // MODE_RANDOM_FADES
   mode_sense_distance,   // MODE_SENSE_DISTANCE
+};
+
+void * modeArguments[] = {
+  (void *)MAX_VALUE,    // MODE_SET_ALL
+  NULL,                 // MODE_SWAP_ONE
+  NULL,                 // MODE_FADE_ONE
+  NULL,                 // MODE_COUNT_UP
+  NULL,                 // MODE_FLASH_ORDERED
+  NULL,                 // MODE_RANDOM_FADES
+  NULL,                 // MODE_SENSE_DISTANCE
 };
 
 #define INITIAL_VALUE 0
@@ -155,6 +165,22 @@ void cap_sensor_check(void)
   DEBUG_PRINT(2, "\n");
 }
 
+#define PHOTO_THRESHOLD_LOW  85  // Turn light off when below this level
+#define PHOTO_THRESHOLD_HIGH 100 // Turn light on when above this level
+boolean photo_dark = false;
+void photo_sensor_check(void) 
+{
+  int photo_value = analogRead(PHOTO_PIN);
+  if (photo_value > PHOTO_THRESHOLD_HIGH) {
+    photo_dark = false;
+  } else if (photo_value < PHOTO_THRESHOLD_LOW) {
+    photo_dark = false;
+  }
+//  DEBUG_VALUE(2, "Photo:", photo_value);
+//  DEBUG_PRINT(2, "\n");
+}
+
+
 /******************************************************************************
  * Action loop
  *****************************************************************************/
@@ -166,33 +192,24 @@ void loop()
 
 //  range_finder_check();
 
-#if 1
-  int photo_value = analogRead(PHOTO_PIN);
-  if (photo_value< 85) {
-    set_current_mode(MODE_ALL_ON);
-    mode_arg = (void *)1;
+  photo_sensor_check();
+
+  int delay_period_ms;
+  if (photo_dark) {
+    /* Get the current mode */
+    int mode = get_current_mode();
+
+    /* Call the action function for the current mode */
+    delay_period_ms = modeFunctions[mode](modeArguments[mode]);
+
+    DEBUG_VALUE(3, "Mode:", mode);
   } else {
-    restore_current_mode();
-    mode_arg = NULL;
+    /* When its light out then turn the lights off */
+    delay_period_ms = mode_set_all(0);
   }
-//  DEBUG_VALUE(2, "Photo:", photo_value);
-//  DEBUG_PRINT(2, "\n");
-#endif
-  
-  /* Get the current mode */
-  int mode = get_current_mode();
 
-  /* Call the action function for the current mode */
-  int delay_period = modeFunctions[mode](mode_arg);
-
-  DEBUG_PRINT(3, "Mode:");
-  DEBUG_PRINT(3, mode);
-  DEBUG_PRINT(3, "-");
-  DEBUG_PRINT(3, delay_period);
-
-  DEBUG_PRINT(3, "\n");
+  DEBUG_VALUELN(3, "Per:", delay_period_ms);
   
   /* Wait for the specifided interval */
-  delay(delay_period);
+  delay(delay_period_ms);
 }
-

@@ -15,7 +15,7 @@ uint8_t validModes[] = {
 //  MODE_RANDOM_FADES,
   MODE_SWAP_ONE,
 //  MODE_FADE_ONE,
-  MODE_ALL_ON,
+  MODE_SET_ALL,
 //  MODE_FLASH_ORDERED,
 };
 uint8_t current_mode = validModes[0];
@@ -84,21 +84,18 @@ int mode_example_fades(void *arg)
 }
 #endif
 
-/* Set all LEDs to their max value */
-int mode_all_on(void *arg) 
+/* Set all LEDs to the indicated value */
+int mode_set_all(void *arg) 
 {
-  int new_value;
-  if (arg != NULL) {
-    new_value = (int)arg - 1;
+  static uint16_t old_value = 0;
+  uint16_t new_value = (int)arg;
+
+  if (old_value != new_value) {
     if (new_value < 0) new_value = 0;
     if (new_value > MAX_VALUE) new_value = MAX_VALUE;
-    Serial.print("AllOn:");
-    Serial.println(new_value);
-  } else {
-    new_value = MAX_VALUE;
-  }
-  if (ledValues[0] != new_value) {
-    for (int led = 0; led < NUM_LEDS; led++) {
+    old_value = new_value;
+
+    for (byte led = 0; led < NUM_LEDS; led++) {
       ledValues[led] = new_value;
     }
     Tlc.setAll(new_value);
