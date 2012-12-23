@@ -13,7 +13,7 @@
 #include <NewPing.h>
 #include "Tlc5940.h"
 
-#include "ChristmasLights.h"
+#include "CubeLights.h"
 
 #if NUM_TLCS != 1
   /* NUM_TLCS must be set to 2 in tlc_config.h */

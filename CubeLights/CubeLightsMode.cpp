@@ -4,7 +4,7 @@
 #include "tlc_shifts.h"
 #include "tlc_fades.h"
 
-#include "ChristmasLights.h"
+#include "CubeLights.h"
 
 /* Array of modes that are valid for normal use */
 uint8_t validModes[] = {
