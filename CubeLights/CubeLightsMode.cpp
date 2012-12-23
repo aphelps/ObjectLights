@@ -1,3 +1,6 @@
+#define DEBUG_LEVEL DEBUG_MID
+#include <Debug.h>
+
 #include <Arduino.h>
 
 #include "Tlc5940.h"
@@ -30,11 +33,8 @@ int get_current_mode(void)
   }
 #endif
   
-  //int mode = validModes[buttonValue % sizeof(validModes)];
   if (current_mode != previous_mode) {
-    DEBUG_PRINT("New mode: ");
-    DEBUG_PRINT(current_mode);
-    DEBUG_PRINT("\n");
+    DEBUG_VALUELN(2, "New mode: ", current_mode);
     previous_mode = current_mode;
 
     Tlc.setAll(0);
@@ -60,21 +60,7 @@ void restore_current_mode(void)
   }
 }
 
-
-
-/* From TCL5940 Library's CircularLightBuffer example */
-int mode_example_circular(void *arg) 
-{
-  uint16_t sum = tlc_shiftUp() + 256 * 4;
-  if (sum > MAX_VALUE)
-    sum = 0;
-  Tlc.set(0, sum);
-
-  while (Tlc.update());
-
-  return (2000 / 16);
-}
-
+#if 0
 /* From TCL5940 Library's Fades example */
 int mode_example_fades(void *arg)
 {
@@ -96,6 +82,7 @@ int mode_example_fades(void *arg)
 
   return 0;
 }
+#endif
 
 /* Set all LEDs to their max value */
 int mode_all_on(void *arg) 
@@ -167,79 +154,7 @@ int mode_fade_one(void *arg)
   return 0;
 }
 
-/*
- * This mode fades the rows of the sign one at a time
- */
-#define FADE_ROW_DURATION 500
-int mode_fade_row(void *arg) 
-{
-  static uint8_t row = 0;
 
-  /* Fade to the opposite value */
-  uint32_t startValue = rowValues[row];
-  uint32_t endValue;
-  if (startValue) endValue = 0;
-  else endValue = MAX_VALUE;
-
-  uint32_t startMillis = millis() + 50;
-  uint32_t endMillis = startMillis + FADE_ROW_DURATION;
-
-  /* Start a fade for each led of the row */
-  for (int led = 0; led < NUM_LEDS; led++) {
-    if (ledRow[led] == row) {
-      tlc_addFade(led, startValue, endValue,
-                  startMillis, endMillis);
-      ledValues[led] = endValue;
-    }
-  }
-
-  while (tlc_updateFades()); /* Update until the fade completes */
-
-  /* Store the new row value */
-  rowValues[row] = endValue;
-
-  /* Move to the next row */
-  row = (row + 1) % MAX_ROW;
-
-  return 0;
-}
-
-/*
- * This mode fades the columns of the sign one at a time
- */
-#define FADE_COLUMN_DURATION 500
-int mode_fade_column(void *arg) 
-{
-  static uint8_t column = 0;
-
-  /* Fade to the opposite value */
-  uint32_t startValue = columnValues[column];
-  uint32_t endValue;
-  if (startValue) endValue = 0;
-  else endValue = MAX_VALUE;
-
-  uint32_t startMillis = millis() + 50;
-  uint32_t endMillis = startMillis + FADE_COLUMN_DURATION;
-
-  /* Start a fade for each led of the column */
-  for (int led = 0; led < NUM_LEDS; led++) {
-    if (ledColumn[led] == column) {
-      tlc_addFade(led, startValue, endValue,
-                  startMillis, endMillis);
-      ledValues[led] = endValue;
-    }
-  }
-
-  while (tlc_updateFades()); /* Update until the fade completes */
-
-  /* Store the new column value */
-  columnValues[column] = endValue;
-
-  /* Move to the next column */
-  column = (column + 1) % MAX_COLUMN;
-
-  return 0;
-}
 
 
 /* Set and updated a single LED value */
@@ -281,14 +196,15 @@ int mode_count_up(void *arg)
 
 /* Blink the LEDs in left-right/top-down order */
 uint8_t orderedLeds[] = {
-  19, 10, 8, 18, 12,
-         11, 16,  7,  9, 17,
-             20, 22, 21,  4,
-                 23,  5, 13,  3,
-                     25,  6,  1,
-         26,             15, 24,
-       0,                    14,
-  27,                         2,
+     00,
+  00,   00,
+     00,
+  00,   00,
+     
+  00,   00,
+     00,
+  00,   00,
+     00,
 };
 int mode_flash_ordered(void *arg) 
 {
@@ -303,73 +219,6 @@ int mode_flash_ordered(void *arg)
   return 250;
 }
 
-#define FADE_INCREMENT (1 << 6)
-#define INCREASING_BIT (1 << 2)
-int mode_cross_fade(void *arg) 
-{
-  static uint8_t column = 0;
-  static uint8_t row = 0;
-  
-  for (int led = 0; led < NUM_LEDS; led++) {
-    if (ledColumn[led] == column) {
-      if (ledValues[led] <= 0) {
-        ledValues[led] = FADE_INCREMENT | INCREASING_BIT;
-      } else if (ledValues[led] >= MAX_VALUE) {
-        ledValues[led] -= FADE_INCREMENT | INCREASING_BIT;
-      } else if (ledValues[led] & INCREASING_BIT) {
-        ledValues[led] += FADE_INCREMENT;
-        if (ledValues[led] > MAX_VALUE) {
-          ledValues[led] = MAX_VALUE;
-        }
-      } else {
-        ledValues[led] -= FADE_INCREMENT;
-      }
-      DEBUG_PRINT(led);
-      DEBUG_PRINT("c");
-      DEBUG_PRINT(ledValues[led]);
-      DEBUG_PRINT("-");
-    }
-    if (ledRow[led] == row) {
-      if (ledValues[led] <= 0) {
-        ledValues[led] = FADE_INCREMENT | INCREASING_BIT;
-      } else if (ledValues[led] >= MAX_VALUE) {
-        ledValues[led] -= FADE_INCREMENT | INCREASING_BIT;
-      } else if (ledValues[led] & INCREASING_BIT) {
-        ledValues[led] += FADE_INCREMENT;
-      } else {
-        ledValues[led] -= FADE_INCREMENT;
-        if (ledValues[led] < 0) {
-          ledValues[led] = 0;
-        }
-      }
-
-      if (ledValues[led] > MAX_VALUE) {
-        ledValues[led] = MAX_VALUE;
-      } else if (ledValues[led] < 0) {
-        ledValues[led] = 0;
-      }
-      
-      DEBUG_PRINT(led);
-      DEBUG_PRINT("r");
-      DEBUG_PRINT(ledValues[led]);
-      DEBUG_PRINT("-");
-    }
-    Tlc.set(led, ledValues[led]);
-  }
-
-  row = (row + 1) % MAX_ROW;
-  column = (column + 1) % MAX_COLUMN;
-  
-  DEBUG_PRINT("R/C:");
-  DEBUG_PRINT(row);
-  DEBUG_PRINT("/");
-  DEBUG_PRINT(column);
-  DEBUG_PRINT("\n");  
-
-  while (Tlc.update());
-
-  return 10;
-}
 
 /*
  * Set a random trajectory for each LED
