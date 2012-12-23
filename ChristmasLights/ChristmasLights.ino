@@ -4,6 +4,10 @@
  * Internal to the sign is an Arduino Nano v3 driving two serially connected
  * TLC5940 LED drivers for the individual pixels of the sign.
  */
+#define DEBUG
+#define DEBUG_VERBOSE 2
+#include <Debug.h>
+
 #include <Arduino.h>
 #include <CapacitiveSensor.h>
 #include <NewPing.h>
@@ -139,57 +143,57 @@ void setup()
   randomSeed(analogRead(0));
 
   /* Populate the ledRowArray */
-  DEBUG_PRINT("ledRowArray:\n");
+  DEBUG_PRINT(2, "ledRowArray:\n");
   for (uint32_t i = 0; i < sizeof (signRows); i++) {
     int8_t led = signToIndex[i];
     if (led < 0) {
-      DEBUG_PRINT("X/X");
+      DEBUG_PRINT(2, "X/X");
     } else {
       ledRow[led] = signRows[i];
-      DEBUG_PRINT(led);
-      DEBUG_PRINT("/");
-      DEBUG_PRINT(ledRow[led]);
+      DEBUG_PRINT(2, led);
+      DEBUG_PRINT(2, "/");
+      DEBUG_PRINT(2, ledRow[led]);
     }
     if (i % 8 == 7) {
-      DEBUG_PRINT("\n");
+      DEBUG_PRINT(2, "\n");
     } else {
-      DEBUG_PRINT(", ");
+      DEBUG_PRINT(2, ", ");
     }
   }
 
-  DEBUG_PRINT("ledRow:");
+  DEBUG_PRINT(2, "ledRow:");
   for (int i = 0; i < NUM_LEDS; i++) {
-    DEBUG_PRINT(ledRow[i]);
-    DEBUG_PRINT(", ");
+    DEBUG_PRINT(2, ledRow[i]);
+    DEBUG_PRINT(2, ", ");
   }
-  DEBUG_PRINT("\n");
+  DEBUG_PRINT(2, "\n");
 
 
    /* Populate the ledColumnArray */
-  DEBUG_PRINT("ledColumnArray:\n");
+  DEBUG_PRINT(2, "ledColumnArray:\n");
   for (uint32_t i = 0; i < sizeof (signColumns); i++) {
     int8_t led = signToIndex[i];
     if (led < 0) {
-      DEBUG_PRINT("X/X");
+      DEBUG_PRINT(2, "X/X");
     } else {
       ledColumn[led] = signColumns[i];
-      DEBUG_PRINT(led);
-      DEBUG_PRINT("/");
-      DEBUG_PRINT(ledColumn[led]);
+      DEBUG_PRINT(2, led);
+      DEBUG_PRINT(2, "/");
+      DEBUG_PRINT(2, ledColumn[led]);
     }
     if (i % 8 == 7) {
-      DEBUG_PRINT("\n");
+      DEBUG_PRINT(2, "\n");
     } else {
-      DEBUG_PRINT(", ");
+      DEBUG_PRINT(2, ", ");
     }
   }
 
-  DEBUG_PRINT("ledColumn:");
+  DEBUG_PRINT(2, "ledColumn:");
   for (int i = 0; i < NUM_LEDS; i++) {
-    DEBUG_PRINT(ledColumn[i]);
-    DEBUG_PRINT(", ");
+    DEBUG_PRINT(2, ledColumn[i]);
+    DEBUG_PRINT(2, ", ");
   }
-  DEBUG_PRINT("\n");
+  DEBUG_PRINT(2, "\n");
 
   /* Initialize the range sensor */
 //  pinMode(PING_TRIG, OUTPUT);
@@ -204,20 +208,19 @@ void check_ping()
 {
   if (sonar.check_timer()) {
     range_cm = sonar.ping_result / US_ROUNDTRIP_CM;
-    Serial.print("Ping: ");
-    Serial.print(range_cm); // Ping returned, uS result in ping_result, convert to cm with US_ROUNDTRIP_CM.
-    Serial.println("cm");
+    DEBUG_PRINT(2, "Ping: ");
+    DEBUG_PRINT(2, range_cm); // Ping returned, uS result in ping_result, convert to cm with US_ROUNDTRIP_CM.
+    DEBUG_PRINT(2, "cm");
   }
 }
 
 void check_ping_2() 
 {
   range_cm = sonar.ping() / US_ROUNDTRIP_CM;
-  Serial.print("Ping: ");
-  Serial.print(range_cm);
-  Serial.print("cm - photo:");
-
-  Serial.print(analogRead(PHOTO_PIN));
+  DEBUG_PRINT(2, "Ping: ");
+  DEBUG_PRINT(2, range_cm);
+  DEBUG_PRINT(2, "cm - photo:");
+  DEBUG_PRINT(2, "\n");
 }
 
 void range_finder_check(void) 
@@ -248,20 +251,23 @@ void cap_sensor_check(void)
     long value = side_sensors[side].capacitiveSensorRaw(1);
     if (value < side_min[side]) side_min[side] = value;
     if (value > side_max[side]) side_max[side] = value;
-    side_values[side] = map(value,
-                            side_min[side], side_max[side],
-                            0, MAX_VALUE);
+
+    side_values[side] = value;
+//    side_values[side] = map(value,
+//                            side_min[side], side_max[side],
+//                            0, MAX_VALUE);
   }
-  Serial.print("Cap: ");
+  DEBUG_PRINT(2, "Cap: ");
   sense_delay = millis() - start;
-  Serial.print(sense_delay);        // check on performance in milliseconds
-  Serial.print("\t");                    // tab character for debug windown spacing
+  DEBUG_PRINT(2, sense_delay);        // check on performance in milliseconds
+  DEBUG_PRINT(2, "\t");                    // tab character for debug windown spacing
   for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
-    Serial.print(side_values[side]);
-    Serial.print("-");
-    Serial.print(log(side_values[side]));
-    Serial.print("    ");
+    DEBUG_PRINT(2, side_values[side]);
+    DEBUG_PRINT(2, "-");
+    DEBUG_PRINT(2, log(side_values[side]));
+    DEBUG_PRINT(2, "    ");
   }
+  DEBUG_PRINT(2, "\n");
 }
 
 /******************************************************************************
@@ -269,32 +275,37 @@ void cap_sensor_check(void)
  *****************************************************************************/
 void loop()
 {
+  void *mode_arg = NULL;
 
-//  cap_sensor_check();
+  cap_sensor_check();
 
 //  range_finder_check();
 
-  void *mode_arg = NULL;
-  if (analogRead(PHOTO_PIN) < 85) {
+#if 1
+  int photo_value = analogRead(PHOTO_PIN);
+  if (photo_value< 85) {
     set_current_mode(MODE_ALL_ON);
     mode_arg = (void *)1;
   } else {
     restore_current_mode();
     mode_arg = NULL;
   }
-
+//  DEBUG_VALUE(2, "Photo:", photo_value);
+//  DEBUG_PRINT(2, "\n");
+#endif
+  
   /* Get the current mode */
   int mode = get_current_mode();
 
   /* Call the action function for the current mode */
   int delay_period = modeFunctions[mode](mode_arg);
 
-  Serial.print("Mode:");
-  Serial.print(mode);
-  Serial.print("-");
-  Serial.print(delay_period);
+  DEBUG_PRINT(3, "Mode:");
+  DEBUG_PRINT(3, mode);
+  DEBUG_PRINT(3, "-");
+  DEBUG_PRINT(3, delay_period);
 
-  Serial.print("\n");
+  DEBUG_PRINT(3, "\n");
   
   /* Wait for the specifided interval */
   delay(delay_period);
