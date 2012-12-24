@@ -9,6 +9,8 @@
 
 #include "CubeLights.h"
 
+unsigned long mode_next_action = 0;
+
 /* Array of modes that are valid for normal use */
 uint8_t validModes[] = {
 //  MODE_SENSE_DISTANCE,
@@ -109,18 +111,23 @@ int mode_set_all(void *arg)
 
 
 /* Swap the state of a single LED */
+#define MODE_SWAP_ONE_PERIOD 25
 int mode_swap_one(void *arg) 
 {
-  int led = random(NUM_LEDS);
+  unsigned long now = millis();
 
-  if (ledValues[led]) ledValues[led] = 0;
-  else ledValues[led] = MAX_VALUE;
+  if (now >= mode_next_action) {
+    uint8_t led = random(NUM_LEDS);
 
-  Tlc.set(led, ledValues[led]);
+    if (ledValues[led]) ledValues[led] = 0;
+    else ledValues[led] = MAX_VALUE;
+    Tlc.set(led, ledValues[led]);
+    while (Tlc.update());
 
-  while (Tlc.update());
+    mode_next_action = now + MODE_SWAP_ONE_PERIOD;
+  }
 
-  return 25;
+  return 0;
 }
 
 /* Fade the state of a single LED from high-to-low or vice versa*/
@@ -128,25 +135,27 @@ int mode_swap_one(void *arg)
 #define FADE_ONE_MAX_DURATION 250
 int mode_fade_one(void *arg)
 {
-  /* Get a random LED and determine the start and end values for the fade */
-  int led = random(NUM_LEDS);
-  uint32_t startValue = ledValues[led];
-  uint32_t endValue;
-  if (startValue) endValue = 0;
-  else endValue = MAX_VALUE;
+  /* Update the current fade, if no ongoing fades then start a new one */
+  if (tlc_updateFades() == 0) {
+    /* Get a random LED and determine the start and end values for the fade */
+    uint8_t  led = random(NUM_LEDS);
+    uint16_t startValue = ledValues[led];
+    uint16_t endValue;
+    if (startValue) endValue = 0;
+    else endValue = MAX_VALUE;
 
-  /* Set duration of the fade */
-  uint32_t duration = FADE_ONE_MIN_DURATION +
-    random(FADE_ONE_MAX_DURATION - FADE_ONE_MIN_DURATION);
+    /* Set duration of the fade */
+    uint32_t duration = FADE_ONE_MIN_DURATION +
+      random(FADE_ONE_MAX_DURATION - FADE_ONE_MIN_DURATION);
 
-  /* Set the start time slightly in the future */
-  uint32_t startMillis = millis() + 50;
+    /* Set the start time slightly in the future */
+    uint32_t startMillis = millis() + 50;
 
-  tlc_addFade(led, startValue, endValue, startMillis, startMillis + duration);
+    tlc_addFade(led, startValue, endValue, startMillis, startMillis + duration);
 
-  while (tlc_updateFades()); /* Updae until the fade completes */
-
-  ledValues[led] = endValue;
+    /* Set the LED value to its final value */
+    ledValues[led] = endValue;
+  }
 
   return 0;
 }
@@ -177,7 +186,7 @@ int flashChannel(int channel, int count, int flash_delay)
 
 /* Sequencially flash the LEDs */
 int mode_count_up(void *arg) 
-{
+{    
   for (int i = 0; i < NUM_LEDS; i++) {
     updateChannel(i, 0);
     delay(5000);
@@ -206,14 +215,20 @@ uint8_t orderedLeds[] = {
 int mode_flash_ordered(void *arg) 
 {
   static int led = -1;
-  led = (led + 1) % NUM_LEDS;
-  if (ledValues[orderedLeds[led]]) {
-    ledValues[orderedLeds[led]] = 0;
-  } else {
-    ledValues[orderedLeds[led]] = MAX_VALUE;
+
+  unsigned long now = millis();
+  if (now >= mode_next_action) {
+    led = (led + 1) % NUM_LEDS;
+    if (ledValues[orderedLeds[led]]) {
+      ledValues[orderedLeds[led]] = 0;
+    } else {
+      ledValues[orderedLeds[led]] = MAX_VALUE;
+    }
+    updateChannel(orderedLeds[led], ledValues[orderedLeds[led]]);
+    mode_next_action = now + 250;
   }
-  updateChannel(orderedLeds[led], ledValues[orderedLeds[led]]);
-  return 250;
+
+  return 0;
 }
 
 
@@ -226,36 +241,38 @@ boolean random_fades_initialized = false;
 int mode_random_fades(void *arg)
 {
   if (!random_fades_initialized) {
-    for (int led = 0; led < NUM_LEDS; led++) {
+    /* Initialize the fade values */
+    for (uint8_t led = 0; led < NUM_LEDS; led++) {
         random_fades_vectors[led] = -1 * (16 + random(RANDOM_FADES_RANGE));
     }
     random_fades_initialized = true;
   }
 
-  for (int led = 0; led < NUM_LEDS; led++) {
-    ledValues[led] += random_fades_vectors[led];
-    if (ledValues[led] <= 0) {
-      ledValues[led] = 0;
-      random_fades_vectors[led] = 16 + random(RANDOM_FADES_RANGE);
-    } else if (ledValues[led] >= MAX_VALUE) {
-      ledValues[led] = MAX_VALUE;
-      random_fades_vectors[led] *= -1;
-    } 
-    Tlc.set(led, ledValues[led]);
+  unsigned long now = millis();
+  if (now >= mode_next_action) {
+    for (uint8_t led = 0; led < NUM_LEDS; led++) {
+      ledValues[led] += random_fades_vectors[led];
+      if (ledValues[led] <= 0) {
+        ledValues[led] = 0;
+        random_fades_vectors[led] = 16 + random(RANDOM_FADES_RANGE);
+      } else if (ledValues[led] >= MAX_VALUE) {
+        ledValues[led] = MAX_VALUE;
+        random_fades_vectors[led] *= -1;
+      } 
+      Tlc.set(led, ledValues[led]);
+    }
+
+    while (Tlc.update());
+    mode_next_action = now + 10;
   }
 
-  while (Tlc.update());
-
-  return 10;
+  return 0;
 }
 
 #define MIN_DISTANCE 5
 #define MAX_DISTANCE 20
 int mode_sense_distance(void *arg) 
 {
-//  long led_value = side_values[0];
-//  if (led_value > MAX_VALUE) led_value = MAX_VALUE;
-
   int led_value;
   if (range_cm >= MAX_DISTANCE) {
     led_value = 0;
@@ -265,12 +282,6 @@ int mode_sense_distance(void *arg)
     led_value = (MAX_DISTANCE - range_cm) * MAX_VALUE /
       (MAX_DISTANCE - MIN_DISTANCE);
   }
-
-#if 0
-  Serial.print(range_cm);
-  Serial.print("-");
-  Serial.println(led_value);
-#endif
 
   Tlc.setAll(led_value);
   while (Tlc.update());

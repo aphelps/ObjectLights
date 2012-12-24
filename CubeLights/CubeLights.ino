@@ -186,8 +186,6 @@ void photo_sensor_check(void)
  *****************************************************************************/
 void loop()
 {
-  void *mode_arg = NULL;
-
   cap_sensor_check();
 
 //  range_finder_check();

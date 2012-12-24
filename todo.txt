@@ -1,0 +1,9 @@
+Todo
+----
+
+* Add meta-code to all debug-only code (such as value range checks, etc)
+  - Maybe as an assertion to flash lights or something
+
+* Change all mode functions to only set the changes, do the update wait separately to allow for changes to the mode based on environment (intruder signal, etc)
+
+* Map the channels to the geometry
