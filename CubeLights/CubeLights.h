@@ -6,7 +6,7 @@
 #ifndef CUBELIGHTS_H
 #define CUBELIGHTS_H
 
-/* ***** LED Driver config ***** */
+/***** LED Driver config ******************************************************/
 
 #define MAX_VALUE 4095 // Max TLC pin value
 
@@ -16,7 +16,7 @@
 
 extern int16_t ledValues[];
 
-/* ***** LED modes ***** */
+/***** LED modes **************************************************************/
 
 /* Return the current mode value */
 int get_current_mode(void);
@@ -49,13 +49,34 @@ int mode_random_fades(void *arg);
 int mode_sense_distance(void *arg);
 
 
-/* ***** Sensor info ***** */
-
-/* Capacitive side sensors */
-#define NUM_SIDE_SENSORS 2
-extern long side_values[];
+/***** Sensor info ********************************************************** */
 
 /* Range finder */
-extern uint16_t range_cm;
+#define PING_TRIG_PIN 2
+#define PING_ECHO_PIN 12
+#define PING_MAX_CM 200   /* Maximum distance in cm, limits the sensor delay */
+#define PING_DELAY_MS 250 /* Minimum time between readings */
+
+extern uint16_t range_cm; /* Last value of the range finger */
+void sensor_range(void);  /* Update the range finder value */
+
+/* Photo sensor */
+#define PHOTO_PIN A0
+#define PHOTO_THRESHOLD_LOW  85  /* Consider light off when below this level */
+#define PHOTO_THRESHOLD_HIGH 100 /* Consider light on when above this level */
+#define PHOTO_DELAY_MS 100       /* Minimum time between readings */
+
+extern uint16_t photo_value; /* Last value of the photo sensor */
+extern boolean photo_dark;   /* If its "dark" based on threshold values */
+void sensor_photo(void);     /* Update the photo sensor values */
+
+/* Capacitive side sensors */
+#define NUM_CAP_SENSORS 2
+extern long cap_values[];  /* Last value of the capacitive sensors */
+
+#define CAP_DELAY_MS 250    /* Minimum time between readings */
+void sensor_cap_init(void);
+void sensor_cap(void);
+
 
 #endif

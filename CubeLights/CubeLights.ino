@@ -49,23 +49,6 @@ void * modeArguments[] = {
 
 #define INITIAL_VALUE 0
 
-#define CAP_DELAY_MS 250
-CapacitiveSensor side_sensors[NUM_SIDE_SENSORS] = {
-  CapacitiveSensor(4,5),
-  CapacitiveSensor(4,6),
-};
-long side_values[NUM_SIDE_SENSORS];
-long side_min[NUM_SIDE_SENSORS];
-long side_max[NUM_SIDE_SENSORS];
-
-#define PING_TRIG 2
-#define PING_ECHO 12
-#define PING_MAX_CM 200
-#define PING_DELAY_MS 250 /* Frequency (in ms) to trigger the range finder */
-NewPing sonar(PING_TRIG, PING_ECHO, PING_MAX_CM);
-
-#define PHOTO_PIN A0
-
 /******************************************************************************
  * Initialization
  *****************************************************************************/
@@ -74,12 +57,7 @@ void setup()
   //Serial.begin(9600);
   Serial.begin(115200);
 
-  for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
-    side_sensors[side].set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
-    side_sensors[side].set_CS_Timeout_Millis(100);
-    side_min[side] = 0xFFFF;
-    side_max[side] = 0;
-  }
+  sensor_cap_init(); /* Initialize the capacitive sensors */
 
   /* Initialize the LED drivers with all-off */ 
   Tlc.init(INITIAL_VALUE);
@@ -99,86 +77,6 @@ void setup()
   digitalWrite(PHOTO_PIN, HIGH); 
 }
 
-uint16_t range_cm = 10;
-void check_ping()  // Interupt driven range finder
-{
-  if (sonar.check_timer()) {
-    range_cm = sonar.ping_result / US_ROUNDTRIP_CM;
-    DEBUG_PRINT(2, "Ping: ");
-    DEBUG_PRINT(2, range_cm); // Ping returned, uS result in ping_result, convert to cm with US_ROUNDTRIP_CM.
-    DEBUG_PRINT(2, "cm");
-  }
-}
-
-void check_ping_2() // Non-interupt range finder
-{
-  range_cm = sonar.ping() / US_ROUNDTRIP_CM;
-  DEBUG_PRINT(2, "Ping: ");
-  DEBUG_PRINT(2, range_cm);
-  DEBUG_PRINT(2, "cm - photo:");
-  DEBUG_PRINT(2, "\n");
-}
-
-void range_finder_check(void) 
-{
-  static long nextPing = millis();
-  long now = millis();
-  if (now >= nextPing) {
-    nextPing = now + PING_DELAY_MS;
-    //sonar.ping_timer(check_ping);
-    check_ping_2();
-  }
-}
-
-void cap_sensor_check(void) 
-{
-  /* Determine if its time to perform a check */
-  static long next_check = millis();
-  long now = millis();
-  if (now < next_check) return;
-  next_check = now + CAP_DELAY_MS;
-  
-  /* Read the side sensors */
-  long start = millis();
-  long sense_delay;
-  for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
-    //long value = side_sensors[side].capacitiveSensor(10);
-    long value = side_sensors[side].capacitiveSensorRaw(1);
-    if (value < side_min[side]) side_min[side] = value;
-    if (value > side_max[side]) side_max[side] = value;
-
-    side_values[side] = value;
-//    side_values[side] = map(value,
-//                            side_min[side], side_max[side],
-//                            0, MAX_VALUE);
-  }
-  DEBUG_PRINT(2, "Cap: ");
-  sense_delay = millis() - start;
-  DEBUG_PRINT(2, sense_delay);        // check on performance in milliseconds
-  DEBUG_PRINT(2, "\t");                    // tab character for debug windown spacing
-  for (int side = 0; side < NUM_SIDE_SENSORS; side++) {
-    DEBUG_PRINT(2, side_values[side]);
-    DEBUG_PRINT(2, "-");
-    DEBUG_PRINT(2, log(side_values[side]));
-    DEBUG_PRINT(2, "    ");
-  }
-  DEBUG_PRINT(2, "\n");
-}
-
-#define PHOTO_THRESHOLD_LOW  85  // Turn light off when below this level
-#define PHOTO_THRESHOLD_HIGH 100 // Turn light on when above this level
-boolean photo_dark = false;
-void photo_sensor_check(void) 
-{
-  int photo_value = analogRead(PHOTO_PIN);
-  if (photo_value > PHOTO_THRESHOLD_HIGH) {
-    photo_dark = false;
-  } else if (photo_value < PHOTO_THRESHOLD_LOW) {
-    photo_dark = false;
-  }
-//  DEBUG_VALUE(2, "Photo:", photo_value);
-//  DEBUG_PRINT(2, "\n");
-}
 
 
 /******************************************************************************
@@ -186,11 +84,10 @@ void photo_sensor_check(void)
  *****************************************************************************/
 void loop()
 {
-  cap_sensor_check();
-
-//  range_finder_check();
-
-  photo_sensor_check();
+  /* Update sensors as needed */
+  sensor_cap();
+  sensor_range();
+  sensor_photo();
 
   int delay_period_ms;
   if (photo_dark) {
