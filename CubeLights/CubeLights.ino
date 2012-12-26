@@ -97,13 +97,15 @@ void loop()
     /* Call the action function for the current mode */
     delay_period_ms = modeFunctions[mode](modeArguments[mode]);
 
-    DEBUG_VALUE(3, "Mode:", mode);
+    DEBUG_VALUE(3, " Mode:", mode);
   } else {
     /* When its light out then turn the lights off */
     delay_period_ms = mode_set_all(0);
   }
 
-  DEBUG_VALUELN(3, "Per:", delay_period_ms);
+  DEBUG_VALUE(3, " Per:", delay_period_ms);
+
+  DEBUG_PRINT_END();
   
   /* Wait for the specifided interval */
   delay(delay_period_ms);

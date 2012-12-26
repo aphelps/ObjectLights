@@ -27,7 +27,7 @@ void sensor_range(void)
     nextPing = now + PING_DELAY_MS;
     range_cm = sonar.ping() / US_ROUNDTRIP_CM;
 
-    DEBUG_VALUELN(2, "Ping:", range_cm);
+    DEBUG_VALUE(2, " Ping:", range_cm);
   }
 }
 
@@ -49,8 +49,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = false;
     }
-    DEBUG_VALUE(2, "Photo:", photo_value);
-    DEBUG_PRINT(2, "\n");
+    DEBUG_VALUE(2, " Photo:", photo_value);
   }
 }
 
@@ -96,7 +95,7 @@ void sensor_cap(void)
 //                            cap_min[cap], cap_max[cap],
 //                            0, MAX_VALUE);
   }
-  DEBUG_PRINT(2, "Cap: ");
+  DEBUG_PRINT(2, " Cap: ");
   sense_delay = millis() - start;
   DEBUG_PRINT(2, sense_delay);        // check on performance in milliseconds
   DEBUG_PRINT(2, "\t");                    // tab character for debug windown spacing
@@ -106,5 +105,4 @@ void sensor_cap(void)
     DEBUG_PRINT(2, log(cap_values[cap]));
     DEBUG_PRINT(2, "    ");
   }
-  DEBUG_PRINT(2, "\n");
 }
