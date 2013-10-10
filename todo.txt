@@ -1,0 +1,17 @@
+
+
+
+
+Light pattern ideas
+-------------------
+
+1)
+  Init:
+    * Assign each led in every triangle a random color
+
+  Iterate:
+    * Average the three LEDs in each triangle, fade triangle to that color
+    * Spread each triangle's color to the adjacent LED of its vertex neighbors
+    * Repeat
+
+(Will likely average out globally over time, add an additional cyclic or random color cycle to keep it going)
