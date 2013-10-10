@@ -29,5 +29,5 @@ void setup()
 }
 
 void loop() {
-
+  pixels.patternRed(50);
 }
