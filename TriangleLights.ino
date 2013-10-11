@@ -28,6 +28,17 @@ void setup()
   digitalWrite(LIGHT_SENSOR, HIGH);
 }
 
+#define NUM_MODES 2
+#define MODE_PERIOD 50
 void loop() {
-  pixels.patternRed(50);
+  int mode = getButtonValue() % NUM_MODES;
+
+  switch (mode) {
+  case 0: pixels.patternRed(MODE_PERIOD); break;
+  case 1: pixels.patternGreen(MODE_PERIOD); break;
+  case 2: pixels.patternBlue(MODE_PERIOD); break;
+  case 3: pixels.patternOne(MODE_PERIOD); break;
+  }
+
+  delay(10);
 }

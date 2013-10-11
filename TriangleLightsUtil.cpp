@@ -25,3 +25,7 @@ void buttonInterrupt(void)
 
   prevValue = value;
 }
+
+int getButtonValue() {
+  return buttonValue;
+}

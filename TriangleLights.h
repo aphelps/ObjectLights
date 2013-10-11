@@ -3,5 +3,6 @@
 
 #define PUSH_BUTTON_PIN 2
 void buttonInterrupt(void);
+int getButtonValue();
 
 #endif
