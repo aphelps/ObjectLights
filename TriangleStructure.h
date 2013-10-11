@@ -36,6 +36,8 @@ class Triangle {
   RGB* getLED(byte vertex);
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2);
 
+  void setColor(byte r, byte g, byte b);
+
   boolean hasLeds;
 
  private:

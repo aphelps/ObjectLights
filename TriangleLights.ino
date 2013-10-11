@@ -10,9 +10,12 @@
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 
-#define LIGHT_SENSOR A0
+int numLeds = 50;
+PixelUtil pixels(numLeds, 12, 11);
 
-PixelUtil pixels(50, 12, 11);
+int numTriangles = 0;
+Triangle **triangles;
+
 
 void setup()
 {
@@ -20,25 +23,37 @@ void setup()
 
   randomSeed(analogRead(3));
 
-  /* Configure the mode toggle switch */
-  pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
-  attachInterrupt(0, buttonInterrupt, CHANGE);
+  /* Setup the sensors */
+  initializePins();
 
-  /* Turn on input pullup on analog light sensor pin */
-  digitalWrite(LIGHT_SENSOR, HIGH);
+  /* Generate the geometry */
+  triangles = buildIcosohedron();
+  numTriangles = 20;
+
+  /* Set the pixel values for the triangles */
+  int led = numLeds - 1;
+  for (int i = 0; i < numTriangles; i++) {
+    // XXX - There is no intelligence here.  This is done from highest down
+    // so that when wiring the end led should be placed first.
+    if (led >= 2) {
+      triangles[i]->setLedPixels(led, led - 1, led - 2);
+      led -= 3;
+    }
+  }
 }
 
-#define NUM_MODES 2
+#define NUM_MODES 1
 #define MODE_PERIOD 50
 void loop() {
+  /* Check for update of light sensor value */
+  sensor_photo();
+
   int mode = getButtonValue() % NUM_MODES;
 
   switch (mode) {
-  case 0: pixels.patternRed(MODE_PERIOD); break;
-  case 1: pixels.patternGreen(MODE_PERIOD); break;
-  case 2: pixels.patternBlue(MODE_PERIOD); break;
-  case 3: pixels.patternOne(MODE_PERIOD); break;
+  case 0: trianglesTestPattern(triangles, numTriangles, 500);
   }
+  pixels.update();
 
   delay(10);
 }

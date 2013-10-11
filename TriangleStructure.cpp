@@ -38,6 +38,14 @@ void Triangle::setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2) {
   leds[2].pixel = p2;
 }
 
+void Triangle::setColor(byte r, byte g, byte b) {
+  if (hasLeds) {
+    for (int i = 0; i < 3; i++) {
+      leds[i].setColor(r, g, b);
+    }
+  }
+}
+
 
 void makeEdge(Triangle **triangles, int tri, int edge, int neighbor) {
   triangles[tri]->setEdge(edge, triangles[neighbor]);
