@@ -33,6 +33,7 @@ void setup()
   /* Set the pixel values for the triangles */
   int led = numLeds - 1;
   for (int i = 0; i < numTriangles; i++) {
+    DEBUG_VALUELN(DEBUG_HIGH, "led:", led);
     // XXX - There is no intelligence here.  This is done from highest down
     // so that when wiring the end led should be placed first.
     if (led >= 2) {
@@ -42,7 +43,7 @@ void setup()
   }
 }
 
-#define NUM_MODES 1
+#define NUM_MODES 2
 #define MODE_PERIOD 50
 void loop() {
   /* Check for update of light sensor value */
@@ -52,6 +53,7 @@ void loop() {
 
   switch (mode) {
   case 0: trianglesTestPattern(triangles, numTriangles, 500);
+  case 1: trianglesTestPattern(triangles, numTriangles, 500);
   }
   pixels.update();
 
