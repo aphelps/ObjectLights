@@ -21,11 +21,10 @@ void sensor_photo(void);     /* Update the photo sensor values */
 #define LIGHT_SENSOR_PIN A0
 int getLightValue();
 
-
-
 void initializePins();
 
 
-void trianglesTestPattern(Triangle **triangles, int size, int periodms);
+void trianglesTestPattern(Triangle *triangles, int size, int periodms);
+void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms);
 
 #endif

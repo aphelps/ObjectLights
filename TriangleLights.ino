@@ -14,8 +14,7 @@ int numLeds = 50;
 PixelUtil pixels;
 
 int numTriangles = 0;
-Triangle **triangles;
-
+Triangle *triangles;
 
 void setup()
 {
@@ -33,18 +32,23 @@ void setup()
   triangles = buildIcosohedron();
   numTriangles = 20;
 
-
-  DEBUG_PRINTLN(DEBUG_HIGH, "Early exit"); return;
+  //  DEBUG_PRINTLN(DEBUG_HIGH, "Early exit"); return; // XXX
 
   /* Set the pixel values for the triangles */
   int led = numLeds - 1;
   for (int i = 0; i < numTriangles; i++) {
-    DEBUG_VALUELN(DEBUG_HIGH, "led:", led);
     // XXX - There is no intelligence here.  This is done from highest down
     // so that when wiring the end led should be placed first.
     if (led >= 2) {
-      triangles[i]->setLedPixels(led, led - 1, led - 2);
+      DEBUG_VALUE(DEBUG_HIGH, "Setting leds for tri:", i);
+      DEBUG_VALUE(DEBUG_HIGH, " ", led);
+      DEBUG_VALUE(DEBUG_HIGH, " ", led - 1);
+      DEBUG_VALUELN(DEBUG_HIGH, " ", led - 2);
+
+      triangles[i].setLedPixels(led, led - 1, led - 2);
       led -= 3;
+    } else {
+      DEBUG_VALUELN(DEBUG_HIGH, "No leds for tri:", i);
     }
   }
 }

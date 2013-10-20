@@ -61,17 +61,17 @@ void Triangle::setColor(byte r, byte g, byte b) {
 void Triangle::print(byte level) {
   DEBUG_VALUE(level, "Tri: ", id);
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
-    //    if (edges[e] != NULL) DEBUG_VALUE(level, " e:", edges[e]->id);
+    if (edges[e] != NULL) DEBUG_VALUE(level, " e:", edges[e]->id);
   }
 
   for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
-    //    DEBUG_VALUE(level, " v:", v);
+    DEBUG_VALUE(level, " v:", v);
     for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
-      //      if (vertices[v][o] != NULL) DEBUG_VALUE(level, " ", vertices[v][o]->id);
+      if (vertices[v][o] != NULL) DEBUG_VALUE(level, " ", vertices[v][o]->id);
     }
   }
 
-DEBUG_PRINTLN(level, "");
+  DEBUG_PRINTLN(level, "");
 }
 
 
@@ -79,13 +79,13 @@ DEBUG_PRINTLN(level, "");
  * Topology construction helper functions
  */
 
-void makeEdge(Triangle **triangles, int tri, int edge, int neighbor) {
-  triangles[tri]->setEdge(edge, triangles[neighbor]);
+void makeEdge(Triangle *triangles, int tri, int edge, int neighbor) {
+  triangles[tri].setEdge(edge, &triangles[neighbor]);
 }
 
-void makeVertex(Triangle **triangles, int tri, int vertex, int index,
+void makeVertex(Triangle *triangles, int tri, int vertex, int index,
 		int neighbor) {
-  triangles[tri]->setVertex(vertex, index, triangles[neighbor]);
+  triangles[tri].setVertex(vertex, index, &triangles[neighbor]);
 }
 
 /******************************************************************************
@@ -106,16 +106,17 @@ void makeVertex(Triangle **triangles, int tri, int vertex, int index,
  *       /3 \8 /  \13/  \7 /2 \
  *      /____\/    \/    \/____\
  */
-Triangle** buildIcosohedron() {
-  XXX - Convert to an array, not array of pointers
-  Triangle **triangles = (Triangle **)malloc(sizeof (Triangle *) * 20);
-
-  DEBUG_VALUELN(DEBUG_HIGH, "XXX: Triangle * size=", sizeof (Triangle *));
-  DEBUG_VALUELN(DEBUG_HIGH, "XXX: Triangle array size=", sizeof (triangles));
-  return NULL;
+Triangle* buildIcosohedron() {
+  Triangle *triangles = (Triangle *)malloc(sizeof (Triangle) * 20);
+  DEBUG_COMMAND(DEBUG_ERROR,
+		if (triangles == NULL) {
+		  DEBUG_ERR(F("Failed to malloc triangles"));
+		  debug_err_state(DEBUG_ERR_MALLOC);
+		}
+		);
 
   for (byte i = 0; i < 20; i++) {
-    triangles[i] = new Triangle(i);
+    triangles[i] = Triangle(i);
   }
 
   // XXX: This is very manual, is there a way to generate this programmatically?
@@ -130,8 +131,6 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  0,  2,  0, 10);
   makeVertex(triangles,  0,  2,  1,  9);
   numTriangles++;
-
-#if 0
 
   makeEdge  (triangles,  1,  0,  2);
   makeEdge  (triangles,  1,  1,  6);
@@ -341,11 +340,10 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 19,  2,  0,  9);
   makeVertex(triangles, 19,  2,  1, 10);
   numTriangles++;
-#endif
 
   DEBUG_COMMAND(DEBUG_HIGH,
 		for (int t = 0; t < numTriangles; t++) {
-		  triangles[t]->print(DEBUG_HIGH);
+		  triangles[t].print(DEBUG_HIGH);
 		}
 		);
 

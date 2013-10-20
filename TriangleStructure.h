@@ -55,6 +55,6 @@ class Triangle {
 };
 
 /* Allocate and return a fully connected icosohedron */
-Triangle** buildIcosohedron();
+Triangle* buildIcosohedron();
 
 #endif

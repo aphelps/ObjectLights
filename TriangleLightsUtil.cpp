@@ -67,7 +67,7 @@ void sensor_photo(void)
  */
 
 /* This iterates through the triangles, lighting the ones with leds */
-void trianglesTestPattern(Triangle **triangles, int size, int periodms) {
+void trianglesTestPattern(Triangle *triangles, int size, int periodms) {
   static unsigned long next_time = millis();
   static int current = 0;
 
@@ -75,16 +75,16 @@ void trianglesTestPattern(Triangle **triangles, int size, int periodms) {
     next_time += periodms;
 
     /* Clear the color of the previous triangle */
-    triangles[current % size]->setColor(0, 0, 0);
+    triangles[current % size].setColor(0, 0, 0);
 
     current++;
 
     /* Set the color on the new triangle */
-    triangles[current % size]->setColor(255, 0, 0);
+    triangles[current % size].setColor(255, 0, 0);
   }
 }
 
-void trianglesRandomNeighbor(Triangle **triangles, int size, int periodms) {
+void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms) {
   static unsigned long next_time = millis();
   static int current = 0;
 
@@ -92,7 +92,7 @@ void trianglesRandomNeighbor(Triangle **triangles, int size, int periodms) {
     next_time += periodms;
 
     /* Clear the color of the previous triangle */
-    triangles[current % size]->setColor(0, 0, 0);
+    triangles[current % size].setColor(0, 0, 0);
 
     /* Choose the next triangle */
     boolean has_next = false;
@@ -101,7 +101,7 @@ void trianglesRandomNeighbor(Triangle **triangles, int size, int periodms) {
     }
 
     /* Set the color on the new triangle */
-    triangles[current % size]->setColor(255, 0, 0);
+    triangles[current % size].setColor(255, 0, 0);
   }
 
 }
