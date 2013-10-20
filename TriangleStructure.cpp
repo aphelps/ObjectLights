@@ -9,6 +9,18 @@
 Triangle::Triangle(unsigned int _id) {
   hasLeds = false;
   id = _id;
+
+  for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
+    edges[e] = NULL;
+  }
+
+  for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
+    for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
+      vertices[v][o] = NULL;
+    }
+  }
+
+  DEBUG_VALUELN(DEBUG_HIGH, "Created Triangle ", id);
 }
 
 Triangle *Triangle::getEdge(byte edge) {
@@ -46,6 +58,26 @@ void Triangle::setColor(byte r, byte g, byte b) {
   }
 }
 
+void Triangle::print(byte level) {
+  DEBUG_VALUE(level, "Tri: ", id);
+  for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
+    //    if (edges[e] != NULL) DEBUG_VALUE(level, " e:", edges[e]->id);
+  }
+
+  for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
+    //    DEBUG_VALUE(level, " v:", v);
+    for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
+      //      if (vertices[v][o] != NULL) DEBUG_VALUE(level, " ", vertices[v][o]->id);
+    }
+  }
+
+DEBUG_PRINTLN(level, "");
+}
+
+
+/******************************************************************************
+ * Topology construction helper functions
+ */
 
 void makeEdge(Triangle **triangles, int tri, int edge, int neighbor) {
   triangles[tri]->setEdge(edge, triangles[neighbor]);
@@ -75,12 +107,19 @@ void makeVertex(Triangle **triangles, int tri, int vertex, int index,
  *      /____\/    \/    \/____\
  */
 Triangle** buildIcosohedron() {
+  XXX - Convert to an array, not array of pointers
   Triangle **triangles = (Triangle **)malloc(sizeof (Triangle *) * 20);
+
+  DEBUG_VALUELN(DEBUG_HIGH, "XXX: Triangle * size=", sizeof (Triangle *));
+  DEBUG_VALUELN(DEBUG_HIGH, "XXX: Triangle array size=", sizeof (triangles));
+  return NULL;
+
   for (byte i = 0; i < 20; i++) {
     triangles[i] = new Triangle(i);
   }
 
   // XXX: This is very manual, is there a way to generate this programmatically?
+  int numTriangles = 0;
   makeEdge  (triangles,  0,  0,  1);
   makeEdge  (triangles,  0,  1,  5);
   makeEdge  (triangles,  0,  2,  4);
@@ -90,6 +129,9 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  0,  1,  1, 11);
   makeVertex(triangles,  0,  2,  0, 10);
   makeVertex(triangles,  0,  2,  1,  9);
+  numTriangles++;
+
+#if 0
 
   makeEdge  (triangles,  1,  0,  2);
   makeEdge  (triangles,  1,  1,  6);
@@ -100,6 +142,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  1,  1,  1, 12);
   makeVertex(triangles,  1,  2,  0, 11);
   makeVertex(triangles,  1,  2,  1,  5);
+  numTriangles++;
 
   makeEdge  (triangles,  2,  0,  3);
   makeEdge  (triangles,  2,  1,  7);
@@ -110,6 +153,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  2,  1,  1, 13);
   makeVertex(triangles,  2,  2,  0, 12);
   makeVertex(triangles,  2,  2,  1,  6);
+  numTriangles++;
 
   makeEdge  (triangles,  3,  0,  4);
   makeEdge  (triangles,  3,  1,  8);
@@ -120,6 +164,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  3,  1,  1, 14);
   makeVertex(triangles,  3,  2,  0, 13);
   makeVertex(triangles,  3,  2,  1,  7);
+  numTriangles++;
 
   makeEdge  (triangles,  4,  0,  0);
   makeEdge  (triangles,  4,  1,  9);
@@ -130,6 +175,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  4,  1,  1, 10);
   makeVertex(triangles,  4,  2,  0, 14);
   makeVertex(triangles,  4,  2,  1,  8);
+  numTriangles++;
 
   makeEdge  (triangles,  5,  0, 10);
   makeEdge  (triangles,  5,  1,  0);
@@ -140,6 +186,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  5,  1,  1,  4);
   makeVertex(triangles,  5,  2,  0,  6);
   makeVertex(triangles,  5,  2,  1, 11);
+  numTriangles++;
 
   makeEdge  (triangles,  6,  0, 11);
   makeEdge  (triangles,  6,  1,  1);
@@ -150,6 +197,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  6,  1,  1,  0);
   makeVertex(triangles,  6,  2,  0,  2);
   makeVertex(triangles,  6,  2,  1,  7);
+  numTriangles++;
 
   makeEdge  (triangles,  7,  0, 12);
   makeEdge  (triangles,  7,  1,  2);
@@ -160,6 +208,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  7,  1,  1,  1);
   makeVertex(triangles,  7,  2,  0,  8);
   makeVertex(triangles,  7,  2,  1, 13);
+  numTriangles++;
 
   makeEdge  (triangles,  8,  0, 13);
   makeEdge  (triangles,  8,  1,  3);
@@ -170,6 +219,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  8,  1,  1,  2);
   makeVertex(triangles,  8,  2,  0,  4);
   makeVertex(triangles,  8,  2,  1,  9);
+  numTriangles++;
 
   makeEdge  (triangles,  9,  0,  14);
   makeEdge  (triangles,  9,  1,  4);
@@ -180,6 +230,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles,  9,  1,  1,  3);
   makeVertex(triangles,  9,  2,  0,  0);
   makeVertex(triangles,  9,  2,  1,  5);
+  numTriangles++;
 
   makeEdge  (triangles, 10,  0,  5);
   makeEdge  (triangles, 10,  1, 15);
@@ -190,6 +241,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 10,  1,  1, 16);
   makeVertex(triangles, 10,  2,  0, 19);
   makeVertex(triangles, 10,  2,  1, 14);
+  numTriangles++;
 
   makeEdge  (triangles, 11,  0,  6);
   makeEdge  (triangles, 11,  1, 16);
@@ -200,6 +252,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 11,  1,  1, 17);
   makeVertex(triangles, 11,  2,  0, 15);
   makeVertex(triangles, 11,  2,  1, 10);
+  numTriangles++;
 
   makeEdge  (triangles, 12,  0,  7);
   makeEdge  (triangles, 12,  1, 17);
@@ -210,6 +263,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 12,  1,  1, 18);
   makeVertex(triangles, 12,  2,  0, 16);
   makeVertex(triangles, 12,  2,  1, 11);
+  numTriangles++;
 
   makeEdge  (triangles, 13,  0,  8);
   makeEdge  (triangles, 13,  1, 18);
@@ -220,6 +274,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 13,  1,  1, 19);
   makeVertex(triangles, 13,  2,  0, 17);
   makeVertex(triangles, 13,  2,  1, 12);
+  numTriangles++;
 
   makeEdge  (triangles, 14,  0,  9);
   makeEdge  (triangles, 14,  1, 19);
@@ -230,6 +285,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 14,  1,  1, 15);
   makeVertex(triangles, 14,  2,  0, 18);
   makeVertex(triangles, 14,  2,  1, 13);
+  numTriangles++;
 
   makeEdge  (triangles, 15,  0, 19);
   makeEdge  (triangles, 15,  1, 10);
@@ -240,6 +296,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 15,  1,  1,  9);
   makeVertex(triangles, 15,  2,  0,  5);
   makeVertex(triangles, 15,  2,  1, 11);
+  numTriangles++;
 
   makeEdge  (triangles, 16,  0, 15);
   makeEdge  (triangles, 16,  1, 11);
@@ -250,6 +307,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 16,  1,  1,  5);
   makeVertex(triangles, 16,  2,  0,  6);
   makeVertex(triangles, 16,  2,  1,  12);
+  numTriangles++;
 
   makeEdge  (triangles, 17,  0, 16);
   makeEdge  (triangles, 17,  1, 12);
@@ -260,6 +318,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 17,  1,  1,  6);
   makeVertex(triangles, 17,  2,  0,  7);
   makeVertex(triangles, 17,  2,  1, 13);
+  numTriangles++;
 
   makeEdge  (triangles, 18,  0, 17);
   makeEdge  (triangles, 18,  1, 13);
@@ -270,6 +329,7 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 18,  1,  1, 17);
   makeVertex(triangles, 18,  2,  0,  8);
   makeVertex(triangles, 18,  2,  1, 14);
+  numTriangles++;
 
   makeEdge  (triangles, 19,  0, 18);
   makeEdge  (triangles, 19,  1, 14);
@@ -280,6 +340,14 @@ Triangle** buildIcosohedron() {
   makeVertex(triangles, 19,  1,  1,  8);
   makeVertex(triangles, 19,  2,  0,  9);
   makeVertex(triangles, 19,  2,  1, 10);
+  numTriangles++;
+#endif
+
+  DEBUG_COMMAND(DEBUG_HIGH,
+		for (int t = 0; t < numTriangles; t++) {
+		  triangles[t]->print(DEBUG_HIGH);
+		}
+		);
 
   return triangles;
 }

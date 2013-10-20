@@ -11,7 +11,7 @@
 #include "TriangleLights.h"
 
 int numLeds = 50;
-PixelUtil pixels(numLeds, 12, 11);
+PixelUtil pixels;
 
 int numTriangles = 0;
 Triangle **triangles;
@@ -20,8 +20,11 @@ Triangle **triangles;
 void setup()
 {
   Serial.begin(9600);
+  DEBUG_PRINTLN(DEBUG_HIGH, "Initializing");
 
   randomSeed(analogRead(3));
+
+  pixels = PixelUtil(numLeds, 12, 11);
 
   /* Setup the sensors */
   initializePins();
@@ -29,6 +32,9 @@ void setup()
   /* Generate the geometry */
   triangles = buildIcosohedron();
   numTriangles = 20;
+
+
+  DEBUG_PRINTLN(DEBUG_HIGH, "Early exit"); return;
 
   /* Set the pixel values for the triangles */
   int led = numLeds - 1;
@@ -46,6 +52,8 @@ void setup()
 #define NUM_MODES 2
 #define MODE_PERIOD 50
 void loop() {
+  return;
+
   /* Check for update of light sensor value */
   sensor_photo();
 
@@ -55,7 +63,7 @@ void loop() {
   case 0: trianglesTestPattern(triangles, numTriangles, 500);
   case 1: trianglesTestPattern(triangles, numTriangles, 500);
   }
-  pixels.update();
+  //pixels.update();
 
   delay(10);
 }

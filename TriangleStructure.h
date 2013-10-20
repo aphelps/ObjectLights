@@ -22,6 +22,9 @@
  * clockwise (or left to right if triangle is positioned with vertex on top).
  */
 
+#define TRIANGLE_NUM_EDGES 3
+#define TRIANGLE_NUM_VERTICES 3
+#define TRIANGLE_VERTEX_ORDER 2
 class Triangle {
  public:
 
@@ -38,6 +41,8 @@ class Triangle {
 
   void setColor(byte r, byte g, byte b);
 
+  void print(byte level);
+
   boolean hasLeds;
 
  private:
@@ -45,8 +50,8 @@ class Triangle {
   unsigned int id;
 
   RGB leds[3];
-  Triangle *edges[3];
-  Triangle *vertices[3][2];
+  Triangle *edges[TRIANGLE_NUM_EDGES];
+  Triangle *vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
 };
 
 /* Allocate and return a fully connected icosohedron */
