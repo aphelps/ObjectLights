@@ -8,6 +8,7 @@
 void initializePins() {
   /* Configure the mode toggle switch */
   pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
+
   attachInterrupt(0, buttonInterrupt, CHANGE);
 
   /* Turn on input pullup on analog light sensor pin */
@@ -26,10 +27,7 @@ void buttonInterrupt(void)
   if ((value == HIGH) && (prevValue == LOW) && (now - prevTime > 500)) {
     buttonValue++;
     prevTime = now;
-
-    DEBUG_VALUE(DEBUG_HIGH, "value=", value);
-    DEBUG_VALUE(DEBUG_HIGH, " buttonValue=", buttonValue);
-    DEBUG_VALUE(DEBUG_HIGH, " prevTime=", prevTime);
+    // WARNING: Its unsafe to put print statements in an interrupt handler
   }
 
   prevValue = value;
@@ -58,7 +56,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = true;
     }
-    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
+    //    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
   }
 }
 
@@ -66,27 +64,90 @@ void sensor_photo(void)
  * Triangle light patterns
  */
 
+void clearTriangles(Triangle *triangles, int size) {
+  for (int tri = 0; tri < size; tri++) {
+    triangles[tri].setColor(0, 0, 0);
+  }
+}
+
 /* This iterates through the triangles, lighting the ones with leds */
-void trianglesTestPattern(Triangle *triangles, int size, int periodms) {
+void trianglesTestPattern(Triangle *triangles, int size, int periodms,
+			  boolean init) {
   static unsigned long next_time = millis();
   static int current = 0;
+
+  if (init) {
+    current = 0;
+    next_time = millis();
+    clearTriangles(triangles, size);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    /* Clear the color of the previous triangle and its edges*/
+    triangles[current % size].setColor(0, 0, 0);
+    for (byte edge = 0; edge < 3; edge++) {
+      triangles[current % size].edges[edge]->setColor(0, 0, 0);
+    }
+
+    //    current = (current + 1) % size;
+
+    /* Set the color on the new triangle and its edges */
+    triangles[current % size].setColor(0, 255, 0);
+    triangles[current % size].edges[0]->setColor(32, 32, 00); // yellow
+    triangles[current % size].edges[1]->setColor(32, 00, 32); // purple
+    triangles[current % size].edges[2]->setColor(00, 32, 32); // teal
+  }
+}
+
+/*
+ * This pattern lights a single triangle, moving randomly between neighboring
+ * triangles.
+ */
+void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
+			     boolean init) {
+  static unsigned long next_time = millis();
+  static Triangle *current = &triangles[0];
+
+  if (init) {
+    current = &triangles[0];
+    next_time = millis();
+    clearTriangles(triangles, size);
+}
 
   if (millis() > next_time) {
     next_time += periodms;
 
     /* Clear the color of the previous triangle */
-    triangles[current % size].setColor(0, 0, 0);
+    current->setColor(0, 0, 0);
 
-    current++;
+    /* Choose the next triangle */
+    byte edge;
+    do {
+      edge = random(0, 2);
+    } while (!current->edges[edge]->hasLeds);
+    current = current->edges[edge];
 
     /* Set the color on the new triangle */
-    triangles[current % size].setColor(255, 0, 0);
+    current->setColor(0, 0, 255);
   }
 }
 
-void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms) {
+/*
+ * Triangles are initialized to a random color, each cycle they swap colors
+ * with a random neighbor.
+ */
+void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
+			     boolean init) {
   static unsigned long next_time = millis();
   static int current = 0;
+
+  if (init) {
+    current = 0;
+    next_time = millis();
+    clearTriangles(triangles, size);
+  }
 
   if (millis() > next_time) {
     next_time += periodms;
@@ -95,13 +156,11 @@ void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms) {
     triangles[current % size].setColor(0, 0, 0);
 
     /* Choose the next triangle */
-    boolean has_next = false;
-    while (!has_next) {
-      //XXX
-    }
+    do {
+      current = random(0, 2);
+    } while (!triangles[current].hasLeds);
 
     /* Set the color on the new triangle */
-    triangles[current % size].setColor(255, 0, 0);
+    // XXX - triangles[current % size].setColor(255, 0, 0);
   }
-
 }

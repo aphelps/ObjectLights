@@ -28,6 +28,7 @@
 class Triangle {
  public:
 
+  Triangle() {};
   Triangle(unsigned int id);
 
   Triangle *getEdge(byte edge);
@@ -44,17 +45,18 @@ class Triangle {
   void print(byte level);
 
   boolean hasLeds;
-
- private:
-
+  boolean updated;
   unsigned int id;
-
   RGB leds[3];
   Triangle *edges[TRIANGLE_NUM_EDGES];
   Triangle *vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
 };
 
+/* Send updated values to a Pixel chain */
+void updateTrianglePixels(Triangle *triangles, int numTriangles,
+			  PixelUtil *pixels);
+
 /* Allocate and return a fully connected icosohedron */
-Triangle* buildIcosohedron();
+Triangle* buildIcosohedron(int *numTriangles);
 
 #endif

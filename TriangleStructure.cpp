@@ -8,6 +8,7 @@
 
 Triangle::Triangle(unsigned int _id) {
   hasLeds = false;
+  updated = false;
   id = _id;
 
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
@@ -55,6 +56,7 @@ void Triangle::setColor(byte r, byte g, byte b) {
     for (int i = 0; i < 3; i++) {
       leds[i].setColor(r, g, b);
     }
+    updated = true;
   }
 }
 
@@ -106,8 +108,11 @@ void makeVertex(Triangle *triangles, int tri, int vertex, int index,
  *       /3 \8 /  \13/  \7 /2 \
  *      /____\/    \/    \/____\
  */
-Triangle* buildIcosohedron() {
-  Triangle *triangles = (Triangle *)malloc(sizeof (Triangle) * 20);
+Triangle triangleArray[20];
+Triangle* buildIcosohedron(int *numTriangles) {
+  int triangleCount = 20;
+
+  Triangle *triangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
   DEBUG_COMMAND(DEBUG_ERROR,
 		if (triangles == NULL) {
 		  DEBUG_ERR(F("Failed to malloc triangles"));
@@ -115,12 +120,12 @@ Triangle* buildIcosohedron() {
 		}
 		);
 
-  for (byte i = 0; i < 20; i++) {
+  for (byte i = 0; i < triangleCount; i++) {
     triangles[i] = Triangle(i);
   }
 
   // XXX: This is very manual, is there a way to generate this programmatically?
-  int numTriangles = 0;
+  *numTriangles = 0;
   makeEdge  (triangles,  0,  0,  1);
   makeEdge  (triangles,  0,  1,  5);
   makeEdge  (triangles,  0,  2,  4);
@@ -130,7 +135,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  0,  1,  1, 11);
   makeVertex(triangles,  0,  2,  0, 10);
   makeVertex(triangles,  0,  2,  1,  9);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  1,  0,  2);
   makeEdge  (triangles,  1,  1,  6);
@@ -141,7 +147,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  1,  1,  1, 12);
   makeVertex(triangles,  1,  2,  0, 11);
   makeVertex(triangles,  1,  2,  1,  5);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  2,  0,  3);
   makeEdge  (triangles,  2,  1,  7);
@@ -152,7 +159,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  2,  1,  1, 13);
   makeVertex(triangles,  2,  2,  0, 12);
   makeVertex(triangles,  2,  2,  1,  6);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  3,  0,  4);
   makeEdge  (triangles,  3,  1,  8);
@@ -163,7 +171,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  3,  1,  1, 14);
   makeVertex(triangles,  3,  2,  0, 13);
   makeVertex(triangles,  3,  2,  1,  7);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  4,  0,  0);
   makeEdge  (triangles,  4,  1,  9);
@@ -174,7 +183,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  4,  1,  1, 10);
   makeVertex(triangles,  4,  2,  0, 14);
   makeVertex(triangles,  4,  2,  1,  8);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  5,  0, 10);
   makeEdge  (triangles,  5,  1,  0);
@@ -185,7 +195,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  5,  1,  1,  4);
   makeVertex(triangles,  5,  2,  0,  6);
   makeVertex(triangles,  5,  2,  1, 11);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  6,  0, 11);
   makeEdge  (triangles,  6,  1,  1);
@@ -196,7 +207,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  6,  1,  1,  0);
   makeVertex(triangles,  6,  2,  0,  2);
   makeVertex(triangles,  6,  2,  1,  7);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  7,  0, 12);
   makeEdge  (triangles,  7,  1,  2);
@@ -207,7 +219,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  7,  1,  1,  1);
   makeVertex(triangles,  7,  2,  0,  8);
   makeVertex(triangles,  7,  2,  1, 13);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  8,  0, 13);
   makeEdge  (triangles,  8,  1,  3);
@@ -218,7 +231,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  8,  1,  1,  2);
   makeVertex(triangles,  8,  2,  0,  4);
   makeVertex(triangles,  8,  2,  1,  9);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles,  9,  0,  14);
   makeEdge  (triangles,  9,  1,  4);
@@ -229,7 +243,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles,  9,  1,  1,  3);
   makeVertex(triangles,  9,  2,  0,  0);
   makeVertex(triangles,  9,  2,  1,  5);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 10,  0,  5);
   makeEdge  (triangles, 10,  1, 15);
@@ -240,7 +255,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 10,  1,  1, 16);
   makeVertex(triangles, 10,  2,  0, 19);
   makeVertex(triangles, 10,  2,  1, 14);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 11,  0,  6);
   makeEdge  (triangles, 11,  1, 16);
@@ -251,7 +267,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 11,  1,  1, 17);
   makeVertex(triangles, 11,  2,  0, 15);
   makeVertex(triangles, 11,  2,  1, 10);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 12,  0,  7);
   makeEdge  (triangles, 12,  1, 17);
@@ -262,7 +279,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 12,  1,  1, 18);
   makeVertex(triangles, 12,  2,  0, 16);
   makeVertex(triangles, 12,  2,  1, 11);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 13,  0,  8);
   makeEdge  (triangles, 13,  1, 18);
@@ -273,7 +291,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 13,  1,  1, 19);
   makeVertex(triangles, 13,  2,  0, 17);
   makeVertex(triangles, 13,  2,  1, 12);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 14,  0,  9);
   makeEdge  (triangles, 14,  1, 19);
@@ -284,7 +303,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 14,  1,  1, 15);
   makeVertex(triangles, 14,  2,  0, 18);
   makeVertex(triangles, 14,  2,  1, 13);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 15,  0, 19);
   makeEdge  (triangles, 15,  1, 10);
@@ -295,7 +315,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 15,  1,  1,  9);
   makeVertex(triangles, 15,  2,  0,  5);
   makeVertex(triangles, 15,  2,  1, 11);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 16,  0, 15);
   makeEdge  (triangles, 16,  1, 11);
@@ -306,7 +327,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 16,  1,  1,  5);
   makeVertex(triangles, 16,  2,  0,  6);
   makeVertex(triangles, 16,  2,  1,  12);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 17,  0, 16);
   makeEdge  (triangles, 17,  1, 12);
@@ -317,7 +339,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 17,  1,  1,  6);
   makeVertex(triangles, 17,  2,  0,  7);
   makeVertex(triangles, 17,  2,  1, 13);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 18,  0, 17);
   makeEdge  (triangles, 18,  1, 13);
@@ -328,7 +351,8 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 18,  1,  1, 17);
   makeVertex(triangles, 18,  2,  0,  8);
   makeVertex(triangles, 18,  2,  1, 14);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
   makeEdge  (triangles, 19,  0, 18);
   makeEdge  (triangles, 19,  1, 14);
@@ -339,13 +363,39 @@ Triangle* buildIcosohedron() {
   makeVertex(triangles, 19,  1,  1,  8);
   makeVertex(triangles, 19,  2,  0,  9);
   makeVertex(triangles, 19,  2,  1, 10);
-  numTriangles++;
+  (*numTriangles)++;
+  if (*numTriangles == triangleCount) goto ICOS_DONE;
 
-  DEBUG_COMMAND(DEBUG_HIGH,
-		for (int t = 0; t < numTriangles; t++) {
+ ICOS_DONE:
+  DEBUG_COMMAND(DEBUG_MID,
+		for (int t = 0; t < *numTriangles; t++) {
 		  triangles[t].print(DEBUG_HIGH);
 		}
 		);
 
+  DEBUG_VALUELN(DEBUG_MID, "Icos numTriangles:", *numTriangles);
   return triangles;
+}
+
+/* Send updated values to a Pixel chain */
+void updateTrianglePixels(Triangle *triangles, int numTriangles,
+			  PixelUtil *pixels) {
+  boolean update = false;
+  int updated = 0;
+  for (int tri = 0; tri < numTriangles; tri++) {
+    if (triangles[tri].updated) {
+      update = true;
+      for (byte led = 0; led < 3; led++) {
+	pixels->setPixelRGB(&(triangles[tri].leds[led]));
+      }
+      triangles[tri].updated = false;
+      DEBUG_VALUE(DEBUG_HIGH, "XXX: TRIANGLES UPDATED: addr ", (int)&triangles[tri]);
+      updated++;
+    }
+  }
+
+  if (update) {
+    pixels->update();
+    DEBUG_VALUELN(DEBUG_HIGH, "Updated triangles:", updated);
+  }
 }

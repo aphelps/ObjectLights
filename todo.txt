@@ -1,6 +1,6 @@
-
-
-
+General todo
+------------
+* Change debug #defines to F() all strings
 
 Light pattern ideas
 -------------------

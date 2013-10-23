@@ -24,7 +24,9 @@ int getLightValue();
 void initializePins();
 
 
-void trianglesTestPattern(Triangle *triangles, int size, int periodms);
-void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms);
+void trianglesTestPattern(Triangle *triangles, int size, int periodms,
+			  boolean init);
+void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
+			     boolean init);
 
 #endif

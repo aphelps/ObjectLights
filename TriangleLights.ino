@@ -21,17 +21,17 @@ void setup()
   Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_HIGH, "Initializing");
 
+  /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
-  pixels = PixelUtil(numLeds, 12, 11);
+  pixels = PixelUtil(numLeds, 8, 12); // 12, 11);
 
   /* Setup the sensors */
   initializePins();
 
   /* Generate the geometry */
-  triangles = buildIcosohedron();
-  numTriangles = 20;
-
+  triangles = buildIcosohedron(&numTriangles);
+  DEBUG_VALUELN(DEBUG_HIGH, "Inited with numTriangles:", numTriangles);
   //  DEBUG_PRINTLN(DEBUG_HIGH, "Early exit"); return; // XXX
 
   /* Set the pixel values for the triangles */
@@ -53,21 +53,39 @@ void setup()
   }
 }
 
-#define NUM_MODES 2
+#define NUM_MODES 3
 #define MODE_PERIOD 50
 void loop() {
-  return;
+  static byte prev_mode = -1;
+  byte mode;
+
+  mode = 1; //getButtonValue() % NUM_MODES;
+  prev_mode = mode;
 
   /* Check for update of light sensor value */
-  sensor_photo();
-
-  int mode = getButtonValue() % NUM_MODES;
-
+  //  sensor_photo();
   switch (mode) {
-  case 0: trianglesTestPattern(triangles, numTriangles, 500);
-  case 1: trianglesTestPattern(triangles, numTriangles, 500);
+  case 0: {
+#if 1
+    pixels.patternRed(MODE_PERIOD);
+#endif
+#if 1
+    pixels.update();
+#endif
+    break;
   }
-  //pixels.update();
+  case 1: {
+    trianglesTestPattern(triangles, numTriangles, 500,
+			 prev_mode != mode);
+    break;
+  }
+  case 2: {
+    trianglesRandomNeighbor(triangles, numTriangles, 250,
+			    prev_mode != mode);
+    break;
+  }
+  }
+  updateTrianglePixels(triangles, numTriangles, &pixels);
 
   delay(10);
 }
