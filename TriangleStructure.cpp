@@ -149,6 +149,10 @@ void setLeds(Triangle *triangles, int tri, int baseLed) {
   triangles[tri].setLedPixels(baseLed, baseLed - 1, baseLed - 2);
 }
 
+void setLeds(Triangle *triangles, int tri, int led1, int led2, int led3) {
+  triangles[tri].setLedPixels(led1, led2, led3);
+}
+
 /******************************************************************************
  * Construct an icosohedron
  *
@@ -205,25 +209,25 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   setLeds(triangles, 5,  led); led -= 3; // 2 - T,R
 #endif
 #if 1
-  setLeds(triangles, 0, led); led -= 3; // 47 - R
-  setLeds(triangles, 5, led); led -= 3; // 44 - G
-  setLeds(triangles, 11, led); led -= 3; // 41 - B
-  setLeds(triangles, 6, led); led -= 3; // 38 - Y
-  setLeds(triangles, 1, led); led -= 3; // 35 - P
-  setLeds(triangles, 3, led); led -= 3; // 32 - T,R
+  setLeds(triangles, 0,  led, led-1, led-2); led -= 3; // 47 - R x
+  setLeds(triangles, 5,  led-2, led, led-1); led -= 3; // 44 - G x
+  setLeds(triangles, 11, led-1, led-2, led); led -= 3; // 41 - B x
+  setLeds(triangles, 6,  led, led-1, led-2); led -= 3; // 38 - Y x
+  setLeds(triangles, 1,  led-2, led, led-1); led -= 3; // 35 - P x
+  setLeds(triangles, 3,  led, led-2, led-1); led -= 3; // 32 - T,R x
 
-  setLeds(triangles, 4, led); led -= 3; // 29 - G
-  setLeds(triangles, 9,  led); led -= 3; // 26 - B
-  setLeds(triangles, 10, led); led -= 3; // 23 - Y
-  setLeds(triangles, 15, led); led -= 3; // 20 - P
-  setLeds(triangles, 16, led); led -= 3; // 17 - T,R
+  setLeds(triangles, 4,  led-1, led-2, led); led -= 3; // 29 - G x
+  setLeds(triangles, 9,  led-2, led-1, led); led -= 3; // 26 - B x
+  setLeds(triangles, 10, led-1, led-2, led); led -= 3; // 23 - Y x
+  setLeds(triangles, 15, led-2, led-1, led); led -= 3; // 20 - P x ??
+  setLeds(triangles, 16, led, led-1, led-2); led -= 3; // 17 - T,R x
 
-  setLeds(triangles, 17,  led); led -= 3; // 14 - G
-  setLeds(triangles, 12, led); led -= 3; // 11 - B
-  setLeds(triangles, 2,  led); led -= 3; // 8 - Y
+  setLeds(triangles, 17, led-1, led, led-2); led -= 3; // 14 - G x
+  setLeds(triangles, 12, led-2, led, led-1); led -= 3; // 11 - B x
+  setLeds(triangles, 2,  led-1, led-2, led); led -= 3; // 8 - Y x
   led--;   // Had to skip an LED due to wire lengths
-  setLeds(triangles, 14, led); led -= 3; // 4 - P
-  setLeds(triangles, 19,  led); led -= 3; // 1 - T,R
+  setLeds(triangles, 14, led, led-2, led-1); led -= 3; // 4 - P x
+  setLeds(triangles, 19, led-2, led-1, led); led -= 3; // 1 - T,R
 
 #endif
   // XXX: This is very manual, is there a way to generate this programmatically?
