@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+#define DEBUG_LEVEL DEBUG_MID
 #include "Debug.h"
 
 #include "PixelUtil.h"
@@ -21,7 +21,7 @@ Triangle::Triangle(unsigned int _id) {
     }
   }
 
-  DEBUG_VALUELN(DEBUG_HIGH, "Created Triangle ", id);
+  DEBUG_VALUELN(DEBUG_MID, "Created Triangle ", id);
 }
 
 Triangle *Triangle::getEdge(byte edge) {
@@ -60,6 +60,61 @@ void Triangle::setColor(byte r, byte g, byte b) {
   }
 }
 
+void Triangle::setColor(byte led, byte r, byte g, byte b) {
+  if (hasLeds) {
+    leds[led].setColor(r, g, b);
+    updated = true;
+  }
+}
+
+void Triangle::setColor(uint32_t c) {
+  if (hasLeds) {
+    for (int i = 0; i < 3; i++) {
+      leds[i].setColor(c);
+    }
+    updated = true;
+  }
+}
+
+void Triangle::setColor(byte led, uint32_t c) {
+  if (hasLeds) {
+    leds[led].setColor(c);
+    updated = true;
+  }
+}
+
+uint32_t Triangle::getColor() {
+  if (hasLeds) {
+    return leds[0].color();
+  } else {
+    return 0;
+  }
+}
+
+byte Triangle::getRed() {
+  if (hasLeds) {
+    return leds[0].red();
+  } else {
+    return 0;
+  }
+}
+
+byte Triangle::getGreen() {
+  if (hasLeds) {
+    return leds[0].green();
+  } else {
+    return 0;
+  }
+}
+
+byte Triangle::getBlue() {
+  if (hasLeds) {
+    return leds[0].blue();
+  } else {
+    return 0;
+  }
+}
+
 void Triangle::print(byte level) {
   DEBUG_VALUE(level, "Tri: ", id);
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
@@ -90,6 +145,10 @@ void makeVertex(Triangle *triangles, int tri, int vertex, int index,
   triangles[tri].setVertex(vertex, index, &triangles[neighbor]);
 }
 
+void setLeds(Triangle *triangles, int tri, int baseLed) {
+  triangles[tri].setLedPixels(baseLed, baseLed - 1, baseLed - 2);
+}
+
 /******************************************************************************
  * Construct an icosohedron
  *
@@ -109,7 +168,7 @@ void makeVertex(Triangle *triangles, int tri, int vertex, int index,
  *      /____\/    \/    \/____\
  */
 Triangle triangleArray[20];
-Triangle* buildIcosohedron(int *numTriangles) {
+Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   int triangleCount = 20;
 
   Triangle *triangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
@@ -124,6 +183,49 @@ Triangle* buildIcosohedron(int *numTriangles) {
     triangles[i] = Triangle(i);
   }
 
+  int led = numLeds - 1;
+#if 0 // This is the HTML prototype module config
+  setLeds(triangles, 0, led); led -= 3; // 47 - R
+  setLeds(triangles, 4, led); led -= 3; // 44 - G
+  setLeds(triangles, 3, led); led -= 3; // 41 - B
+  setLeds(triangles, 2, led); led -= 3; // 38 - Y
+  setLeds(triangles, 1, led); led -= 3; // 35 - P
+  setLeds(triangles, 6, led); led -= 3; // 32 - T,R
+
+  setLeds(triangles, 12, led); led -= 3; // 29 - G
+  setLeds(triangles, 7,  led); led -= 3; // 26 - B
+  setLeds(triangles, 13, led); led -= 3; // 23 - Y
+  setLeds(triangles, 18, led); led -= 3; // 20 - P
+  setLeds(triangles, 19, led); led -= 3; // 17 - T,R
+
+  setLeds(triangles, 8,  led); led -= 3; // 14 - G
+  setLeds(triangles, 14, led); led -= 3; // 11 - B
+  setLeds(triangles, 9,  led); led -= 3; // 8 - Y
+  setLeds(triangles, 10, led); led -= 3; // 5 - P
+  setLeds(triangles, 5,  led); led -= 3; // 2 - T,R
+#endif
+#if 1
+  setLeds(triangles, 0, led); led -= 3; // 47 - R
+  setLeds(triangles, 5, led); led -= 3; // 44 - G
+  setLeds(triangles, 11, led); led -= 3; // 41 - B
+  setLeds(triangles, 6, led); led -= 3; // 38 - Y
+  setLeds(triangles, 1, led); led -= 3; // 35 - P
+  setLeds(triangles, 3, led); led -= 3; // 32 - T,R
+
+  setLeds(triangles, 4, led); led -= 3; // 29 - G
+  setLeds(triangles, 9,  led); led -= 3; // 26 - B
+  setLeds(triangles, 10, led); led -= 3; // 23 - Y
+  setLeds(triangles, 15, led); led -= 3; // 20 - P
+  setLeds(triangles, 16, led); led -= 3; // 17 - T,R
+
+  setLeds(triangles, 17,  led); led -= 3; // 14 - G
+  setLeds(triangles, 12, led); led -= 3; // 11 - B
+  setLeds(triangles, 2,  led); led -= 3; // 8 - Y
+  led--;   // Had to skip an LED due to wire lengths
+  setLeds(triangles, 14, led); led -= 3; // 4 - P
+  setLeds(triangles, 19,  led); led -= 3; // 1 - T,R
+
+#endif
   // XXX: This is very manual, is there a way to generate this programmatically?
   *numTriangles = 0;
   makeEdge  (triangles,  0,  0,  1);
@@ -369,7 +471,7 @@ Triangle* buildIcosohedron(int *numTriangles) {
  ICOS_DONE:
   DEBUG_COMMAND(DEBUG_MID,
 		for (int t = 0; t < *numTriangles; t++) {
-		  triangles[t].print(DEBUG_HIGH);
+		  triangles[t].print(DEBUG_MID);
 		}
 		);
 
@@ -389,7 +491,7 @@ void updateTrianglePixels(Triangle *triangles, int numTriangles,
 	pixels->setPixelRGB(&(triangles[tri].leds[led]));
       }
       triangles[tri].updated = false;
-      DEBUG_VALUE(DEBUG_HIGH, "XXX: TRIANGLES UPDATED: addr ", (int)&triangles[tri]);
+      DEBUG_VALUE(DEBUG_HIGH, "XXX: TRIANGLES UPDATED: addr=", (int)&triangles[tri]);
       updated++;
     }
   }

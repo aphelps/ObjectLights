@@ -28,5 +28,10 @@ void trianglesTestPattern(Triangle *triangles, int size, int periodms,
 			  boolean init);
 void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
 			     boolean init);
-
+void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
+			  boolean init);
+void trianglesLifePattern(Triangle *triangles, int size, int periodms,
+			  boolean init);
+void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
+			  boolean init);
 #endif

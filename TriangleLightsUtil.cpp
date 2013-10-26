@@ -70,6 +70,41 @@ void clearTriangles(Triangle *triangles, int size) {
   }
 }
 
+void randomTriangles(Triangle *triangles, int size) {
+  for (int tri = 0; tri < size; tri++) {
+    byte red = random(0, 16);
+    byte green = random(0, 16);
+    byte blue = random(0, 16);
+    red = red * red;
+    green = green * green;
+    blue = blue * blue;
+
+    triangles[tri].setColor(red, green, blue);
+  }
+}
+
+void binaryTriangles(Triangle *triangles, int size, uint32_t color, int thresh)
+{
+  for (int tri = 0; tri < size; tri++) {
+    boolean set = (random(0, 100) > thresh);
+    if (set) triangles[tri].setColor(color);
+    else triangles[tri].setColor(0);
+  }
+}
+
+void randomBinaryTriangles(Triangle *triangles, int size, byte color, int thresh)
+{
+  for (int tri = 0; tri < size; tri++) {
+    boolean red = (random(0, 100) > thresh);
+    boolean green = (random(0, 100) > thresh);
+    boolean blue = (random(0, 100) > thresh);
+
+    triangles[tri].setColor((red ? color : 0),
+			    (blue ? color : 0),
+			    (green ? color : 0));
+  }
+}
+
 /* This iterates through the triangles, lighting the ones with leds */
 void trianglesTestPattern(Triangle *triangles, int size, int periodms,
 			  boolean init) {
@@ -91,13 +126,13 @@ void trianglesTestPattern(Triangle *triangles, int size, int periodms,
       triangles[current % size].edges[edge]->setColor(0, 0, 0);
     }
 
-    //    current = (current + 1) % size;
+    current = (current + 1) % size;
 
     /* Set the color on the new triangle and its edges */
-    triangles[current % size].setColor(0, 255, 0);
-    triangles[current % size].edges[0]->setColor(32, 32, 00); // yellow
-    triangles[current % size].edges[1]->setColor(32, 00, 32); // purple
-    triangles[current % size].edges[2]->setColor(00, 32, 32); // teal
+    triangles[current % size].setColor(255, 0, 0);
+    triangles[current % size].edges[0]->setColor(8, 00, 00);
+    triangles[current % size].edges[1]->setColor(8, 00, 00);
+    triangles[current % size].edges[2]->setColor(8, 00, 00);
   }
 }
 
@@ -121,6 +156,9 @@ void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
 
     /* Clear the color of the previous triangle */
     current->setColor(0, 0, 0);
+    for (byte edge = 0; edge < 3; edge++) {
+      current->edges[edge]->setColor(0, 0, 0);
+    }
 
     /* Choose the next triangle */
     byte edge;
@@ -131,11 +169,14 @@ void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
 
     /* Set the color on the new triangle */
     current->setColor(0, 0, 255);
+    for (byte edge = 0; edge < 3; edge++) {
+      current->edges[edge]->setColor(0, 0, 8);
+    }
   }
 }
 
 /*
- * Triangles are initialized to a random color, each cycle they swap colors
+ * Triangles are initialized to a random color, each cycle one swaps colors
  * with a random neighbor.
  */
 void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
@@ -146,21 +187,115 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
   if (init) {
     current = 0;
     next_time = millis();
-    clearTriangles(triangles, size);
+    randomTriangles(triangles, size);
   }
 
   if (millis() > next_time) {
     next_time += periodms;
 
-    /* Clear the color of the previous triangle */
-    triangles[current % size].setColor(0, 0, 0);
-
-    /* Choose the next triangle */
     do {
-      current = random(0, 2);
+      current = random(0, size);
     } while (!triangles[current].hasLeds);
 
-    /* Set the color on the new triangle */
-    // XXX - triangles[current % size].setColor(255, 0, 0);
+    int edge;
+    do {
+      edge = random(0, 3);
+    } while (!triangles[current].edges[edge]->hasLeds);
+
+    uint32_t currentColor = triangles[current].getColor();
+    uint32_t edgeColor = triangles[current].edges[edge]->getColor();
+    DEBUG_VALUE(DEBUG_HIGH, "curr color:", currentColor);
+    DEBUG_VALUELN(DEBUG_HIGH, "edge color:", edgeColor);
+
+    triangles[current].setColor(edgeColor);
+    triangles[current].edges[edge]->setColor(currentColor);
+ }
+}
+
+void trianglesLifePattern(Triangle *triangles, int size, int periodms,
+			     boolean init) {
+  static unsigned long next_time = millis();
+  static int current = 0;
+
+  if (init) {
+    current = 0;
+    next_time = millis();
+    binaryTriangles(triangles, size, pixel_color(255, 0, 0), 25);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    int set[size];
+    for (int tri = 0; tri < size; tri++) {
+      set[tri] = 0;
+      if (triangles[tri].getColor() != 0) set[tri]++;
+      for (byte edge = 0; edge < 3; edge++) {
+	if (triangles[tri].edges[edge]->getColor() != 0) set[tri]++;
+      }
+    }
+
+    for (int tri = 0; tri < size; tri++) {
+      DEBUG_VALUE(DEBUG_HIGH, " ", set[tri]);
+      switch (set[tri]) {
+      case 0:
+      case 3:
+      case 4:
+	triangles[tri].setColor(0);
+	break;
+      case 1:
+      case 2:
+	triangles[tri].setColor(255, 0, 0);
+	break;
+      }
+    }
+    DEBUG_PRINTLN(DEBUG_HIGH, "");
+  }
+}
+
+void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
+			     boolean init) {
+  static unsigned long next_time = millis();
+  static unsigned long next_reset = millis();
+
+  if (init || (millis() > next_reset)) {
+    next_reset = millis() + 60000;
+    next_time = millis();
+    randomBinaryTriangles(triangles, size, 255, 25);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    int set[size][3];
+    for (int tri = 0; tri < size; tri++) {
+      if (triangles[tri].getRed() != 0) set[tri][0] = 1; else set[tri][0] = 0;
+      if (triangles[tri].getGreen() != 0) set[tri][1] = 1; else set[tri][1] = 0;
+      if (triangles[tri].getBlue() != 0) set[tri][2] = 1; else set[tri][2] = 0;
+      for (byte edge = 0; edge < 3; edge++) {
+	if (triangles[tri].edges[edge]->getRed() != 0) set[tri][0]++;
+	if (triangles[tri].edges[edge]->getGreen() != 0) set[tri][1]++;
+	if (triangles[tri].edges[edge]->getBlue() != 0) set[tri][2]++;
+      }
+    }
+
+    for (int tri = 0; tri < size; tri++) {
+      byte color[3];
+      for (byte c = 0; c < 3; c++) {
+	switch (set[tri][c]) {
+	case 0:
+	case 3:
+	case 4:
+	  color[c] = 0;
+	  break;
+	case 1:
+	case 2:
+	  color[c] = 255;
+	  break;
+	}
+      }
+
+      triangles[tri].setColor(color[0], color[1], color[2]);
+    }
   }
 }

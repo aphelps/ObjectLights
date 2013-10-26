@@ -24,16 +24,17 @@ void setup()
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
-  pixels = PixelUtil(numLeds, 8, 12); // 12, 11);
+  pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
 
   /* Setup the sensors */
   initializePins();
 
   /* Generate the geometry */
-  triangles = buildIcosohedron(&numTriangles);
+  triangles = buildIcosohedron(&numTriangles, numLeds);
   DEBUG_VALUELN(DEBUG_HIGH, "Inited with numTriangles:", numTriangles);
   //  DEBUG_PRINTLN(DEBUG_HIGH, "Early exit"); return; // XXX
 
+#if 0
   /* Set the pixel values for the triangles */
   int led = numLeds - 1;
   for (int i = 0; i < numTriangles; i++) {
@@ -51,23 +52,43 @@ void setup()
       DEBUG_VALUELN(DEBUG_HIGH, "No leds for tri:", i);
     }
   }
+
+  // XXX - Color assignements test
+  int p = 47; uint32_t color = pixels.pixelColor(64, 0, 0);
+  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
+  p = p - 3;  color = pixels.pixelColor(0, 64, 0);
+  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
+  p = p - 3;  color = pixels.pixelColor(0, 0, 64);
+  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
+  p = p - 3;  color = pixels.pixelColor(64, 64, 0); // yellow
+  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
+  p = p - 3;  color = pixels.pixelColor(64, 0, 64); // purple
+  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
+  p = p - 3;  color = pixels.pixelColor(0, 64, 64); // teal
+  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
+
+pixels.update();
+  while (true);
+#endif
 }
 
-#define NUM_MODES 3
+#define NUM_MODES 6
 #define MODE_PERIOD 50
 void loop() {
+  setupMode();
+  return;
+
   static byte prev_mode = -1;
   byte mode;
 
-  mode = 1; //getButtonValue() % NUM_MODES;
-  prev_mode = mode;
+  mode = getButtonValue() % NUM_MODES;
 
   /* Check for update of light sensor value */
   //  sensor_photo();
   switch (mode) {
   case 0: {
 #if 1
-    pixels.patternRed(MODE_PERIOD);
+    pixels.patternOne(MODE_PERIOD);
 #endif
 #if 1
     pixels.update();
@@ -80,12 +101,55 @@ void loop() {
     break;
   }
   case 2: {
-    trianglesRandomNeighbor(triangles, numTriangles, 250,
+    trianglesRandomNeighbor(triangles, numTriangles, MODE_PERIOD,
 			    prev_mode != mode);
+    break;
+  }
+  case 3: {
+    trianglesSwapPattern(triangles, numTriangles, MODE_PERIOD,
+			 prev_mode != mode);
+    break;
+  }
+  case 4: {
+    trianglesLifePattern(triangles, numTriangles, 500,
+			 prev_mode != mode);
+    break;
+  }
+  case 5: {
+    trianglesLifePattern2(triangles, numTriangles, 500,
+			 prev_mode != mode);
     break;
   }
   }
   updateTrianglePixels(triangles, numTriangles, &pixels);
+  prev_mode = mode;
 
+  delay(10);
+}
+
+void setupMode() {
+  static int prev_value = -1;
+  int value;
+  int triangle = 0;
+
+  if (prev_value == -1) {
+    triangle = 0;
+  } else {
+    value = getButtonValue() % NUM_MODES;
+    if (value != prev_value) {
+      triangle = (triangle + 1) % numTriangles;
+    }
+  }
+
+  /*
+   * Set the current triangles vertex[0] to white
+   *
+   */
+  triangles[triangle].vertices[0][0]->setColor(32, 32, 32);
+  triangles[triangle].vertices[0][1]->setColor(32, 32, 32);
+  triangles[triangle].setColor(0, 255, 0, 0);
+  triangles[triangle].setColor(1, 0, 255, 0);
+  triangles[triangle].setColor(2, 0, 0, 255);
+  updateTrianglePixels(triangles, numTriangles, &pixels);
   delay(10);
 }
