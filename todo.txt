@@ -1,9 +1,7 @@
 Todo
 ----
 
-* Move sensor code into separate files
-
-* Add "print line at end" to debug printing
+* Convert DEBUG levels to be purely #defs
 
 * Add meta-code to all debug-only code (such as value range checks, etc)
   - Maybe as an assertion to flash lights or something

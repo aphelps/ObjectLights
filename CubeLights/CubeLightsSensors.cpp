@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -27,7 +27,7 @@ void sensor_range(void)
     nextPing = now + PING_DELAY_MS;
     range_cm = sonar.ping() / US_ROUNDTRIP_CM;
 
-    DEBUG_VALUE(2, " Ping:", range_cm);
+    DEBUG_VALUE(DEBUG_HIGH, " Ping:", range_cm);
   }
 }
 
@@ -49,7 +49,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = false;
     }
-    DEBUG_VALUE(2, " Photo:", photo_value);
+    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
   }
 }
 
@@ -95,14 +95,14 @@ void sensor_cap(void)
 //                            cap_min[cap], cap_max[cap],
 //                            0, MAX_VALUE);
   }
-  DEBUG_PRINT(2, " Cap: ");
+  DEBUG_PRINT(DEBUG_HIGH, " Cap: ");
   sense_delay = millis() - start;
-  DEBUG_PRINT(2, sense_delay);        // check on performance in milliseconds
-  DEBUG_PRINT(2, "\t");                    // tab character for debug windown spacing
+  DEBUG_PRINT(DEBUG_HIGH, sense_delay);        // check on performance in milliseconds
+  DEBUG_PRINT(DEBUG_HIGH, "\t");                    // tab character for debug windown spacing
   for (int cap = 0; cap < NUM_CAP_SENSORS; cap++) {
-    DEBUG_PRINT(2, cap_values[cap]);
-    DEBUG_PRINT(2, "-");
-    DEBUG_PRINT(2, log(cap_values[cap]));
-    DEBUG_PRINT(2, "    ");
+    DEBUG_PRINT(DEBUG_HIGH, cap_values[cap]);
+    DEBUG_PRINT(DEBUG_HIGH, "-");
+    DEBUG_PRINT(DEBUG_HIGH, log(cap_values[cap]));
+    DEBUG_PRINT(DEBUG_HIGH, "    ");
   }
 }

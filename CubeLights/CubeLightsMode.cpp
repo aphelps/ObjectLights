@@ -62,6 +62,14 @@ void restore_current_mode(void)
   }
 }
 
+boolean update_needed = false;
+void send_update() {
+  if (update_needed) {
+    while (Tlc.update());
+    update_needed = true;
+  }
+}
+
 #if 0
 /* From TCL5940 Library's Fades example */
 int mode_example_fades(void *arg)
@@ -87,12 +95,15 @@ int mode_example_fades(void *arg)
 #endif
 
 /* Set all LEDs to the indicated value */
+#define MODE_SET_ALL_PERIOD 1000
 int mode_set_all(void *arg) 
 {
   static uint16_t old_value = 0;
   uint16_t new_value = (int)arg;
+  unsigned long now = millis();
 
-  if (old_value != new_value) {
+  if ((old_value != new_value) ||
+      (now > mode_next_action)) {
     if (new_value < 0) new_value = 0;
     if (new_value > MAX_VALUE) new_value = MAX_VALUE;
     old_value = new_value;
@@ -102,7 +113,8 @@ int mode_set_all(void *arg)
     }
     Tlc.setAll(new_value);
 
-    while (Tlc.update());
+    update_needed = true;
+    mode_next_action = now + MODE_SET_ALL_PERIOD;
   }
   
   return 0;
@@ -122,8 +134,8 @@ int mode_swap_one(void *arg)
     if (ledValues[led]) ledValues[led] = 0;
     else ledValues[led] = MAX_VALUE;
     Tlc.set(led, ledValues[led]);
-    while (Tlc.update());
-
+ 
+    update_needed = true;
     mode_next_action = now + MODE_SWAP_ONE_PERIOD;
   }
 
@@ -262,7 +274,7 @@ int mode_random_fades(void *arg)
       Tlc.set(led, ledValues[led]);
     }
 
-    while (Tlc.update());
+    update_needed = true;
     mode_next_action = now + 10;
   }
 
@@ -284,6 +296,6 @@ int mode_sense_distance(void *arg)
   }
 
   Tlc.setAll(led_value);
-  while (Tlc.update());
+  update_needed = true;
   return 0;
 }

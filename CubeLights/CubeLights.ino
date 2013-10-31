@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -57,7 +57,7 @@ void setup()
   //Serial.begin(9600);
   Serial.begin(115200);
 
-  sensor_cap_init(); /* Initialize the capacitive sensors */
+  //sensor_cap_init(); /* Initialize the capacitive sensors */
 
   /* Initialize the LED drivers with all-off */ 
   Tlc.init(INITIAL_VALUE);
@@ -68,10 +68,6 @@ void setup()
   }
 
   randomSeed(analogRead(0));
-
-  /* Initialize the range sensor */
-//  pinMode(PING_TRIG, OUTPUT);
-//  pinMode(PING_ECHO,INPUT);
 
   /* Turn on input pullup on analog photo pin */
   digitalWrite(PHOTO_PIN, HIGH); 
@@ -85,28 +81,35 @@ void setup()
 void loop()
 {
   /* Update sensors as needed */
-  sensor_cap();
+  //  sensor_cap();
   sensor_range();
   sensor_photo();
 
+  int mode;
   int delay_period_ms;
-  if (photo_dark) {
+  //if (photo_dark) {
+  if (range_cm > 10) {
     /* Get the current mode */
-    int mode = get_current_mode();
+    mode = get_current_mode();
 
     /* Call the action function for the current mode */
     delay_period_ms = modeFunctions[mode](modeArguments[mode]);
-
-    DEBUG_VALUE(3, " Mode:", mode);
   } else {
     /* When its light out then turn the lights off */
+    mode = -1;
     delay_period_ms = mode_set_all(0);
   }
 
-  DEBUG_VALUE(3, " Per:", delay_period_ms);
+  send_update();
 
-  DEBUG_PRINT_END();
-  
+  static long next_update = 0;
+  if (millis() > next_update) {
+   DEBUG_VALUE(DEBUG_HIGH, " Mode:", mode);
+   DEBUG_VALUE(DEBUG_HIGH, " Per:", delay_period_ms);
+   DEBUG_PRINT_END();
+   next_update = millis() + 1000;
+  }
+
   /* Wait for the specifided interval */
   delay(delay_period_ms);
 }

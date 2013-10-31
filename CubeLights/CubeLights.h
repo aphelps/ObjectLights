@@ -48,11 +48,12 @@ int mode_flash_ordered(void *arg);
 int mode_random_fades(void *arg);
 int mode_sense_distance(void *arg);
 
+void send_update();
 
 /***** Sensor info ********************************************************** */
 
 /* Range finder */
-#define PING_TRIG_PIN 2
+#define PING_TRIG_PIN 8
 #define PING_ECHO_PIN 12
 #define PING_MAX_CM 200   /* Maximum distance in cm, limits the sensor delay */
 #define PING_DELAY_MS 250 /* Minimum time between readings */
