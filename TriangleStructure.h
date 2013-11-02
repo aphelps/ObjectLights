@@ -54,6 +54,10 @@ class Triangle {
   byte getBlue(byte vertex);
 
   byte matchVertex(Triangle *neighbor);
+  Triangle *leftOfVertex(byte vertex);
+  Triangle *rightOfVertex(byte vertex);
+  byte matchVertexLeft(Triangle *neighbor, byte vertex);
+  byte matchVertexRight(Triangle *neighbor, byte vertex);
 
   void print(byte level);
 

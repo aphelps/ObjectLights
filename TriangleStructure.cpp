@@ -164,6 +164,74 @@ byte Triangle::matchVertex(Triangle *neighbor) {
   return 255;
 }
 
+/*
+ * Return the vertex that lies left of the indicated triangle
+ *     ^--------
+ *    /?\V     /
+ *   /   \ N  /
+ *  /     \  /
+ * /_______\/
+ */
+byte Triangle::matchVertexRight(Triangle *neighbor, byte vertex) {
+  /* Find the edge of the neighbor */
+  for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
+    if (edges[edge] == neighbor) {
+      return edge;
+    }
+  }
+  return (byte)-1;
+}
+
+/*
+ * Return the vertex that lies right of the indicated triangle
+ * --------^
+ * \     V/?\
+ *  \  N /   \
+ *   \  /     \
+ *    \/_______\
+ */
+byte Triangle::matchVertexLeft(Triangle *neighbor, byte vertex) {
+  /* Find the edge of the neighbor */
+  for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
+    if (edges[edge] == neighbor) {
+      return (edge + 2) % TRIANGLE_NUM_EDGES;
+    }
+  }
+  return (byte)-1;
+}
+
+/*
+ * Return the triangle to the left of the indicated vertex
+ *-----^
+ *    /V\
+ * X /   \
+ *  /     \
+ * /_______\
+ */
+Triangle *Triangle::leftOfVertex(byte vertex) {
+  switch (vertex) {
+  case 0: return edges[2]; break;
+  case 1: return edges[0]; break;
+  case 2: return edges[1]; break;
+  default:
+    DEBUG_ERR(F("leftOfVertex: invalid vertex"));
+    return NULL;
+    break;
+  }
+}
+
+/*
+ * Return the triangle to the right of the indicated vertex
+ *     ^
+ *    /V\
+ *   /   \X
+ *  /     \
+ * /_______\
+ */
+Triangle *Triangle::rightOfVertex(byte vertex) {
+  return edges[vertex];
+}
+
 void Triangle::print(byte level) {
   DEBUG_VALUE(level, "Tri: ", id);
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
@@ -348,8 +416,8 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   makeVertex(triangles,  5,  0,  1, 15);
   makeVertex(triangles,  5,  1,  0,  9);
   makeVertex(triangles,  5,  1,  1,  4);
-  makeVertex(triangles,  5,  2,  0,  6);
-  makeVertex(triangles,  5,  2,  1, 11);
+  makeVertex(triangles,  5,  2,  0,  1);
+  makeVertex(triangles,  5,  2,  1,  6);
   (*numTriangles)++;
   if (*numTriangles == triangleCount) goto ICOS_DONE;
 
@@ -503,7 +571,7 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   makeVertex(triangles, 18,  0,  0, 15);
   makeVertex(triangles, 18,  0,  1, 16);
   makeVertex(triangles, 18,  1,  0, 12);
-  makeVertex(triangles, 18,  1,  1, 17);
+  makeVertex(triangles, 18,  1,  1,  7);
   makeVertex(triangles, 18,  2,  0,  8);
   makeVertex(triangles, 18,  2,  1, 14);
   (*numTriangles)++;
