@@ -72,7 +72,7 @@ pixels.update();
 #endif
 }
 
-#define NUM_MODES 6
+#define NUM_MODES 8
 #define MODE_PERIOD 50
 void loop() {
   //  setupMode(); return;
@@ -86,38 +86,49 @@ void loop() {
   //  sensor_photo();
   switch (mode) {
   case 0: {
-#if 1
+#if 0
     pixels.patternOne(MODE_PERIOD);
-#endif
-#if 1
     pixels.update();
+#else
+    trianglesStaticNoise(triangles, numTriangles, MODE_PERIOD,
+			 prev_mode != mode);
+
 #endif
     break;
   }
   case 1: {
-    trianglesTestPattern(triangles, numTriangles, 500,
+    trianglesCircleCorner(triangles, numTriangles, MODE_PERIOD,
 			 prev_mode != mode);
     break;
   }
   case 2: {
+    trianglesTestPattern(triangles, numTriangles, 500,
+			 prev_mode != mode);
+    break;
+  }
+  case 3: {
     trianglesRandomNeighbor(triangles, numTriangles, MODE_PERIOD,
 			    prev_mode != mode);
     break;
   }
-  case 3: {
+  case 4: {
     trianglesSwapPattern(triangles, numTriangles, MODE_PERIOD,
 			 prev_mode != mode);
     break;
   }
-  case 4: {
+  case 5: {
     trianglesLifePattern(triangles, numTriangles, 500,
 			 prev_mode != mode);
     break;
   }
-  case 5: {
+  case 6: {
     trianglesLifePattern2(triangles, numTriangles, 500,
 			 prev_mode != mode);
     break;
+  }
+  case 7: {
+    trianglesBuildup(triangles, numTriangles, MODE_PERIOD,
+		     prev_mode != mode, 0, 0);
   }
   }
   updateTrianglePixels(triangles, numTriangles, &pixels);
@@ -126,6 +137,10 @@ void loop() {
   delay(10);
 }
 
+/*
+ * Once the topology of the triangles has been set this can be used
+ * to set the individual LEDs within the triangles.
+ */
 void setupMode() {
   static int prev_value = -1;
   int value;

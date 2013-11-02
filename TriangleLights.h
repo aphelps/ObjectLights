@@ -34,4 +34,10 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
 			  boolean init);
 void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
 			  boolean init);
+void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
+			   boolean init);
+void trianglesBuildup(Triangle *triangles, int size, int periodms,
+		      boolean init, uint32_t fgColor, uint32_t bgColor);
+void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
+			  boolean init);
 #endif

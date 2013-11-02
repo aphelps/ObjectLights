@@ -299,3 +299,123 @@ void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
     }
   }
 }
+
+void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
+			     boolean init) {
+  static unsigned long next_time = millis();
+
+  static Triangle *current = &triangles[0];
+  static int vertex = 0;
+
+  if (init) {
+    current = &triangles[0];
+    vertex = 0;
+    next_time = millis();
+    clearTriangles(triangles, size);
+    current->setColor(vertex, 255, 0, 0);
+}
+
+  if (millis() > next_time) {
+    Triangle *next;
+    next_time += periodms;
+
+    byte storedRed = current->getBlue(vertex) + 5;
+    if (random(0, 200) + storedRed > 220) storedRed = 0;
+    current->setColor(vertex, storedRed, storedRed, storedRed);
+
+    if (random(0, 100) < 95) {
+      next = current->vertices[vertex][0];
+      if (next->hasLeds) {
+	vertex = next->matchVertex(current);
+	next->setColor(vertex, 0, next->getRed(vertex), 0);
+      } else {
+	next = current;
+      }
+    } else {
+      next = current;
+    }
+
+    if (next == current) {
+      next = current;
+      vertex = (vertex + 1) % 3;
+      next->setColor(vertex, 0, next->getRed(vertex), 0);
+    }
+
+    DEBUG_VALUE(DEBUG_HIGH, "next=", next->id);
+    DEBUG_VALUELN(DEBUG_HIGH, " vert=", vertex);
+
+    next->setColor(vertex, 255, 0, next->getGreen(vertex));
+    current = next;
+  }
+}
+
+void trianglesBuildup(Triangle *triangles, int size, int periodms,
+		      boolean init, uint32_t fgColor, uint32_t bgColor) {
+  static unsigned long next_time = millis();
+
+  static Triangle *current = &triangles[0];
+  static Triangle *next = NULL;
+
+  if (init) {
+    current = &triangles[0];
+    next = current;
+    next->mark = 1;
+    next_time = millis();
+    clearTriangles(triangles, size);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    /* Clear the color of the previous triangle */
+    current->setColor(current->mark, current->mark, current->mark);
+
+    /* Set the color on the new triangle */
+    static byte color = 64;
+    next->setColor(color, 0, 0);
+    if (color > (255 - 64)) {
+      next->mark += next->mark;
+      if (next->mark == 0) next->mark = 1;
+      current = next;
+      color = 0;
+
+      /* Choose the next triangle */
+      byte edge;
+      do {
+	edge = random(0, 3);
+      } while (!current->edges[edge]->hasLeds);
+      next = current->edges[edge];
+
+    } else {
+      color += 64;
+    }
+  }
+}
+
+/* This iterates through the triangles, lighting the ones with leds */
+void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
+			  boolean init) {
+  static unsigned long next_time = millis();
+
+  if (init) {
+    next_time = millis();
+    clearTriangles(triangles, size);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    /* Set the leds randomly to on off in white */
+    for (int tri = 0; tri < size; tri++) {
+      for (byte led = 0; led < 3; led++) {
+	if (random(0, 100) < 60) {
+	  triangles[tri].setColor(led, 0);
+	} else {
+	  int value = random(1,17);
+	  value = (value * value) - 1;
+	  triangles[tri].setColor(led, value, value, value);
+	}
+      }
+    }
+  }
+}

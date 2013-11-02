@@ -47,17 +47,24 @@ class Triangle {
 
   uint32_t getColor();
   byte getRed();
+  byte getRed(byte vertex);
   byte getGreen();
+  byte getGreen(byte vertex);
   byte getBlue();
+  byte getBlue(byte vertex);
+
+  byte matchVertex(Triangle *neighbor);
 
   void print(byte level);
 
+  // Variables - be careful of object size
   boolean hasLeds;
   boolean updated;
   unsigned int id;
   RGB leds[3];
   Triangle *edges[TRIANGLE_NUM_EDGES];
   Triangle *vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
+  byte mark;
 };
 
 /* Send updated values to a Pixel chain */

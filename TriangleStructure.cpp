@@ -9,6 +9,7 @@
 Triangle::Triangle(unsigned int _id) {
   hasLeds = false;
   updated = false;
+  mark = 0;
   id = _id;
 
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
@@ -99,6 +100,15 @@ byte Triangle::getRed() {
   }
 }
 
+byte Triangle::getRed(byte vertex) {
+  if (hasLeds) {
+    return leds[vertex].red();
+  } else {
+    return 0;
+  }
+}
+
+
 byte Triangle::getGreen() {
   if (hasLeds) {
     return leds[0].green();
@@ -107,12 +117,51 @@ byte Triangle::getGreen() {
   }
 }
 
+byte Triangle::getGreen(byte vertex) {
+  if (hasLeds) {
+    return leds[vertex].green();
+  } else {
+    return 0;
+  }
+}
+
+
 byte Triangle::getBlue() {
   if (hasLeds) {
     return leds[0].blue();
   } else {
     return 0;
   }
+}
+
+byte Triangle::getBlue(byte vertex) {
+  if (hasLeds) {
+    return leds[vertex].blue();
+  } else {
+    return 0;
+  }
+}
+
+/*
+ * This is used to find the LED adjacent to a corner triangle
+ *      S
+ *     \/
+ *     ^
+ *    /?\
+ *   /   \
+ *  /     \
+ * /?_____?\
+ *
+ */
+byte Triangle::matchVertex(Triangle *neighbor) {
+  for (byte v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
+    for (byte i = 0; i < TRIANGLE_VERTEX_ORDER; i++) {
+      if (vertices[v][i] == neighbor) {
+	return v;
+      }
+    }
+  }
+  return 255;
 }
 
 void Triangle::print(byte level) {
