@@ -72,10 +72,10 @@ pixels.update();
 #endif
 }
 
-#define NUM_MODES 8
+#define NUM_MODES 9
 #define MODE_PERIOD 50
 void loop() {
-  //  setupMode(); return;
+  //setupMode(); return;
 
   static byte prev_mode = -1;
   byte mode;
@@ -90,7 +90,7 @@ void loop() {
     pixels.patternOne(MODE_PERIOD);
     pixels.update();
 #else
-    trianglesStaticNoise(triangles, numTriangles, MODE_PERIOD,
+    trianglesCircleCorner2(triangles, numTriangles, MODE_PERIOD,
 			 prev_mode != mode);
 
 #endif
@@ -130,6 +130,10 @@ void loop() {
     trianglesBuildup(triangles, numTriangles, MODE_PERIOD,
 		     prev_mode != mode, 0, 0);
   }
+  case 8: {
+    trianglesStaticNoise(triangles, numTriangles, MODE_PERIOD,
+			 prev_mode != mode);
+  }
   }
   updateTrianglePixels(triangles, numTriangles, &pixels);
   prev_mode = mode;
@@ -154,6 +158,10 @@ void setupMode() {
     if (value != prev_value) {
       triangles[triangle].vertices[0][0]->setColor(0);
       triangles[triangle].vertices[0][1]->setColor(0);
+      triangles[triangle].vertices[1][0]->setColor(0);
+      triangles[triangle].vertices[1][1]->setColor(0);
+      triangles[triangle].vertices[2][0]->setColor(0);
+      triangles[triangle].vertices[2][1]->setColor(0);
       triangles[triangle].setColor(0);
 
       triangle = (triangle + 1) % numTriangles;
@@ -166,10 +174,16 @@ void setupMode() {
    * Set the current triangles vertex[0] to white
    *
    */
-  triangles[triangle].vertices[0][0]->setColor(32, 32, 32);
-  triangles[triangle].vertices[0][1]->setColor(32, 32, 32);
+  triangles[triangle].vertices[0][0]->setColor(32, 0, 0);
+  triangles[triangle].vertices[0][1]->setColor(32, 0, 0);
   triangles[triangle].setColor(0, 255, 0, 0); // R
+
+  triangles[triangle].vertices[1][0]->setColor(0, 32, 0);
+  triangles[triangle].vertices[1][1]->setColor(0, 32, 0);
   triangles[triangle].setColor(1, 0, 255, 0); // G
+
+  triangles[triangle].vertices[2][0]->setColor(0, 0, 32);
+  triangles[triangle].vertices[2][1]->setColor(0, 0, 32);
   triangles[triangle].setColor(2, 0, 0, 255); // B
   updateTrianglePixels(triangles, numTriangles, &pixels);
   delay(10);

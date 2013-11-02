@@ -313,7 +313,7 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
     next_time = millis();
     clearTriangles(triangles, size);
     current->setColor(vertex, 255, 0, 0);
-}
+  }
 
   if (millis() > next_time) {
     Triangle *next;
@@ -327,6 +327,55 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
       next = current->vertices[vertex][0];
       if (next->hasLeds) {
 	vertex = next->matchVertex(current);
+	next->setColor(vertex, 0, next->getRed(vertex), 0);
+      } else {
+	next = current;
+      }
+    } else {
+      next = current;
+    }
+
+    if (next == current) {
+      next = current;
+      vertex = (vertex + 1) % 3;
+      next->setColor(vertex, 0, next->getRed(vertex), 0);
+    }
+
+    DEBUG_VALUE(DEBUG_HIGH, "next=", next->id);
+    DEBUG_VALUELN(DEBUG_HIGH, " vert=", vertex);
+
+    next->setColor(vertex, 255, 0, next->getGreen(vertex));
+    current = next;
+  }
+}
+
+void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
+			     boolean init) {
+  static unsigned long next_time = millis();
+
+  static Triangle *current = &triangles[0];
+  static int vertex = 0;
+
+  if (init) {
+    current = &triangles[0];
+    vertex = 0;
+    next_time = millis();
+    clearTriangles(triangles, size);
+    current->setColor(vertex, 255, 0, 0);
+  }
+
+  if (millis() > next_time) {
+    Triangle *next;
+    next_time += periodms;
+
+    byte storedRed = current->getBlue(vertex) + 5;
+    if (random(0, 200) + storedRed > 220) storedRed = 0;
+    current->setColor(vertex, storedRed, storedRed, storedRed);
+
+    if (random(0, 100) < 95) {
+      next = current->leftOfVertex(vertex); // Shift to the left triangle
+      if (next->hasLeds) {
+	vertex = next->matchVertexRight(current, vertex); // Find the local vertex adjacent to the one on the previous triangle
 	next->setColor(vertex, 0, next->getRed(vertex), 0);
       } else {
 	next = current;
