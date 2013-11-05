@@ -72,7 +72,7 @@ pixels.update();
 #endif
 }
 
-#define NUM_MODES 9
+#define NUM_MODES 10
 #define MODE_PERIOD 50
 void loop() {
   //setupMode(); return;
@@ -81,6 +81,9 @@ void loop() {
   byte mode;
 
   mode = getButtonValue() % NUM_MODES;
+  if (mode != prev_mode) {
+    DEBUG_MEMORY(DEBUG_HIGH);
+  }
 
   /* Check for update of light sensor value */
   //  sensor_photo();
@@ -90,30 +93,30 @@ void loop() {
     pixels.patternOne(MODE_PERIOD);
     pixels.update();
 #else
-    trianglesCircleCorner2(triangles, numTriangles, MODE_PERIOD,
-			 prev_mode != mode);
+    trianglesSnake(triangles, numTriangles, MODE_PERIOD,
+			   prev_mode != mode);
 
 #endif
     break;
   }
   case 1: {
-    trianglesCircleCorner(triangles, numTriangles, MODE_PERIOD,
-			 prev_mode != mode);
-    break;
-  }
-  case 2: {
     trianglesTestPattern(triangles, numTriangles, 500,
 			 prev_mode != mode);
     break;
   }
+  case 2: {
+    trianglesCircleCorner(triangles, numTriangles, MODE_PERIOD,
+			  prev_mode != mode);
+    break;
+  }
   case 3: {
-    trianglesRandomNeighbor(triangles, numTriangles, MODE_PERIOD,
-			    prev_mode != mode);
+    trianglesCircleCorner2(triangles, numTriangles, MODE_PERIOD,
+			   prev_mode != mode);
     break;
   }
   case 4: {
-    trianglesSwapPattern(triangles, numTriangles, MODE_PERIOD,
-			 prev_mode != mode);
+    trianglesRandomNeighbor(triangles, numTriangles, MODE_PERIOD,
+			    prev_mode != mode);
     break;
   }
   case 5: {
@@ -129,16 +132,23 @@ void loop() {
   case 7: {
     trianglesBuildup(triangles, numTriangles, MODE_PERIOD,
 		     prev_mode != mode, 0, 0);
+    break;
   }
   case 8: {
     trianglesStaticNoise(triangles, numTriangles, MODE_PERIOD,
 			 prev_mode != mode);
+    break;
+  }
+  case 9: {
+    trianglesSwapPattern(triangles, numTriangles, MODE_PERIOD,
+			 prev_mode != mode);
+    break;
   }
   }
   updateTrianglePixels(triangles, numTriangles, &pixels);
   prev_mode = mode;
 
-  delay(10);
+  //  delay(10);
 }
 
 /*

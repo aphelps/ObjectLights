@@ -64,7 +64,7 @@ class Triangle {
   // Variables - be careful of object size
   boolean hasLeds;
   boolean updated;
-  unsigned int id;
+  byte id;
   RGB leds[3];
   Triangle *edges[TRIANGLE_NUM_EDGES];
   Triangle *vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];

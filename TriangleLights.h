@@ -42,5 +42,6 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 			  boolean init);
 void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 			    boolean init);
-
+void trianglesSnake(Triangle *triangles, int size, int periodms,
+		    boolean init);
 #endif

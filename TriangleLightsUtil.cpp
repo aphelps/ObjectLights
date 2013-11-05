@@ -56,7 +56,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = true;
     }
-    //    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
+    //    DEBUG_VALUE(DEBUG_HIGH, F(" Photo:"), photo_value);
   }
 }
 
@@ -105,10 +105,15 @@ void randomBinaryTriangles(Triangle *triangles, int size, byte color, int thresh
   }
 }
 
+/******************************************************************************
+ * Triangle Patterns
+ */
+
+static unsigned long next_time = 0;
+
 /* This iterates through the triangles, lighting the ones with leds */
 void trianglesTestPattern(Triangle *triangles, int size, int periodms,
 			  boolean init) {
-  static unsigned long next_time = millis();
   static int current = 0;
 
   if (init) {
@@ -142,7 +147,6 @@ void trianglesTestPattern(Triangle *triangles, int size, int periodms,
  */
 void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
 			     boolean init) {
-  static unsigned long next_time = millis();
   static Triangle *current = &triangles[0];
 
   if (init) {
@@ -181,7 +185,6 @@ void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
  */
 void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
 			     boolean init) {
-  static unsigned long next_time = millis();
   static int current = 0;
 
   if (init) {
@@ -204,8 +207,8 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
 
     uint32_t currentColor = triangles[current].getColor();
     uint32_t edgeColor = triangles[current].edges[edge]->getColor();
-    DEBUG_VALUE(DEBUG_HIGH, "curr color:", currentColor);
-    DEBUG_VALUELN(DEBUG_HIGH, "edge color:", edgeColor);
+    DEBUG_VALUE(DEBUG_HIGH, F("curr color:"), currentColor);
+    DEBUG_VALUELN(DEBUG_HIGH, F("edge color:"), edgeColor);
 
     triangles[current].setColor(edgeColor);
     triangles[current].edges[edge]->setColor(currentColor);
@@ -214,7 +217,6 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
 
 void trianglesLifePattern(Triangle *triangles, int size, int periodms,
 			     boolean init) {
-  static unsigned long next_time = millis();
   static int current = 0;
 
   if (init) {
@@ -236,7 +238,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
     }
 
     for (int tri = 0; tri < size; tri++) {
-      DEBUG_VALUE(DEBUG_HIGH, " ", set[tri]);
+      DEBUG_VALUE(DEBUG_HIGH, F(" "), set[tri]);
       switch (set[tri]) {
       case 0:
       case 3:
@@ -249,13 +251,12 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
 	break;
       }
     }
-    DEBUG_PRINTLN(DEBUG_HIGH, "");
+    DEBUG_PRINTLN(DEBUG_HIGH, F(""));
   }
 }
 
 void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
 			     boolean init) {
-  static unsigned long next_time = millis();
   static unsigned long next_reset = millis();
 
   if (init || (millis() > next_reset)) {
@@ -302,8 +303,6 @@ void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
 
 void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
 			     boolean init) {
-  static unsigned long next_time = millis();
-
   static Triangle *current = &triangles[0];
   static int vertex = 0;
 
@@ -341,8 +340,8 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
       next->setColor(vertex, 0, next->getRed(vertex), 0);
     }
 
-    DEBUG_VALUE(DEBUG_HIGH, "next=", next->id);
-    DEBUG_VALUELN(DEBUG_HIGH, " vert=", vertex);
+    //    DEBUG_VALUE(DEBUG_HIGH, F("next="), next->id);
+    //    DEBUG_VALUELN(DEBUG_HIGH, F(" vert="), vertex);
 
     next->setColor(vertex, 255, 0, next->getGreen(vertex));
     current = next;
@@ -351,8 +350,6 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
 
 void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 			     boolean init) {
-  static unsigned long next_time = millis();
-
   static Triangle *current = &triangles[0];
   static int vertex = 0;
 
@@ -390,8 +387,8 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
       next->setColor(vertex, 0, next->getRed(vertex), 0);
     }
 
-    DEBUG_VALUE(DEBUG_HIGH, "next=", next->id);
-    DEBUG_VALUELN(DEBUG_HIGH, " vert=", vertex);
+    //   DEBUG_VALUE(DEBUG_HIGH, F("next="), next->id);
+    //   DEBUG_VALUELN(DEBUG_HIGH, F(" vert="), vertex);
 
     next->setColor(vertex, 255, 0, next->getGreen(vertex));
     current = next;
@@ -400,15 +397,10 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 
 void trianglesBuildup(Triangle *triangles, int size, int periodms,
 		      boolean init, uint32_t fgColor, uint32_t bgColor) {
-  static unsigned long next_time = millis();
-
   static Triangle *current = &triangles[0];
-  static Triangle *next = NULL;
 
   if (init) {
     current = &triangles[0];
-    next = current;
-    next->mark = 1;
     next_time = millis();
     clearTriangles(triangles, size);
   }
@@ -416,36 +408,41 @@ void trianglesBuildup(Triangle *triangles, int size, int periodms,
   if (millis() > next_time) {
     next_time += periodms;
 
-    /* Clear the color of the previous triangle */
-    current->setColor(current->mark, current->mark, current->mark);
+    /* Get the color of the current triangle */
+    byte color = current->getRed();
 
-    /* Set the color on the new triangle */
-    static byte color = 64;
-    next->setColor(color, 0, 0);
     if (color > (255 - 64)) {
-      next->mark += next->mark;
-      if (next->mark == 0) next->mark = 1;
-      current = next;
+      /*
+       * If the current color is above the threshold value then
+       * increment its mark and choose the next triangle.
+       */
+      if (current->mark == 0) current->mark = 1;
+      else current->mark += current->mark;
+
       color = 0;
 
       /* Choose the next triangle */
+      Triangle *next = NULL;
       byte edge;
       do {
 	edge = random(0, 3);
       } while (!current->edges[edge]->hasLeds);
       next = current->edges[edge];
 
-    } else {
-      color += 64;
+      /* Set the current triangle's color to its mark value */
+      current->setColor(current->mark, current->mark, current->mark);
+      current = next;
     }
+
+    /* Increment the color of the current triangle */
+    color += 16;
+    current->setColor(color, 0, 0);
   }
 }
 
 /* This iterates through the triangles, lighting the ones with leds */
 void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 			  boolean init) {
-  static unsigned long next_time = millis();
-
   if (init) {
     next_time = millis();
     clearTriangles(triangles, size);
@@ -466,5 +463,139 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 	}
       }
     }
+  }
+}
+
+
+/* Run a snake randomly around the light */
+#define SNAKE_LENGTH 5
+void trianglesSnake(Triangle *triangles, int size, int periodms,
+			  boolean init) {
+  static byte snakeTriangles[SNAKE_LENGTH];
+  static byte snakeVertices[SNAKE_LENGTH];
+  byte values[SNAKE_LENGTH] = {
+    255, 128, 64, 32, 16//, 8, 4, 2, 1
+  };
+  static byte currentIndex = (byte)-1;
+
+  if (init || (currentIndex == (byte)-1)) {
+    DEBUG_PRINTLN(DEBUG_HIGH, F("Initializing"));
+    next_time = millis();
+    clearTriangles(triangles, size);
+    for (int i = 0; i < SNAKE_LENGTH; i++) {
+      snakeTriangles[i] = (byte)-1;
+      snakeVertices[i] = (byte)-1;
+    }
+
+    /* Start from a random triangle */
+    byte tri;
+    do {
+      tri = random(0, size);
+    } while (!triangles[tri].hasLeds);
+    currentIndex = 0;
+    snakeTriangles[currentIndex] = tri;
+    snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    /* Clear the tail */
+    byte tri, vert;
+    byte nextIndex;
+
+    /* Choose the next location */
+    Triangle *current = &triangles[snakeTriangles[currentIndex]];
+    tri = (byte)-1;
+    boolean found = false;
+
+    byte startDirection = random(0, 4);
+#if 0
+    for (byte direction = 0;
+	 direction < ((TRIANGLE_NUM_EDGES - 1) * 2 + TRIANGLE_VERTEX_ORDER);
+	 direction++) {
+#else
+    for (byte direction = 0; direction < 4; direction++) {
+#endif
+      switch ((startDirection + direction) % 4) {
+      case 0:
+      default:
+	// Triangle to the left
+	tri = current->leftOfVertex(snakeVertices[currentIndex])->id;
+	vert = triangles[tri].matchVertexRight(current,
+					       snakeVertices[currentIndex]);
+	break;
+      case 1:
+	// Triangle to the right
+	tri = current->rightOfVertex(snakeVertices[currentIndex])->id;
+	vert = triangles[tri].matchVertexLeft(current,
+					       snakeVertices[currentIndex]);
+	break;
+      case 2:
+	// Same triangle, vertex to the left
+	vert = (snakeVertices[currentIndex] + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
+	tri = snakeTriangles[currentIndex];
+	break;
+      case 3: {
+	// Same triangle, vertex to the right
+	vert = (snakeVertices[currentIndex] + 1) % TRIANGLE_NUM_EDGES;
+	tri = snakeTriangles[currentIndex];
+	break;
+      }
+      }
+
+      /*
+      DEBUG_VALUE(DEBUG_HIGH, F("r: "), triangles[tri].leds[vert].red());
+      DEBUG_VALUE(DEBUG_HIGH, F("g: "), triangles[tri].leds[vert].green());
+      DEBUG_VALUE(DEBUG_HIGH, F("b: "), triangles[tri].leds[vert].blue());
+      DEBUG_VALUE(DEBUG_HIGH, F("c: "), triangles[tri].leds[vert].color());
+      */
+
+      if ((triangles[tri].leds[vert].color() == 0) &&
+	  (triangles[tri].hasLeds)) {
+	// Verify that the choosen vertex is dark
+	found = true;
+	break;
+      }
+    }
+    if (!found) {
+      currentIndex = (byte)-1;
+      DEBUG_PRINTLN(DEBUG_HIGH, F("End of snake"));
+      return;
+    }
+
+    if (currentIndex == 0) {
+      nextIndex = SNAKE_LENGTH - 1;
+    } else {
+      nextIndex = currentIndex - 1;
+    }
+    if ((snakeTriangles[nextIndex] < size) &&
+	(snakeVertices[nextIndex] < size))
+      triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex], 0);
+
+    /* Move the array index*/
+    currentIndex = nextIndex;
+    snakeTriangles[currentIndex] = tri;
+    snakeVertices[currentIndex] = vert;
+
+    /* Set the led values */
+    for (byte i = 0; i < SNAKE_LENGTH; i++) {
+      byte valueIndex = (i + SNAKE_LENGTH - currentIndex) % SNAKE_LENGTH;
+      if (snakeTriangles[i] != (byte)-1) {
+
+	triangles[snakeTriangles[i]].setColor(snakeVertices[i],
+#if 0
+					      values[valueIndex],
+					      values[valueIndex],
+					      values[valueIndex]);
+#else
+	pixel_wheel(map(valueIndex, 0, SNAKE_LENGTH, 0, 255)) );
+#endif
+      }
+    }
+
+    DEBUG_VALUE(DEBUG_HIGH, F("i:"), currentIndex);
+    DEBUG_VALUE(DEBUG_HIGH, F(" tri:"), tri);
+    DEBUG_VALUELN(DEBUG_HIGH, F(" vert:"), vert);
   }
 }
