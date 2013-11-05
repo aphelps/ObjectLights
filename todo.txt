@@ -1,8 +1,6 @@
 Todo
 ----
 
-* Convert DEBUG levels to be purely #defs
-
 * Add meta-code to all debug-only code (such as value range checks, etc)
   - Maybe as an assertion to flash lights or something
 
@@ -12,10 +10,3 @@ Todo
 
 * Store thresholds in EEProm?
   - Could also store values if a scheme for cycling the address is used to prevent burnout
-
-Investigate
------------
-
-* Does the capsense library fuck up timing?  (ie does noInterrupts() mess things up?)
-
-* Reading directly using bits?

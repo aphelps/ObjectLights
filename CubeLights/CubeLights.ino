@@ -12,8 +12,10 @@
 #include <CapacitiveSensor.h>
 #include <NewPing.h>
 #include "Tlc5940.h"
+#include <Wire.h>
 
 #include "CubeLights.h"
+#include "MPR121.h"
 
 #if NUM_TLCS != 1
   /* NUM_TLCS must be set to 1 in tlc_config.h */
@@ -49,6 +51,9 @@ void * modeArguments[] = {
 
 #define INITIAL_VALUE 0
 
+boolean captouch_states[12]; // Track touch values
+
+
 /******************************************************************************
  * Initialization
  *****************************************************************************/
@@ -81,7 +86,7 @@ void setup()
 void loop()
 {
   /* Update sensors as needed */
-  //  sensor_cap();
+  sensor_cap();
   sensor_range();
   sensor_photo();
 
@@ -102,7 +107,7 @@ void loop()
 
   send_update();
 
-  static long next_update = 0;
+  static unsigned long next_update = 0;
   if (millis() > next_update) {
    DEBUG_VALUE(DEBUG_HIGH, " Mode:", mode);
    DEBUG_VALUE(DEBUG_HIGH, " Per:", delay_period_ms);

@@ -72,12 +72,15 @@ extern boolean photo_dark;   /* If its "dark" based on threshold values */
 void sensor_photo(void);     /* Update the photo sensor values */
 
 /* Capacitive side sensors */
+#define CAP_TOUCH_MAX 12
 #define NUM_CAP_SENSORS 2
-extern long cap_values[];  /* Last value of the capacitive sensors */
+#define CAP_TOUCH_1 0
+#define CAP_TOUCH_2 2
+
+#define CAP_TOUCH_PIN 2
 
 #define CAP_DELAY_MS 250    /* Minimum time between readings */
 void sensor_cap_init(void);
 void sensor_cap(void);
-
 
 #endif

@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <NewPing.h>
 #include <CapacitiveSensor.h>
+#include "MPR121.h"
 
 #include "CubeLights.h"
 
@@ -63,13 +64,13 @@ long cap_values[NUM_CAP_SENSORS];
 long cap_min[NUM_CAP_SENSORS];
 long cap_max[NUM_CAP_SENSORS];
 
+MPR121 touch_sensor(CAP_TOUCH_PIN);
+boolean touch_states[CAP_TOUCH_MAX];
+
 void sensor_cap_init() 
 {
-  for (uint8_t cap = 0; cap < NUM_CAP_SENSORS; cap++) {
-    cap_sensors[cap].set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
-    cap_sensors[cap].set_CS_Timeout_Millis(100);
-    cap_min[cap] = 0xFFFF;
-    cap_max[cap] = 0;
+  for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
+    touch_states[i] = 0;
   }
 }
 
@@ -80,29 +81,11 @@ void sensor_cap(void)
   long now = millis();
   if (now < next_check) return;
   next_check = now + CAP_DELAY_MS;
-  
-  /* Read the cap sensors */
-  long start = millis();
-  long sense_delay;
-  for (int cap = 0; cap < NUM_CAP_SENSORS; cap++) {
-    //long value = cap_sensors[cap].capacitiveSensor(10);
-    long value = cap_sensors[cap].capacitiveSensorRaw(1);
-    if (value < cap_min[cap]) cap_min[cap] = value;
-    if (value > cap_max[cap]) cap_max[cap] = value;
 
-    cap_values[cap] = value;
-//    cap_values[cap] = map(value,
-//                            cap_min[cap], cap_max[cap],
-//                            0, MAX_VALUE);
+  touch_sensor.readTouchInputs(touch_states);
+  DEBUG_PRINT(DEBUG_HIGH, "Cap:");
+  for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
+    DEBUG_VALUE(DEBUG_HIGH, " ", touch_states[i]);
   }
-  DEBUG_PRINT(DEBUG_HIGH, " Cap: ");
-  sense_delay = millis() - start;
-  DEBUG_PRINT(DEBUG_HIGH, sense_delay);        // check on performance in milliseconds
-  DEBUG_PRINT(DEBUG_HIGH, "\t");                    // tab character for debug windown spacing
-  for (int cap = 0; cap < NUM_CAP_SENSORS; cap++) {
-    DEBUG_PRINT(DEBUG_HIGH, cap_values[cap]);
-    DEBUG_PRINT(DEBUG_HIGH, "-");
-    DEBUG_PRINT(DEBUG_HIGH, log(cap_values[cap]));
-    DEBUG_PRINT(DEBUG_HIGH, "    ");
-  }
+  DEBUG_PRINT_END();
 }
