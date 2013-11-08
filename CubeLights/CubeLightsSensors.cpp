@@ -56,33 +56,31 @@ void sensor_photo(void)
 
 /* ***** Capacitive Sensors ***************************************************/
 
-CapacitiveSensor cap_sensors[NUM_CAP_SENSORS] = {
-  CapacitiveSensor(4,5),
-  CapacitiveSensor(4,6),
-};
-long cap_values[NUM_CAP_SENSORS];
-long cap_min[NUM_CAP_SENSORS];
-long cap_max[NUM_CAP_SENSORS];
-
-MPR121 touch_sensor(CAP_TOUCH_PIN);
 boolean touch_states[CAP_TOUCH_MAX];
+MPR121 touch_sensor(CAP_TOUCH_PIN, touch_states, false);
 
 void sensor_cap_init() 
 {
   for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
     touch_states[i] = 0;
   }
+  touch_sensor.setThreshold(0, 10, 10);
+  touch_sensor.setThreshold(2, 10, 20);
 }
 
 void sensor_cap(void) 
 {
-  /* Determine if its time to perform a check */
-  static long next_check = millis();
-  long now = millis();
-  if (now < next_check) return;
-  next_check = now + CAP_DELAY_MS;
+  if (touch_sensor.useInterrupt) {
+    if (!touch_sensor.triggered) return;
+  } else {
+    /* Determine if its time to perform a check */
+    static long next_check = millis();
+    long now = millis();
+    if (now < next_check) return;
+    next_check = now + CAP_DELAY_MS;
+  }
 
-  touch_sensor.readTouchInputs(touch_states);
+  touch_sensor.readTouchInputs();
   DEBUG_PRINT(DEBUG_HIGH, "Cap:");
   for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
     DEBUG_VALUE(DEBUG_HIGH, " ", touch_states[i]);

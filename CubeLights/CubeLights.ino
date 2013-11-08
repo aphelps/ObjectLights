@@ -9,7 +9,6 @@
 #include <Debug.h>
 
 #include <Arduino.h>
-#include <CapacitiveSensor.h>
 #include <NewPing.h>
 #include "Tlc5940.h"
 #include <Wire.h>
@@ -51,8 +50,6 @@ void * modeArguments[] = {
 
 #define INITIAL_VALUE 0
 
-boolean captouch_states[12]; // Track touch values
-
 
 /******************************************************************************
  * Initialization
@@ -62,7 +59,9 @@ void setup()
   //Serial.begin(9600);
   Serial.begin(115200);
 
-  //sensor_cap_init(); /* Initialize the capacitive sensors */
+  randomSeed(analogRead(0));
+
+  sensor_cap_init(); /* Initialize the capacitive sensors */
 
   /* Initialize the LED drivers with all-off */ 
   Tlc.init(INITIAL_VALUE);
@@ -71,8 +70,6 @@ void setup()
   for (int led = 0; led < NUM_LEDS; led++) {
     ledValues[led] = INITIAL_VALUE;
   }
-
-  randomSeed(analogRead(0));
 
   /* Turn on input pullup on analog photo pin */
   digitalWrite(PHOTO_PIN, HIGH); 

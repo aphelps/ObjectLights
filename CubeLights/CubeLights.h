@@ -52,7 +52,7 @@ void send_update();
 
 /***** Sensor info ********************************************************** */
 
-/* Range finder */
+/***** Range finder *****/
 #define PING_TRIG_PIN 8
 #define PING_ECHO_PIN 12
 #define PING_MAX_CM 200   /* Maximum distance in cm, limits the sensor delay */
@@ -61,7 +61,7 @@ void send_update();
 extern uint16_t range_cm; /* Last value of the range finger */
 void sensor_range(void);  /* Update the range finder value */
 
-/* Photo sensor */
+/***** Photo sensor *****/
 #define PHOTO_PIN A0
 #define PHOTO_THRESHOLD_LOW  85  /* Consider light off when below this level */
 #define PHOTO_THRESHOLD_HIGH 100 /* Consider light on when above this level */
@@ -71,8 +71,10 @@ extern uint16_t photo_value; /* Last value of the photo sensor */
 extern boolean photo_dark;   /* If its "dark" based on threshold values */
 void sensor_photo(void);     /* Update the photo sensor values */
 
-/* Capacitive side sensors */
+/***** Capacitive side sensors *****/
 #define CAP_TOUCH_MAX 12
+extern boolean touch_states[];
+
 #define NUM_CAP_SENSORS 2
 #define CAP_TOUCH_1 0
 #define CAP_TOUCH_2 2

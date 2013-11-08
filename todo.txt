@@ -10,3 +10,7 @@ Todo
 
 * Store thresholds in EEProm?
   - Could also store values if a scheme for cycling the address is used to prevent burnout
+
+* Try using the timer based NewPing methods
+
+* Get rid of the "mode delay" and replace with in-mode time checks
