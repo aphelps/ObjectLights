@@ -106,10 +106,10 @@ void loop()
 
   static unsigned long next_update = 0;
   if (millis() > next_update) {
-   DEBUG_VALUE(DEBUG_HIGH, " Mode:", mode);
-   DEBUG_VALUE(DEBUG_HIGH, " Per:", delay_period_ms);
-   DEBUG_PRINT_END();
-   next_update = millis() + 1000;
+    DEBUG_VALUE(DEBUG_HIGH, F(" Mode:"), mode);
+    DEBUG_VALUE(DEBUG_HIGH, F(" Per:"), delay_period_ms);
+    DEBUG_PRINT_END();
+    next_update = millis() + 1000;
   }
 
   /* Wait for the specifided interval */

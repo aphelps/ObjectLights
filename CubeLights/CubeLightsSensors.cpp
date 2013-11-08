@@ -10,7 +10,6 @@
 
 #include <Arduino.h>
 #include <NewPing.h>
-#include <CapacitiveSensor.h>
 #include "MPR121.h"
 
 #include "CubeLights.h"
@@ -28,7 +27,7 @@ void sensor_range(void)
     nextPing = now + PING_DELAY_MS;
     range_cm = sonar.ping() / US_ROUNDTRIP_CM;
 
-    DEBUG_VALUE(DEBUG_HIGH, " Ping:", range_cm);
+    DEBUG_VALUE(DEBUG_HIGH, F(" Ping cm:"), range_cm);
   }
 }
 
@@ -50,7 +49,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = false;
     }
-    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
+    DEBUG_VALUE(DEBUG_HIGH, F(" Photo:"), photo_value);
   }
 }
 
@@ -81,9 +80,9 @@ void sensor_cap(void)
   }
 
   touch_sensor.readTouchInputs();
-  DEBUG_PRINT(DEBUG_HIGH, "Cap:");
+  DEBUG_PRINT(DEBUG_HIGH, F("Cap:"));
   for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
-    DEBUG_VALUE(DEBUG_HIGH, " ", touch_states[i]);
+    DEBUG_VALUE(DEBUG_HIGH, F(" "), touch_states[i]);
   }
   DEBUG_PRINT_END();
 }
