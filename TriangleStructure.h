@@ -46,6 +46,7 @@ class Triangle {
   void setColor(byte led, uint32_t c);
 
   uint32_t getColor();
+  uint32_t getColor(byte led);
   byte getRed();
   byte getRed(byte vertex);
   byte getGreen();

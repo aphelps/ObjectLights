@@ -92,6 +92,14 @@ uint32_t Triangle::getColor() {
   }
 }
 
+uint32_t Triangle::getColor(byte led) {
+  if (hasLeds) {
+    return leds[led].color();
+  } else {
+    return 0;
+  }
+}
+
 byte Triangle::getRed() {
   if (hasLeds) {
     return leds[0].red();

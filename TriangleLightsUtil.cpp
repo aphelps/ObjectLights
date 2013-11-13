@@ -67,6 +67,7 @@ void sensor_photo(void)
 void clearTriangles(Triangle *triangles, int size) {
   for (int tri = 0; tri < size; tri++) {
     triangles[tri].setColor(0, 0, 0);
+    triangles[tri].mark = 0;
   }
 }
 
@@ -102,6 +103,41 @@ void randomBinaryTriangles(Triangle *triangles, int size, byte color, int thresh
     triangles[tri].setColor((red ? color : 0),
 			    (blue ? color : 0),
 			    (green ? color : 0));
+  }
+}
+
+void incrementMarkAll(Triangle *triangles, int size, char incr) {
+  for (int tri = 0; tri < size; tri++) {
+    int value = triangles[tri].mark + incr;
+    if (value < 0) triangles[tri].mark = 0;
+    else if (value > 255) triangles[tri].mark = 255;
+    else triangles[tri].mark = value;
+  }
+}
+
+/* Adjusted every led by the indicated amount */
+void incrementAll(Triangle *triangles, int size,
+                  char r, char g, char b) {
+  for (int tri = 0; tri < size; tri++) {
+      for (byte c = 0; c < 3; c++) {
+	int red = triangles[tri].leds[c].red();
+	int green = triangles[tri].leds[c].green();
+	int blue = triangles[tri].leds[c].blue();
+
+	red = red + r;
+	if (red < 0) red = 0;
+	else if (red > 255) red = 255;
+
+	green = green + g;
+	if (green < 0) green = 0;
+	else if (green > 255) green = 255;
+
+	blue = blue + b;
+	if (blue < 0) blue = 0;
+	else if (blue > 255) blue = 255;
+
+	triangles[tri].setColor(c, (byte)red, (byte)green, (byte)blue);
+      }
   }
 }
 
@@ -365,6 +401,54 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
     Triangle *next;
     next_time += periodms;
 
+    // Set the current led to ever increasing white
+    if (current->mark < 250) current->mark += 10;
+    current->setColor(vertex, current->mark, current->mark, current->mark);
+
+    if (random(0, 100) < 95){
+      // Shift to the left triangle
+      next = current->leftOfVertex(vertex);
+      if (next->hasLeds) {
+	// Find the local vertex adjacent to the one on the previous triangle
+	vertex = next->matchVertexRight(current, vertex);
+      } else {
+	next = current;
+      }
+    } else {
+      next = current;
+    }
+
+    if (next == current) {
+      // Shift around the current triangle
+      vertex = (vertex + 1) % 3;
+    }
+
+    incrementAll(triangles, size, -1, -1, -1);
+    incrementMarkAll(triangles, size, -1);
+
+    next->setColor(vertex, 255, 0, 0);
+    current = next;
+  }
+}
+
+
+void trianglesCircleCorner3(Triangle *triangles, int size, int periodms,
+			     boolean init) {
+  static Triangle *current = &triangles[0];
+  static int vertex = 0;
+
+  if (init) {
+    current = &triangles[0];
+    vertex = 0;
+    next_time = millis();
+    clearTriangles(triangles, size);
+    current->setColor(vertex, 255, 0, 0);
+  }
+
+  if (millis() > next_time) {
+    Triangle *next;
+    next_time += periodms;
+
     byte storedRed = current->getBlue(vertex) + 5;
     if (random(0, 200) + storedRed > 220) storedRed = 0;
     current->setColor(vertex, storedRed, storedRed, storedRed);
@@ -392,6 +476,8 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 
     next->setColor(vertex, 255, 0, next->getGreen(vertex));
     current = next;
+
+    incrementAll(triangles, size, -16, -16, -16);
   }
 }
 
@@ -468,15 +554,16 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 
 
 /* Run a snake randomly around the light */
-#define SNAKE_LENGTH 5
+#define SNAKE_LENGTH 7
 void trianglesSnake(Triangle *triangles, int size, int periodms,
 			  boolean init) {
   static byte snakeTriangles[SNAKE_LENGTH];
   static byte snakeVertices[SNAKE_LENGTH];
-  byte values[SNAKE_LENGTH] = {
-    255, 128, 64, 32, 16//, 8, 4, 2, 1
+  uint32_t values[SNAKE_LENGTH] = {
+    255, 128, 64, 32, 16, 8, 4//, 2, 1
   };
   static byte currentIndex = (byte)-1;
+  static byte colorMode = 0;
 
   if (init || (currentIndex == (byte)-1)) {
     DEBUG_PRINTLN(DEBUG_HIGH, F("Initializing"));
@@ -495,7 +582,48 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     currentIndex = 0;
     snakeTriangles[currentIndex] = tri;
     snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
+
+    colorMode++;
+    DEBUG_VALUE(DEBUG_HIGH, "colormode=", colorMode);
   }
+
+  switch (colorMode % 5) {
+    case 0: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
+      }
+      break;
+    }
+    case 1: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte red = 255 >> i;
+	values[i] = pixel_color(red, 0, 0);
+      }
+      break;
+    }
+    case 2: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte green = 255 >> i;
+	values[i] = pixel_color(0, green, 0);
+      }
+      break;
+    }
+    case 3: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte blue = 255 >> i;
+	values[i] = pixel_color(0, 0, blue);
+      }
+      break;
+    }
+    case 4: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte color = 255 >> i;
+	values[i] = pixel_color(color, color, color);
+      }
+      break;
+    }
+  }
+
 
   if (millis() > next_time) {
     next_time += periodms;
@@ -510,13 +638,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     boolean found = false;
 
     byte startDirection = random(0, 4);
-#if 0
-    for (byte direction = 0;
-	 direction < ((TRIANGLE_NUM_EDGES - 1) * 2 + TRIANGLE_VERTEX_ORDER);
-	 direction++) {
-#else
     for (byte direction = 0; direction < 4; direction++) {
-#endif
       switch ((startDirection + direction) % 4) {
       case 0:
       default:
@@ -543,13 +665,6 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
 	break;
       }
       }
-
-      /*
-      DEBUG_VALUE(DEBUG_HIGH, F("r: "), triangles[tri].leds[vert].red());
-      DEBUG_VALUE(DEBUG_HIGH, F("g: "), triangles[tri].leds[vert].green());
-      DEBUG_VALUE(DEBUG_HIGH, F("b: "), triangles[tri].leds[vert].blue());
-      DEBUG_VALUE(DEBUG_HIGH, F("c: "), triangles[tri].leds[vert].color());
-      */
 
       if ((triangles[tri].leds[vert].color() == 0) &&
 	  (triangles[tri].hasLeds)) {
@@ -583,18 +698,12 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       byte valueIndex = (i + SNAKE_LENGTH - currentIndex) % SNAKE_LENGTH;
       if (snakeTriangles[i] != (byte)-1) {
 
-	triangles[snakeTriangles[i]].setColor(snakeVertices[i],
-#if 0
-					      values[valueIndex],
-					      values[valueIndex],
-					      values[valueIndex]);
-#else
-	pixel_wheel(map(valueIndex, 0, SNAKE_LENGTH, 0, 255)) );
-#endif
+        triangles[snakeTriangles[i]].setColor(snakeVertices[i],
+                                              values[valueIndex]);
       }
     }
 
-    DEBUG_VALUE(DEBUG_HIGH, F("i:"), currentIndex);
+    DEBUG_VALUE(DEBUG_HIGH, F(" i:"), currentIndex);
     DEBUG_VALUE(DEBUG_HIGH, F(" tri:"), tri);
     DEBUG_VALUELN(DEBUG_HIGH, F(" vert:"), vert);
   }

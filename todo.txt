@@ -8,6 +8,10 @@ General todo
   - Improved color scheme
   - Fade brightness towards the tail of the snake
   - Intermittently choose a new color scheme
+* Optimize triangle structure
+  - Change booleans to byte + flags
+  - Switch pointers to indexes
+* Serial based CLI
 
 Light pattern ideas
 -------------------

@@ -16,15 +16,20 @@ PixelUtil pixels;
 int numTriangles = 0;
 Triangle *triangles;
 
+#define DEBUG_LED 13
+
 void setup()
 {
   Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_HIGH, "Initializing");
 
+  pinMode(DEBUG_LED, OUTPUT);
+
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
   pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
+  // pixels = PixelUtil(numLeds, 8, 12); // HMTL=8,12  Hand=12, 11);
 
   /* Setup the sensors */
   initializePins();
@@ -148,7 +153,17 @@ void loop() {
   updateTrianglePixels(triangles, numTriangles, &pixels);
   prev_mode = mode;
 
-  //  delay(10);
+  DEBUG_COMMAND(DEBUG_HIGH,
+		static long next_millis = 0;
+		if (millis() > next_millis) {
+		  if (next_millis % 2 == 0) {
+		    digitalWrite(DEBUG_LED, HIGH);
+		  } else {
+		    digitalWrite(DEBUG_LED, LOW);
+		  }
+		  next_millis += 251;
+		}
+		);
 }
 
 /*
