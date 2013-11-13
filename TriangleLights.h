@@ -24,24 +24,27 @@ int getLightValue();
 void initializePins();
 
 
+typedef void (*triangle_mode_t)(Triangle *triangles, int size, int periodms,
+				boolean init, void *arg);
+
 void trianglesTestPattern(Triangle *triangles, int size, int periodms,
-			  boolean init);
+			  boolean init, void *arg);
 void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
-			     boolean init);
+			     boolean init, void *arg);
 void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
-			  boolean init);
+			  boolean init, void *arg);
 void trianglesLifePattern(Triangle *triangles, int size, int periodms,
-			  boolean init);
+			  boolean init, void *arg);
 void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
-			  boolean init);
+			  boolean init, void *arg);
 void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
-			   boolean init);
+			   boolean init, void *arg);
 void trianglesBuildup(Triangle *triangles, int size, int periodms,
-		      boolean init, uint32_t fgColor, uint32_t bgColor);
+		      boolean init, void *arg);
 void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
-			  boolean init);
+			  boolean init, void *arg);
 void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
-			    boolean init);
+			    boolean init, void *arg);
 void trianglesSnake(Triangle *triangles, int size, int periodms,
-		    boolean init);
+		    boolean init, void *arg);
 #endif

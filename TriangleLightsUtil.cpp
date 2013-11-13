@@ -16,7 +16,7 @@ void initializePins() {
 }
 
 volatile uint16_t buttonValue = 0;
-void buttonInterrupt(void)
+void buttonInterrupt(void) 
 {
   static unsigned long prevTime = 0;
   static int prevValue = LOW;
@@ -84,7 +84,7 @@ void randomTriangles(Triangle *triangles, int size) {
   }
 }
 
-void binaryTriangles(Triangle *triangles, int size, uint32_t color, int thresh)
+void binaryTriangles(Triangle *triangles, int size, uint32_t color, int thresh) 
 {
   for (int tri = 0; tri < size; tri++) {
     boolean set = (random(0, 100) > thresh);
@@ -93,7 +93,7 @@ void binaryTriangles(Triangle *triangles, int size, uint32_t color, int thresh)
   }
 }
 
-void randomBinaryTriangles(Triangle *triangles, int size, byte color, int thresh)
+void randomBinaryTriangles(Triangle *triangles, int size, byte color, int thresh) 
 {
   for (int tri = 0; tri < size; tri++) {
     boolean red = (random(0, 100) > thresh);
@@ -102,7 +102,7 @@ void randomBinaryTriangles(Triangle *triangles, int size, byte color, int thresh
 
     triangles[tri].setColor((red ? color : 0),
 			    (blue ? color : 0),
-			    (green ? color : 0));
+			    (green ? color : 0));   
   }
 }
 
@@ -149,7 +149,7 @@ static unsigned long next_time = 0;
 
 /* This iterates through the triangles, lighting the ones with leds */
 void trianglesTestPattern(Triangle *triangles, int size, int periodms,
-			  boolean init) {
+			  boolean init, void *arg) {
   static int current = 0;
 
   if (init) {
@@ -182,7 +182,7 @@ void trianglesTestPattern(Triangle *triangles, int size, int periodms,
  * triangles.
  */
 void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static Triangle *current = &triangles[0];
 
   if (init) {
@@ -220,7 +220,7 @@ void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
  * with a random neighbor.
  */
 void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static int current = 0;
 
   if (init) {
@@ -235,12 +235,12 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
     do {
       current = random(0, size);
     } while (!triangles[current].hasLeds);
-
+    
     int edge;
     do {
       edge = random(0, 3);
     } while (!triangles[current].edges[edge]->hasLeds);
-
+ 
     uint32_t currentColor = triangles[current].getColor();
     uint32_t edgeColor = triangles[current].edges[edge]->getColor();
     DEBUG_VALUE(DEBUG_HIGH, F("curr color:"), currentColor);
@@ -252,7 +252,7 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
 }
 
 void trianglesLifePattern(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static int current = 0;
 
   if (init) {
@@ -292,7 +292,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
 }
 
 void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static unsigned long next_reset = millis();
 
   if (init || (millis() > next_reset)) {
@@ -338,7 +338,7 @@ void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
 }
 
 void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static Triangle *current = &triangles[0];
   static int vertex = 0;
 
@@ -385,7 +385,7 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
 }
 
 void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static Triangle *current = &triangles[0];
   static int vertex = 0;
 
@@ -425,7 +425,7 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 
     incrementAll(triangles, size, -1, -1, -1);
     incrementMarkAll(triangles, size, -1);
-
+    
     next->setColor(vertex, 255, 0, 0);
     current = next;
   }
@@ -433,7 +433,7 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 
 
 void trianglesCircleCorner3(Triangle *triangles, int size, int periodms,
-			     boolean init) {
+			     boolean init, void *arg) {
   static Triangle *current = &triangles[0];
   static int vertex = 0;
 
@@ -482,7 +482,7 @@ void trianglesCircleCorner3(Triangle *triangles, int size, int periodms,
 }
 
 void trianglesBuildup(Triangle *triangles, int size, int periodms,
-		      boolean init, uint32_t fgColor, uint32_t bgColor) {
+		      boolean init, void *arg) {
   static Triangle *current = &triangles[0];
 
   if (init) {
@@ -528,7 +528,7 @@ void trianglesBuildup(Triangle *triangles, int size, int periodms,
 
 /* This iterates through the triangles, lighting the ones with leds */
 void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
-			  boolean init) {
+			  boolean init, void *arg) {
   if (init) {
     next_time = millis();
     clearTriangles(triangles, size);
@@ -556,7 +556,7 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 /* Run a snake randomly around the light */
 #define SNAKE_LENGTH 7
 void trianglesSnake(Triangle *triangles, int size, int periodms,
-			  boolean init) {
+			  boolean init, void *arg) {
   static byte snakeTriangles[SNAKE_LENGTH];
   static byte snakeVertices[SNAKE_LENGTH];
   uint32_t values[SNAKE_LENGTH] = {
@@ -644,13 +644,13 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       default:
 	// Triangle to the left
 	tri = current->leftOfVertex(snakeVertices[currentIndex])->id;
-	vert = triangles[tri].matchVertexRight(current,
-					       snakeVertices[currentIndex]);
+	vert = triangles[tri].matchVertexRight(current, 
+					       snakeVertices[currentIndex]);	
 	break;
       case 1:
 	// Triangle to the right
 	tri = current->rightOfVertex(snakeVertices[currentIndex])->id;
-	vert = triangles[tri].matchVertexLeft(current,
+	vert = triangles[tri].matchVertexLeft(current, 
 					       snakeVertices[currentIndex]);
 	break;
       case 2:
@@ -684,8 +684,8 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     } else {
       nextIndex = currentIndex - 1;
     }
-    if ((snakeTriangles[nextIndex] < size) &&
-	(snakeVertices[nextIndex] < size))
+    if ((snakeTriangles[nextIndex] < size) && 
+	(snakeVertices[nextIndex] < size)) 
       triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex], 0);
 
     /* Move the array index*/
@@ -697,7 +697,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     for (byte i = 0; i < SNAKE_LENGTH; i++) {
       byte valueIndex = (i + SNAKE_LENGTH - currentIndex) % SNAKE_LENGTH;
       if (snakeTriangles[i] != (byte)-1) {
-
+	
         triangles[snakeTriangles[i]].setColor(snakeVertices[i],
                                               values[valueIndex]);
       }

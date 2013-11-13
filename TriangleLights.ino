@@ -18,6 +18,33 @@ Triangle *triangles;
 
 #define DEBUG_LED 13
 
+#define MODE_PERIOD 50
+triangle_mode_t modeFunctions[] = {
+  trianglesSnake,
+//  trianglesTestPattern,
+//  trianglesCircleCorner,
+  trianglesCircleCorner2,
+  trianglesRandomNeighbor,
+  trianglesLifePattern,
+  trianglesLifePattern2,
+  trianglesBuildup,
+  trianglesStaticNoise,
+  trianglesSwapPattern
+};
+
+uint16_t modePeriods[] = {
+  MODE_PERIOD,
+//  500,
+//  MODE_PERIOD,
+  MODE_PERIOD,
+  MODE_PERIOD,
+  500,
+  500,
+  MODE_PERIOD,
+  MODE_PERIOD,
+  MODE_PERIOD
+};
+
 void setup()
 {
   Serial.begin(9600);
@@ -78,7 +105,6 @@ pixels.update();
 }
 
 #define NUM_MODES 10
-#define MODE_PERIOD 50
 void loop() {
   //setupMode(); return;
 
@@ -92,64 +118,10 @@ void loop() {
 
   /* Check for update of light sensor value */
   //  sensor_photo();
-  switch (mode) {
-  case 0: {
-#if 0
-    pixels.patternOne(MODE_PERIOD);
-    pixels.update();
-#else
-    trianglesSnake(triangles, numTriangles, MODE_PERIOD,
-			   prev_mode != mode);
 
-#endif
-    break;
-  }
-  case 1: {
-    trianglesTestPattern(triangles, numTriangles, 500,
-			 prev_mode != mode);
-    break;
-  }
-  case 2: {
-    trianglesCircleCorner(triangles, numTriangles, MODE_PERIOD,
-			  prev_mode != mode);
-    break;
-  }
-  case 3: {
-    trianglesCircleCorner2(triangles, numTriangles, MODE_PERIOD,
-			   prev_mode != mode);
-    break;
-  }
-  case 4: {
-    trianglesRandomNeighbor(triangles, numTriangles, MODE_PERIOD,
-			    prev_mode != mode);
-    break;
-  }
-  case 5: {
-    trianglesLifePattern(triangles, numTriangles, 500,
-			 prev_mode != mode);
-    break;
-  }
-  case 6: {
-    trianglesLifePattern2(triangles, numTriangles, 500,
-			 prev_mode != mode);
-    break;
-  }
-  case 7: {
-    trianglesBuildup(triangles, numTriangles, MODE_PERIOD,
-		     prev_mode != mode, 0, 0);
-    break;
-  }
-  case 8: {
-    trianglesStaticNoise(triangles, numTriangles, MODE_PERIOD,
-			 prev_mode != mode);
-    break;
-  }
-  case 9: {
-    trianglesSwapPattern(triangles, numTriangles, MODE_PERIOD,
-			 prev_mode != mode);
-    break;
-  }
-  }
+  /* Run the current mode and update the triangles */
+  modeFunctions[mode](triangles, numTriangles, modePeriods[mode],
+		      prev_mode != mode, NULL);
   updateTrianglePixels(triangles, numTriangles, &pixels);
   prev_mode = mode;
 
