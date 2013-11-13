@@ -9,6 +9,7 @@ General todo
   - Fade brightness towards the tail of the snake
   - Intermittently choose a new color scheme
 * Optimize triangle structure
+  - Use the color data in the pixels rather than one in structure
   - Change booleans to byte + flags
   - Switch pointers to indexes
 * Serial based CLI
