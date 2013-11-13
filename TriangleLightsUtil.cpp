@@ -84,6 +84,12 @@ void randomTriangles(Triangle *triangles, int size) {
   }
 }
 
+void wheelTriangles(Triangle *triangles, int size) {
+  for (int tri = 0; tri < size; tri++) {
+    triangles[tri].setColor(pixel_wheel(map(tri, 0, size - 1, 0, 255)));
+  }
+}
+
 void binaryTriangles(Triangle *triangles, int size, uint32_t color, int thresh) 
 {
   for (int tri = 0; tri < size; tri++) {
@@ -226,7 +232,7 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
   if (init) {
     current = 0;
     next_time = millis();
-    randomTriangles(triangles, size);
+    wheelTriangles(triangles, size);
   }
 
   if (millis() > next_time) {
@@ -703,8 +709,10 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       }
     }
 
+#if 0
     DEBUG_VALUE(DEBUG_HIGH, F(" i:"), currentIndex);
     DEBUG_VALUE(DEBUG_HIGH, F(" tri:"), tri);
     DEBUG_VALUELN(DEBUG_HIGH, F(" vert:"), vert);
+#endif
   }
 }

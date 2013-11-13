@@ -23,7 +23,7 @@ int getLightValue();
 
 void initializePins();
 
-
+/* Triangle light modes */
 typedef void (*triangle_mode_t)(Triangle *triangles, int size, int periodms,
 				boolean init, void *arg);
 
@@ -47,4 +47,9 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 			    boolean init, void *arg);
 void trianglesSnake(Triangle *triangles, int size, int periodms,
 		    boolean init, void *arg);
+
+/* Serial input handling */
+#define MAX_CLI_LEN 32
+void cliRead();
+
 #endif

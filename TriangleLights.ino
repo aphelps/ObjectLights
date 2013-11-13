@@ -109,6 +109,13 @@ void loop() {
 		);
 }
 
+
+void serialEvent() {
+  cliRead();
+}
+
+
+
 #if 0
 /*
  * Once the topology of the triangles has been set this can be used
