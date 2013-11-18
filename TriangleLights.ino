@@ -48,6 +48,11 @@ uint16_t modePeriods[] = {
   MODE_PERIOD
 };
 
+pattern_args_t patternConfig = {
+  pixel_color(0, 0, 0), // bgColor
+  pixel_color(255, 255, 255) // fgColor
+};
+
 void setup()
 {
   Serial.begin(9600);
@@ -59,7 +64,7 @@ void setup()
   randomSeed(analogRead(3));
 
   pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
-  // pixels = PixelUtil(numLeds, 8, 12); // HMTL=8,12  Hand=12, 11);
+  //pixels = PixelUtil(numLeds, 12, 8); // HMTL=8,12  Hand=12, 11);
 
   /* Setup the sensors */
   initializePins();
@@ -88,16 +93,16 @@ void loop() {
   }
 
   /* Check for update of light sensor value */
-  //  sensor_photo();
+  sensor_photo();
 
   /* Run the current mode and update the triangles */
   modeFunctions[mode](triangles, numTriangles, modePeriods[mode],
-		      prev_mode != mode, NULL);
+		      prev_mode != mode, &patternConfig);
   updateTrianglePixels(triangles, numTriangles, &pixels);
   prev_mode = mode;
 
   DEBUG_COMMAND(DEBUG_HIGH,
-		static long next_millis = 0;
+		static unsigned long next_millis = 0;
 		if (millis() > next_millis) {
 		  if (next_millis % 2 == 0) {
 		    digitalWrite(DEBUG_LED, HIGH);
