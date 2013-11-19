@@ -22,6 +22,7 @@ Triangle *triangles;
 
 #define MODE_PERIOD 50
 triangle_mode_t modeFunctions[] = {
+  trianglesCircle,
   trianglesSnake,
 //  trianglesTestPattern,
 //  trianglesCircleCorner,
@@ -36,6 +37,7 @@ triangle_mode_t modeFunctions[] = {
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (triangle_mode_t))
 
 uint16_t modePeriods[] = {
+  MODE_PERIOD,
   MODE_PERIOD,
 //  500,
 //  MODE_PERIOD,

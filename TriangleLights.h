@@ -23,7 +23,10 @@ int getLightValue();
 
 void initializePins();
 
-/* Triangle light modes */
+/*
+ * Triangle light modes
+ */
+
 typedef struct {
   uint32_t bgColor;
   uint32_t fgColor;
@@ -50,6 +53,8 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 			  boolean init, pattern_args_t *arg);
 void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
 			    boolean init, pattern_args_t *arg);
+void trianglesCircle(Triangle *triangles, int size, int periodms,
+			   boolean init, pattern_args_t *arg);
 void trianglesSnake(Triangle *triangles, int size, int periodms,
 		    boolean init, pattern_args_t *arg);
 

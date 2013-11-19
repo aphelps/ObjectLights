@@ -79,4 +79,9 @@ void updateTrianglePixels(Triangle *triangles, int numTriangles,
 /* Allocate and return a fully connected icosohedron */
 Triangle* buildIcosohedron(int *numTriangles, int numLeds);
 
+
+/* Macros for rotating around the vertices of a triangle */
+#define VERTEX_CW(v) ((v + 1) % TRIANGLE_NUM_VERTICES)
+#define VERTEX_CCW(v) ((v + TRIANGLE_NUM_VERTICES - 1) % TRIANGLE_NUM_VERTICES)
+
 #endif

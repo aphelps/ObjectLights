@@ -12,7 +12,6 @@ General todo
   - Use the color data in the pixels rather than one in structure
   - Change booleans to byte + flags
   - Switch pointers to indexes
-* Serial based CLI
 
 Light pattern ideas
 -------------------

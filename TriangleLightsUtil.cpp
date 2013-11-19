@@ -441,6 +441,84 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
   }
 }
 
+/* Go in a large circle around a pentagon */
+void movementCircleRight(Triangle *currentTriangle, byte vertex,
+		    Triangle **nextTriangle, byte *nextVertex) {
+  static byte phase = 0;
+
+  if (phase % 2 == 0) {
+    *nextTriangle = currentTriangle;
+    *nextVertex = (vertex + 1) % TRIANGLE_NUM_VERTICES;
+  } else {
+    *nextTriangle = currentTriangle->rightOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+  }
+  DEBUG_VALUE(DEBUG_TRACE, "phase=", phase);
+  DEBUG_VALUE(DEBUG_TRACE, " current=", currentTriangle->id);
+  DEBUG_VALUE(DEBUG_TRACE, ",", vertex);
+  DEBUG_VALUE(DEBUG_TRACE, " next=", (*nextTriangle)->id);
+  DEBUG_VALUELN(DEBUG_TRACE, ",", *nextVertex);
+
+  phase++;
+}
+
+/* Go in a large circle around a pentagon */
+void movementCircleLeft(Triangle *currentTriangle, byte vertex,
+		    Triangle **nextTriangle, byte *nextVertex) {
+  static byte phase = 0;
+
+  if (phase % 2 == 0) {
+    *nextTriangle = currentTriangle;
+    *nextVertex = (vertex + TRIANGLE_NUM_VERTICES - 1) % TRIANGLE_NUM_VERTICES;
+  } else {
+    *nextTriangle = currentTriangle->leftOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+  }
+  phase++;
+}
+
+void trianglesCircle(Triangle *triangles, int size, int periodms,
+			     boolean init, pattern_args_t *arg) {
+  static Triangle *current = &triangles[0];
+  static byte vertex = 0;
+  static boolean right = true;
+
+  if (init) {
+    current = &triangles[0];
+    vertex = 0;
+    next_time = millis();
+    clearTriangles(triangles, size);
+    current->setColor(vertex, 255, 0, 0);
+  }
+
+  if (millis() > next_time) {
+    Triangle *next;
+    next_time += periodms;
+
+    // Set the current led to ever increasing white
+    if (current->mark < 250) current->mark += 10;
+    current->setColor(vertex, current->mark, current->mark, current->mark);
+
+    if (random(0, 100) < 95){
+      if (right) {
+	movementCircleRight(current, vertex, &next, &vertex);
+      } else {
+	movementCircleLeft(current, vertex, &next, &vertex);
+      }
+    } else {
+      next = current;
+      vertex = VERTEX_CW(vertex);
+      right = !right;
+    }
+
+    incrementAll(triangles, size, -1, -1, -1);
+    incrementMarkAll(triangles, size, -1);
+
+    next->setColor(vertex, 255, 0, 0);
+    current = next;
+  }
+}
+
 void trianglesBuildup(Triangle *triangles, int size, int periodms,
 		      boolean init, pattern_args_t *arg) {
   static Triangle *current = &triangles[0];
