@@ -22,10 +22,9 @@ Triangle *triangles;
 
 #define MODE_PERIOD 50
 triangle_mode_t modeFunctions[] = {
+  trianglesSetAll,
   trianglesCircle,
   trianglesSnake,
-//  trianglesTestPattern,
-//  trianglesCircleCorner,
   trianglesCircleCorner2,
   trianglesRandomNeighbor,
   trianglesLifePattern,
@@ -33,14 +32,15 @@ triangle_mode_t modeFunctions[] = {
   trianglesBuildup,
   trianglesStaticNoise,
   trianglesSwapPattern
+//  trianglesTestPattern,
+//  trianglesCircleCorner,
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (triangle_mode_t))
 
 uint16_t modePeriods[] = {
+  1000,
   MODE_PERIOD,
   MODE_PERIOD,
-//  500,
-//  MODE_PERIOD,
   MODE_PERIOD,
   MODE_PERIOD,
   500,
@@ -48,11 +48,13 @@ uint16_t modePeriods[] = {
   MODE_PERIOD,
   MODE_PERIOD,
   MODE_PERIOD
+//  500,
+//  MODE_PERIOD,
 };
 
 pattern_args_t patternConfig = {
   pixel_color(0, 0, 0), // bgColor
-  pixel_color(255, 255, 255) // fgColor
+  pixel_color(0xFF, 0xFF, 0xFF) // fgColor
 };
 
 void setup()

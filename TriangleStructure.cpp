@@ -84,9 +84,11 @@ void Triangle::setColor(byte led, uint32_t c) {
   }
 }
 
+extern PixelUtil pixels;
+
 uint32_t Triangle::getColor() {
   if (hasLeds) {
-    return leds[0].color();
+    return pixels.getColor(leds[0].pixel);
   } else {
     return 0;
   }
@@ -94,7 +96,7 @@ uint32_t Triangle::getColor() {
 
 uint32_t Triangle::getColor(byte led) {
   if (hasLeds) {
-    return leds[led].color();
+    return pixels.getColor(leds[led].pixel);
   } else {
     return 0;
   }
@@ -102,7 +104,7 @@ uint32_t Triangle::getColor(byte led) {
 
 byte Triangle::getRed() {
   if (hasLeds) {
-    return leds[0].red();
+    return pixel_red(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
   }
@@ -110,7 +112,7 @@ byte Triangle::getRed() {
 
 byte Triangle::getRed(byte vertex) {
   if (hasLeds) {
-    return leds[vertex].red();
+    return pixel_red(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
   }
@@ -119,7 +121,7 @@ byte Triangle::getRed(byte vertex) {
 
 byte Triangle::getGreen() {
   if (hasLeds) {
-    return leds[0].green();
+    return pixel_green(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
   }
@@ -127,7 +129,7 @@ byte Triangle::getGreen() {
 
 byte Triangle::getGreen(byte vertex) {
   if (hasLeds) {
-    return leds[vertex].green();
+    return pixel_green(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
   }
@@ -136,7 +138,7 @@ byte Triangle::getGreen(byte vertex) {
 
 byte Triangle::getBlue() {
   if (hasLeds) {
-    return leds[0].blue();
+    return pixel_blue(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
   }
@@ -144,7 +146,7 @@ byte Triangle::getBlue() {
 
 byte Triangle::getBlue(byte vertex) {
   if (hasLeds) {
-    return leds[vertex].blue();
+    return pixel_blue(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
   }
@@ -202,7 +204,7 @@ byte Triangle::matchVertexLeft(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
   for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
     if (edges[edge] == neighbor) {
-      return (edge + 2) % TRIANGLE_NUM_EDGES;
+      return (edge + 1) % TRIANGLE_NUM_EDGES;
     }
   }
   return (byte)-1;

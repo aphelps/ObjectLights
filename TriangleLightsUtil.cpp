@@ -753,3 +753,21 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     DEBUG_VALUELN(DEBUG_TRACE, F(" vert:"), vert);
   }
 }
+
+/* Just set all triangles to the indicate foreground color */
+void trianglesSetAll(Triangle *triangles, int size, int periodms,
+			  boolean init, pattern_args_t *arg) {
+  if (init) {
+    next_time = millis();
+    setAllTriangles(triangles, size, arg->fgColor);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+    DEBUG_HEXVAL(DEBUG_HIGH, "color=", arg->fgColor);
+    DEBUG_HEXVAL(DEBUG_HIGH, " getColor=", triangles[0].getColor());
+    DEBUG_HEXVAL(DEBUG_HIGH, " getRed=", triangles[0].getRed());
+    DEBUG_HEXVAL(DEBUG_HIGH, " getGreen=", triangles[0].getGreen());
+    DEBUG_HEXVALLN(DEBUG_HIGH, " getBlue=", triangles[0].getBlue());
+  }
+}

@@ -57,6 +57,8 @@ void trianglesCircle(Triangle *triangles, int size, int periodms,
 			   boolean init, pattern_args_t *arg);
 void trianglesSnake(Triangle *triangles, int size, int periodms,
 		    boolean init, pattern_args_t *arg);
+void trianglesSetAll(Triangle *triangles, int size, int periodms,
+		     boolean init, pattern_args_t *arg);
 
 /* Serial input handling */
 #define MAX_CLI_LEN 32
