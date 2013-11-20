@@ -12,6 +12,7 @@ General todo
   - Use the color data in the pixels rather than one in structure
   - Change booleans to byte + flags
   - Switch pointers to indexes
+* Figure out why Life2 has only red
 
 Light pattern ideas
 -------------------
