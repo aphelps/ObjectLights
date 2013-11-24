@@ -49,7 +49,7 @@ uint16_t modePeriods[] = {
   500,
   MODE_PERIOD,
   MODE_PERIOD,
-  MODE_PERIOD
+  10
 //  500,
 //  MODE_PERIOD,
 };
@@ -95,6 +95,7 @@ void loop() {
 
   mode = getButtonValue() % NUM_MODES;
   if (mode != prev_mode) {
+    DEBUG_VALUE(DEBUG_HIGH, "mode=", mode);
     DEBUG_MEMORY(DEBUG_HIGH);
   }
 

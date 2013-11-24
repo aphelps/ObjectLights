@@ -151,6 +151,121 @@ void incrementAll(Triangle *triangles, int size,
   }
 }
 
+
+/******************************************************************************
+ * Triangle traversals
+ */
+
+void movementCornerCW(Triangle *currentTriangle, byte vertex,
+			 Triangle **nextTriangle, byte *nextVertex) {
+  *nextTriangle = currentTriangle->leftOfVertex(vertex);
+  *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+}
+
+void movementCornerCCW(Triangle *currentTriangle, byte vertex,
+			Triangle **nextTriangle, byte *nextVertex) {
+  *nextTriangle = currentTriangle->rightOfVertex(vertex);
+  *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+}
+
+/* Go in a large circle around a pentagon */
+void movementCircleCW(Triangle *currentTriangle, byte vertex,
+		    Triangle **nextTriangle, byte *nextVertex) {
+  static byte phase = 0;
+
+  if (phase % 2 == 0) {
+    *nextTriangle = currentTriangle;
+    *nextVertex = VERTEX_CW(vertex);
+  } else {
+    *nextTriangle = currentTriangle->rightOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+  }
+  DEBUG_VALUE(DEBUG_TRACE, "phase=", phase);
+  DEBUG_VALUE(DEBUG_TRACE, " current=", currentTriangle->id);
+  DEBUG_VALUE(DEBUG_TRACE, ",", vertex);
+  DEBUG_VALUE(DEBUG_TRACE, " next=", (*nextTriangle)->id);
+  DEBUG_VALUELN(DEBUG_TRACE, ",", *nextVertex);
+
+  phase++;
+}
+
+/* Go in a large circle around a pentagon */
+void movementCircleCCW(Triangle *currentTriangle, byte vertex,
+		    Triangle **nextTriangle, byte *nextVertex) {
+  static byte phase = 0;
+
+  if (phase % 2 == 0) {
+    *nextTriangle = currentTriangle;
+    *nextVertex = VERTEX_CCW(vertex);
+  } else {
+    *nextTriangle = currentTriangle->leftOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+  }
+  phase++;
+}
+
+/* Follow a belt around the triangles */
+void movementBelt1(Triangle *currentTriangle, byte vertex,
+		    Triangle **nextTriangle, byte *nextVertex) {
+  static byte phase = 0;
+
+  switch (phase % 6) {
+  case 0: case 1: {
+    *nextTriangle = currentTriangle;
+    *nextVertex = VERTEX_CW(vertex);
+    break;
+  }
+  case 2: {
+    *nextTriangle = currentTriangle->rightOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+    break;
+  }
+  case 3: case 4: {
+    *nextTriangle = currentTriangle;
+    *nextVertex = VERTEX_CCW(vertex);
+    break;
+  }
+  case 5: {
+    *nextTriangle = currentTriangle->leftOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+    break;
+  }
+  }
+  phase++;
+}
+
+/* Follow a belt around the triangles */
+void movementBelt2(Triangle *currentTriangle, byte vertex,
+		    Triangle **nextTriangle, byte *nextVertex) {
+  static byte phase = 0;
+
+  switch (phase % 6) {
+  case 3: case 4: {
+    *nextTriangle = currentTriangle;
+    *nextVertex = VERTEX_CW(vertex);
+    break;
+  }
+  case 5: {
+    *nextTriangle = currentTriangle->rightOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+    break;
+  }
+  case 0: case 1: {
+    *nextTriangle = currentTriangle;
+    *nextVertex = VERTEX_CCW(vertex);
+    break;
+  }
+  case 2: {
+    *nextTriangle = currentTriangle->leftOfVertex(vertex);
+    *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+    break;
+  }
+  }
+  phase++;
+}
+
+
+
 /******************************************************************************
  * Triangle Patterns
  */
@@ -353,11 +468,10 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
   static int vertex = 0;
 
   if (init) {
-    current = &triangles[0];
-    vertex = 0;
+    current = &triangles[random(0, size)];
+    vertex = random(0, 3);
     next_time = millis();
     clearTriangles(triangles, size);
-    current->setColor(vertex, 255, 0, 0);
   }
 
   if (millis() > next_time) {
@@ -400,11 +514,10 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
   static int vertex = 0;
 
   if (init) {
-    current = &triangles[0];
-    vertex = 0;
+    current = &triangles[random(0, size)];
+    vertex = random(0, 3);
     next_time = millis();
     clearTriangles(triangles, size);
-    current->setColor(vertex, 255, 0, 0);
   }
 
   if (millis() > next_time) {
@@ -441,54 +554,6 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
   }
 }
 
-void movementCornerCW(Triangle *currentTriangle, byte vertex,
-			 Triangle **nextTriangle, byte *nextVertex) {
-  *nextTriangle = currentTriangle->leftOfVertex(vertex);
-  *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
-}
-
-void movementCornerCCW(Triangle *currentTriangle, byte vertex,
-			Triangle **nextTriangle, byte *nextVertex) {
-  *nextTriangle = currentTriangle->rightOfVertex(vertex);
-  *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
-}
-
-/* Go in a large circle around a pentagon */
-void movementCircleCW(Triangle *currentTriangle, byte vertex,
-		    Triangle **nextTriangle, byte *nextVertex) {
-  static byte phase = 0;
-
-  if (phase % 2 == 0) {
-    *nextTriangle = currentTriangle;
-    *nextVertex = (vertex + 1) % TRIANGLE_NUM_VERTICES;
-  } else {
-    *nextTriangle = currentTriangle->rightOfVertex(vertex);
-    *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
-  }
-  DEBUG_VALUE(DEBUG_TRACE, "phase=", phase);
-  DEBUG_VALUE(DEBUG_TRACE, " current=", currentTriangle->id);
-  DEBUG_VALUE(DEBUG_TRACE, ",", vertex);
-  DEBUG_VALUE(DEBUG_TRACE, " next=", (*nextTriangle)->id);
-  DEBUG_VALUELN(DEBUG_TRACE, ",", *nextVertex);
-
-  phase++;
-}
-
-/* Go in a large circle around a pentagon */
-void movementCircleCCW(Triangle *currentTriangle, byte vertex,
-		    Triangle **nextTriangle, byte *nextVertex) {
-  static byte phase = 0;
-
-  if (phase % 2 == 0) {
-    *nextTriangle = currentTriangle;
-    *nextVertex = (vertex + TRIANGLE_NUM_VERTICES - 1) % TRIANGLE_NUM_VERTICES;
-  } else {
-    *nextTriangle = currentTriangle->leftOfVertex(vertex);
-    *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
-  }
-  phase++;
-}
-
 void trianglesCircle(Triangle *triangles, int size, int periodms,
 			     boolean init, pattern_args_t *arg) {
   static Triangle *current = &triangles[0];
@@ -496,11 +561,10 @@ void trianglesCircle(Triangle *triangles, int size, int periodms,
   static boolean right = true;
 
   if (init) {
-    current = &triangles[0];
-    vertex = 0;
+    current = &triangles[random(0, size)];
+    vertex = random(0, 3);
     next_time = millis();
     clearTriangles(triangles, size);
-    current->setColor(vertex, 255, 0, 0);
   }
 
   if (millis() > next_time) {
@@ -539,45 +603,67 @@ void trianglesLooping(Triangle *triangles, int size, int periodms,
   static byte count = 0;
 
   if (init) {
-    current = &triangles[0];
-    vertex = 0;
+    current = &triangles[random(0, size)];
+    vertex = random(0, 3);
     next_time = millis();
     clearTriangles(triangles, size);
-    current->setColor(vertex, 255, 0, 0);
   }
 
   if (millis() > next_time) {
     Triangle *next;
+    byte nextVertex;
+    byte increment = 10;
+    byte threshold = 5;
     next_time += periodms;
 
-    // Set the current led to ever increasing white
-    if (current->mark < 250) current->mark += 10;
-    current->setColor(vertex, current->mark, current->mark, current->mark);
-
-    if (random(0, 100) < 5) {
-      mode += random(0, 4);
-    }
-
-    switch (mode % 4) {
+    switch (mode % 6) {
     case 0:
-      movementCornerCW(current, vertex, &next, &vertex);
+      movementCornerCW(current, vertex, &next, &nextVertex);
+      increment = 5;
+      threshold = 5;
       break;
     case 1:
-      movementCornerCCW(current, vertex, &next, &vertex);
+      movementCornerCCW(current, vertex, &next, &nextVertex);
+      increment = 5;
+      threshold = 5;
       break;
     case 2:
-      movementCircleCW(current, vertex, &next, &vertex);
+      movementCircleCW(current, vertex, &next, &nextVertex);
+      increment = 10;
+      threshold = 5;
       break;
     case 3:
-      movementCircleCCW(current, vertex, &next, &vertex);
+      movementCircleCCW(current, vertex, &next, &nextVertex);
+      increment = 10;
+      threshold = 5;
+      break;
+    case 4:
+      movementBelt1(current, vertex, &next, &nextVertex);
+      increment = 15;
+      threshold = 2;
+      break;
+    case 5:
+      movementBelt2(current, vertex, &next, &nextVertex);
+      increment = 15;
+      threshold = 2;
       break;
     }
+
+    if (random(0, 100) < threshold) {
+      mode += random(0, 6);
+    }
+
+    // Set the current led to ever increasing white
+    if (current->mark < 250) current->mark += increment;
+    current->setColor(vertex, current->mark, current->mark, current->mark);
 
     incrementAll(triangles, size, -1, -1, -1);
     incrementMarkAll(triangles, size, -1);
 
-    next->setColor(vertex, pixel_wheel(count++));
+    next->mark = next->getRed(nextVertex);
+    next->setColor(nextVertex, 255, 0, 0);
     current = next;
+    vertex = nextVertex;
   }
 }
 

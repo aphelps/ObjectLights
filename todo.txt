@@ -13,6 +13,7 @@ General todo
   - Change booleans to byte + flags
   - Switch pointers to indexes
 * Figure out why Life2 has only red
+* Mode that lights up the points
 
 Light pattern ideas
 -------------------
