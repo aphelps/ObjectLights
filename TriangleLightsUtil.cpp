@@ -151,6 +151,40 @@ void incrementAll(Triangle *triangles, int size,
   }
 }
 
+/******************************************************************************
+ * Color modes
+ */
+
+/* White builds up as an vertex is visited and fades over time */
+void colorWhiteBuildupFade(Triangle *current, byte currVertex,
+			   Triangle *next, byte nextVertex,
+			   Triangle *triangles, byte size,
+			   byte increment) {
+  if (current->mark <= (255 - increment)) current->mark += increment;
+  else current->mark = 255;
+  current->setColor(currVertex, current->mark, current->mark, current->mark);
+
+  incrementAll(triangles, size, -1, -1, -1);
+  incrementMarkAll(triangles, size, -1);
+
+  next->mark = next->getRed(nextVertex);
+  next->setColor(nextVertex, 255, 0, 0);
+}
+
+/* Pixels are set to a pixel_wheel value and face over time */
+void colorRainbowTrail(Triangle *current, byte currVertex,
+		       Triangle *next, byte nextVertex,
+		       Triangle *triangles, byte size) {
+  static byte wheel_position = 0;
+
+  // Perhaps a shift instead?  How to achieve an evenish fade?
+  //  incrementAll(triangles, size, -10, -10, -10);
+  incrementAll(triangles, size, 1, 1, 1);
+
+  next->setColor(nextVertex, pixel_wheel(wheel_position));
+  wheel_position += 5;
+}
+
 
 /******************************************************************************
  * Triangle traversals
@@ -600,7 +634,6 @@ void trianglesLooping(Triangle *triangles, int size, int periodms,
   static Triangle *current = &triangles[0];
   static byte vertex = 0;
   static byte mode = 0;
-  static byte count = 0;
 
   if (init) {
     current = &triangles[random(0, size)];
@@ -653,15 +686,10 @@ void trianglesLooping(Triangle *triangles, int size, int periodms,
       mode += random(0, 6);
     }
 
-    // Set the current led to ever increasing white
-    if (current->mark < 250) current->mark += increment;
-    current->setColor(vertex, current->mark, current->mark, current->mark);
+    //colorWhiteBuildupFade(current, vertex, next, nextVertex, triangles, size, increment);
 
-    incrementAll(triangles, size, -1, -1, -1);
-    incrementMarkAll(triangles, size, -1);
+    colorRainbowTrail(current, vertex, next, nextVertex, triangles, size);
 
-    next->mark = next->getRed(nextVertex);
-    next->setColor(nextVertex, 255, 0, 0);
     current = next;
     vertex = nextVertex;
   }
