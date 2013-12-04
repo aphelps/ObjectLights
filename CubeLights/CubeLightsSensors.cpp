@@ -56,10 +56,12 @@ void sensor_photo(void)
 /* ***** Capacitive Sensors ***************************************************/
 
 boolean touch_states[CAP_TOUCH_MAX];
-MPR121 touch_sensor(CAP_TOUCH_PIN, touch_states, false);
+MPR121 touch_sensor;//(CAP_TOUCH_PIN, touch_states, false);
 
 void sensor_cap_init() 
 {
+  touch_sensor = MPR121(CAP_TOUCH_PIN, touch_states, false);
+  DEBUG_PRINTLN(DEBUG_MID, "Initializing cap touch");
   for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
     touch_states[i] = 0;
   }

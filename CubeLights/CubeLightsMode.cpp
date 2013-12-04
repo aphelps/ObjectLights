@@ -36,7 +36,7 @@ int get_current_mode(void)
 #endif
   
   if (current_mode != previous_mode) {
-    DEBUG_VALUE(2, " New mode: ", current_mode);
+    DEBUG_VALUE(2, F(" New mode: "), current_mode);
     previous_mode = current_mode;
 
     Tlc.setAll(0);

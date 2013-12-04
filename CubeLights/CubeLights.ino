@@ -56,8 +56,10 @@ void * modeArguments[] = {
  *****************************************************************************/
 void setup()
 {
-  //Serial.begin(9600);
-  Serial.begin(115200);
+  Serial.begin(9600);
+  DEBUG_PRINT(DEBUG_HIGH, "Baud is 9600");
+  //Serial.print("Set baud rate to 115200");
+  //Serial.begin(115200);
 
   randomSeed(analogRead(0));
 
@@ -73,6 +75,8 @@ void setup()
 
   /* Turn on input pullup on analog photo pin */
   digitalWrite(PHOTO_PIN, HIGH); 
+
+  DEBUG_PRINTLN(DEBUG_MID, "Setup complete");
 }
 
 
