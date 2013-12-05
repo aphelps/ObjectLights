@@ -1,32 +1,23 @@
 /*******************************************************************************
- * 
+ * Copyright: 2013, Adam Phelps
  * 
  * XXX: Put a license here
  ******************************************************************************/
 
+#include <Arduino.h>
+#include <NewPing.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_WS2801.h>
 
 #define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
-#include <Arduino.h>
-#include <NewPing.h>
-#include "Tlc5940.h"
-#include <Wire.h>
+#include "GeneralUtils.h"
+#include "PixelUtil.h"
 
 #include "CubeLights.h"
 #include "MPR121.h"
-
-#if NUM_TLCS != 1
-  /* NUM_TLCS must be set to 1 in tlc_config.h */
-  NUM_TLCS must equal 1;
-#endif
-
-/* TCL Pin values */
-int16_t ledValues[NUM_LEDS] = {
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-  MAX_VALUE, MAX_VALUE, MAX_VALUE, MAX_VALUE,
-};
 
 mode_function_t modeFunctions[] = {
   mode_set_all,          // MODE_SET_ALL
@@ -48,7 +39,12 @@ void * modeArguments[] = {
   NULL,                 // MODE_SENSE_DISTANCE
 };
 
-#define INITIAL_VALUE 0
+
+#define SETUP_STATE 0 // Used during structure configuration
+#define DEBUG_LED 13
+
+int numLeds = 45;
+PixelUtil pixels;
 
 
 /******************************************************************************
@@ -63,15 +59,9 @@ void setup()
 
   randomSeed(analogRead(0));
 
-  sensor_cap_init(); /* Initialize the capacitive sensors */
+  //sensor_cap_init(); /* Initialize the capacitive sensors */
 
-  /* Initialize the LED drivers with all-off */ 
-  Tlc.init(INITIAL_VALUE);
-
-  /* Initialize the LED values */
-  for (int led = 0; led < NUM_LEDS; led++) {
-    ledValues[led] = INITIAL_VALUE;
-  }
+  pixels = PixelUtil(numLeds, 12, 8);
 
   /* Turn on input pullup on analog photo pin */
   digitalWrite(PHOTO_PIN, HIGH); 
@@ -86,36 +76,62 @@ void setup()
  *****************************************************************************/
 void loop()
 {
-  /* Update sensors as needed */
-  sensor_cap();
-  sensor_range();
+#if SETUP_STATE == 1
+  setupMode(); 
+  return;
+#endif
+
+  static byte prev_mode = -1;
+  byte mode = 0;
+
+#if 0
+  mode = getButtonValue() % NUM_MODES;
+  if (mode != prev_mode) {
+    DEBUG_VALUE(DEBUG_HIGH, "mode=", mode);
+    DEBUG_MEMORY(DEBUG_HIGH);
+  }
+
+  /* Check for update of light sensor value */
   sensor_photo();
 
-  int mode;
-  int delay_period_ms;
-  //if (photo_dark) {
-  if (range_cm > 10) {
-    /* Get the current mode */
-    mode = get_current_mode();
+  /* Run the current mode and update the triangles */
+  modeFunctions[mode](triangles, numTriangles, modePeriods[mode],
+		      prev_mode != mode, &patternConfig);
+  updateTrianglePixels(triangles, numTriangles, &pixels);
+  prev_mode = mode;
+#else
 
-    /* Call the action function for the current mode */
-    delay_period_ms = modeFunctions[mode](modeArguments[mode]);
-  } else {
-    /* When its light out then turn the lights off */
-    mode = -1;
-    delay_period_ms = mode_set_all(0);
+#if 0
+  static unsigned long next_time = millis();
+
+  if (millis() > next_time) {
+    prev_mode++;
+    next_time = next_time + random(10, 100);
+
+    for (int i = 0; i < numLeds; i++) {
+      if (prev_mode % 2 == 0) {
+	pixels.setPixelRGB(i, 0, 0, 0);
+      } else {
+	pixels.setPixelRGB(i, 255, 255, 255);
+      }
+    }
+    DEBUG_VALUELN(DEBUG_HIGH, "mode=", mode);
   }
+#endif
 
-  send_update();
+  pixels.patternOne(50);
+  pixels.update();
+#endif
 
-  static unsigned long next_update = 0;
-  if (millis() > next_update) {
-    DEBUG_VALUE(DEBUG_HIGH, F(" Mode:"), mode);
-    DEBUG_VALUE(DEBUG_HIGH, F(" Per:"), delay_period_ms);
-    DEBUG_PRINT_END();
-    next_update = millis() + 1000;
-  }
-
-  /* Wait for the specifided interval */
-  delay(delay_period_ms);
+  DEBUG_COMMAND(DEBUG_TRACE,
+		static unsigned long next_millis = 0;
+		if (millis() > next_millis) {
+		  if (next_millis % 2 == 0) {
+		    digitalWrite(DEBUG_LED, HIGH);
+		  } else {
+		    digitalWrite(DEBUG_LED, LOW);
+		  }
+		  next_millis += 251;
+		}
+		);
 }

@@ -10,7 +10,7 @@
 
 #define MAX_VALUE 4095 // Max TLC pin value
 
-#define NUM_LEDS 12
+#define NUM_LEDS 45
 #define TLC_DEBUG_LED1 14
 #define TLC_DEBUG_LED2 15
 
