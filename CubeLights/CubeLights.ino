@@ -16,35 +16,18 @@
 #include "GeneralUtils.h"
 #include "PixelUtil.h"
 
+#include "SquareStructure.h"
 #include "CubeLights.h"
 #include "MPR121.h"
-
-mode_function_t modeFunctions[] = {
-  mode_set_all,          // MODE_SET_ALL
-  mode_swap_one,         // MODE_SWAP_ONE
-  mode_fade_one,         // MODE_FADE_ONE
-  mode_count_up,         // MODE_COUNT_UP
-  mode_flash_ordered,    // MODE_FLASH_ORDERED
-  mode_random_fades,     // MODE_RANDOM_FADES
-  mode_sense_distance,   // MODE_SENSE_DISTANCE
-};
-
-void * modeArguments[] = {
-  (void *)MAX_VALUE,    // MODE_SET_ALL
-  NULL,                 // MODE_SWAP_ONE
-  NULL,                 // MODE_FADE_ONE
-  NULL,                 // MODE_COUNT_UP
-  NULL,                 // MODE_FLASH_ORDERED
-  NULL,                 // MODE_RANDOM_FADES
-  NULL,                 // MODE_SENSE_DISTANCE
-};
-
 
 #define SETUP_STATE 0 // Used during structure configuration
 #define DEBUG_LED 13
 
 int numLeds = 45;
 PixelUtil pixels;
+
+int numSquares = 6;
+Square *squares;
 
 
 /******************************************************************************
@@ -57,14 +40,18 @@ void setup()
   //Serial.print("Set baud rate to 115200");
   //Serial.begin(115200);
 
-  randomSeed(analogRead(0));
-
-  //sensor_cap_init(); /* Initialize the capacitive sensors */
+  /* Initialize random see by reading from an unconnected analog pin */
+  randomSeed(analogRead(3));
 
   pixels = PixelUtil(numLeds, 12, 8);
 
-  /* Turn on input pullup on analog photo pin */
-  digitalWrite(PHOTO_PIN, HIGH); 
+  /* Setup the sensors */
+  initializePins();
+  //sensor_cap_init(); /* Initialize the capacitive sensors */
+
+  /* Generate the geometry */
+  squares = buildCube(&numSquares, numLeds);
+  DEBUG_VALUELN(DEBUG_HIGH, "Inited with numSquares:", numSquares);
 
   DEBUG_PRINTLN(DEBUG_MID, "Setup complete");
 }
@@ -83,6 +70,13 @@ void loop()
 
   static byte prev_mode = -1;
   byte mode = 0;
+
+  squares[0].setColor(255, 0, 0);   // R
+  squares[1].setColor(0, 255, 0);   // G
+  squares[2].setColor(0, 0, 255);   // B
+  squares[3].setColor(255, 255, 0); // Y
+  squares[4].setColor(255, 0, 255); // Purple
+  updateSquarePixels(squares, numSquares, &pixels);
 
 #if 0
   mode = getButtonValue() % NUM_MODES;
@@ -119,8 +113,8 @@ void loop()
   }
 #endif
 
-  pixels.patternOne(50);
-  pixels.update();
+  //  pixels.patternOne(50);
+  //pixels.update();
 #endif
 
   DEBUG_COMMAND(DEBUG_TRACE,

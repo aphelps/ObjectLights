@@ -6,15 +6,12 @@
 #ifndef CUBELIGHTS_H
 #define CUBELIGHTS_H
 
-/***** LED Driver config ******************************************************/
+#include "SquareStructure.h"
 
-#define MAX_VALUE 4095 // Max TLC pin value
+/* Setup all pins */
+void initializePins();
 
-#define NUM_LEDS 45
-#define TLC_DEBUG_LED1 14
-#define TLC_DEBUG_LED2 15
-
-extern int16_t ledValues[];
+// XXX - Below here is old
 
 /***** LED modes **************************************************************/
 
