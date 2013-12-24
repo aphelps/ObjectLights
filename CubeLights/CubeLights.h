@@ -50,9 +50,9 @@ void send_update();
 /***** Sensor info ********************************************************** */
 
 /***** Range finder *****/
-#define PING_TRIG_PIN 8
-#define PING_ECHO_PIN 12
-#define PING_MAX_CM 200   /* Maximum distance in cm, limits the sensor delay */
+#define PING_TRIG_PIN 9
+#define PING_ECHO_PIN 6
+#define PING_MAX_CM 100   /* Maximum distance in cm, limits the sensor delay */
 #define PING_DELAY_MS 250 /* Minimum time between readings */
 
 extern uint16_t range_cm; /* Last value of the range finger */
@@ -81,5 +81,33 @@ extern boolean touch_states[];
 #define CAP_DELAY_MS 250    /* Minimum time between readings */
 void sensor_cap_init(void);
 void sensor_cap(void);
+
+
+/*
+ * Cube light mores
+ */
+
+typedef struct {
+  uint32_t bgColor;
+  uint32_t fgColor;
+} pattern_args_t;
+
+typedef void (*square_mode_t)(Square *squares, int size, int periodms,
+				boolean init, pattern_args_t *arg);
+
+void squaresTestPattern(Square *squares, int size, int periodms,
+			  boolean init, pattern_args_t *arg);
+void squaresSetupPattern(Square *squares, int size, int periodms,
+			  boolean init, pattern_args_t *arg);
+void squaresRandomNeighbor(Square *squares, int size, int periodms,
+			  boolean init, pattern_args_t *arg);
+void squaresCyclePattern(Square *squares, int size, int periodms,
+			 boolean init, pattern_args_t *arg);
+void squaresCirclePattern(Square *squares, int size, int periodms,
+			 boolean init, pattern_args_t *arg);
+void squaresFadeCycle(Square *squares, int size, int periodms,
+		      boolean init, pattern_args_t *arg);
+void squaresAllOn(Square *squares, int size, int periodms,
+		  boolean init, pattern_args_t *arg);
 
 #endif

@@ -29,6 +29,31 @@ PixelUtil pixels;
 int numSquares = 6;
 Square *squares;
 
+square_mode_t modeFunctions[] = {
+  squaresAllOn,          // 0
+  squaresTestPattern,    // 1
+  squaresSetupPattern,   // 2
+  squaresRandomNeighbor, // 3
+  squaresCyclePattern,   // 4
+  squaresCirclePattern,  // 5
+  squaresFadeCycle       // 6
+};
+#define NUM_MODES (sizeof (modeFunctions) / sizeof (cube_mode_t))
+
+uint16_t modePeriods[] = {
+  1000,
+  1000,
+  500,
+  500,
+  500,
+  500,
+  1
+};
+
+pattern_args_t patternConfig = {
+  pixel_color(0, 0, 0), // bgColor
+  pixel_color(0xF, 0xF, 0xF) // fgColor
+};
 
 /******************************************************************************
  * Initialization
@@ -71,15 +96,7 @@ void loop()
   static byte prev_mode = -1;
   byte mode = 0;
 
-  squares[0].setColor(255, 0, 0);   // R
-  squares[1].setColor(0, 255, 0);   // G
-  squares[2].setColor(0, 0, 255);   // B
-  squares[3].setColor(255, 255, 0); // Y
-  squares[4].setColor(255, 0, 255); // Purple
-  updateSquarePixels(squares, numSquares, &pixels);
-
-#if 0
-  mode = getButtonValue() % NUM_MODES;
+  mode = 4; //getButtonValue() % NUM_MODES;
   if (mode != prev_mode) {
     DEBUG_VALUE(DEBUG_HIGH, "mode=", mode);
     DEBUG_MEMORY(DEBUG_HIGH);
@@ -88,34 +105,13 @@ void loop()
   /* Check for update of light sensor value */
   sensor_photo();
 
-  /* Run the current mode and update the triangles */
-  modeFunctions[mode](triangles, numTriangles, modePeriods[mode],
+  /* Run the current mode and update the squares */
+  modeFunctions[mode](squares, numSquares, modePeriods[mode],
 		      prev_mode != mode, &patternConfig);
-  updateTrianglePixels(triangles, numTriangles, &pixels);
+  updateSquarePixels(squares, numSquares, &pixels);
   prev_mode = mode;
-#else
 
-#if 0
-  static unsigned long next_time = millis();
-
-  if (millis() > next_time) {
-    prev_mode++;
-    next_time = next_time + random(10, 100);
-
-    for (int i = 0; i < numLeds; i++) {
-      if (prev_mode % 2 == 0) {
-	pixels.setPixelRGB(i, 0, 0, 0);
-      } else {
-	pixels.setPixelRGB(i, 255, 255, 255);
-      }
-    }
-    DEBUG_VALUELN(DEBUG_HIGH, "mode=", mode);
-  }
-#endif
-
-  //  pixels.patternOne(50);
-  //pixels.update();
-#endif
+  DEBUG_VALUELN(DEBUG_HIGH, "time:", millis());
 
   DEBUG_COMMAND(DEBUG_TRACE,
 		static unsigned long next_millis = 0;
