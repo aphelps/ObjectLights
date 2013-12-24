@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include <NewPing.h>
+#include <Wire.h>
 #include "MPR121.h"
 
 #include "CubeLights.h"
@@ -55,18 +56,20 @@ void sensor_photo(void)
 
 /* ***** Capacitive Sensors ***************************************************/
 
-boolean touch_states[CAP_TOUCH_MAX];
-MPR121 touch_sensor;//(CAP_TOUCH_PIN, touch_states, false);
+boolean touch_states[MPR121::MAX_SENSORS];
+MPR121 touch_sensor; // MPR121 must be initialized after Wire.begin();
 
 void sensor_cap_init() 
 {
+  Wire.begin();
+
   touch_sensor = MPR121(CAP_TOUCH_PIN, touch_states, false); // XXX - Problem?
   DEBUG_PRINTLN(DEBUG_MID, "Initializing cap touch");
-  for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
+  for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
     touch_states[i] = 0;
   }
-  touch_sensor.setThreshold(0, 10, 10);
-  touch_sensor.setThreshold(2, 10, 20);
+  touch_sensor.setThreshold(0, 1, 5);
+  touch_sensor.setThreshold(1, 1, 5);
 }
 
 void sensor_cap(void) 
@@ -81,10 +84,11 @@ void sensor_cap(void)
     next_check = now + CAP_DELAY_MS;
   }
 
-  touch_sensor.readTouchInputs();
-  DEBUG_PRINT(DEBUG_HIGH, F("Cap:"));
-  for (byte i = 0; i < CAP_TOUCH_MAX; i++) {
-    DEBUG_VALUE(DEBUG_HIGH, F(" "), touch_states[i]);
+  if (touch_sensor.readTouchInputs()) {
+    DEBUG_PRINT(DEBUG_HIGH, F("Cap:"));
+    for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
+      DEBUG_VALUE(DEBUG_HIGH, F(" "), touch_states[i]);
+    }
+    DEBUG_PRINT_END();
   }
-  DEBUG_PRINT_END();
 }

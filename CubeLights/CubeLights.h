@@ -69,7 +69,6 @@ extern boolean photo_dark;   /* If its "dark" based on threshold values */
 void sensor_photo(void);     /* Update the photo sensor values */
 
 /***** Capacitive side sensors *****/
-#define CAP_TOUCH_MAX 12
 extern boolean touch_states[];
 
 #define NUM_CAP_SENSORS 2
