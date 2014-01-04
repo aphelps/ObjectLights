@@ -205,9 +205,9 @@ void squaresRandomNeighbor(Square *squares, int size, int periodms,
     current = current->edges[edge];
 
     /* Set the color on the new square */
-    current->setColor(0, 0, 255);
+    current->setColor(arg->fgColor);
     for (byte edge = 0; edge < 3; edge++) {
-      current->edges[edge]->setColor(0, 0, 1);
+      current->edges[edge]->setColor(fadeTowards(arg->fgColor, 0, 95));
     }
   }
 
@@ -324,28 +324,48 @@ void squaresCirclePattern(Square *squares, int size, int periodms,
 
 void squaresFadeCycle(Square *squares, int size, int periodms,
 			  boolean init, pattern_args_t *arg) {
-  static byte phase = 0;
+  static long phase_start = 0;
+  long max_phase = 15 * 1000;
   static boolean fadeup = true;
 
+  long now = millis();
+
   if (init) {
-    phase = 0;
-    next_time = millis();
+    phase_start = now;
+    next_time = now;
     clearSquares(squares, size);
   }
 
-  if (millis() > next_time) {
+  if (now > next_time) {
+    long phase = now - phase_start;
+
     next_time += periodms;
 
     for (int i = 0; i < size; i++) {
       if (fadeup) {
-	squares[i].setColor(fadeTowards(arg->bgColor, arg->fgColor, map(phase, 0, 255, 0, 100)));
+	squares[i].setColor(
+			    fadeTowards(
+					arg->bgColor,
+					arg->fgColor,
+					map(phase, 0, max_phase, 0, 100)
+					)
+			    );
       } else {
-	  squares[i].setColor(fadeTowards(arg->fgColor, arg->bgColor, map(phase, 0, 255, 0, 100)));
+	  squares[i].setColor(
+			      fadeTowards(
+					  arg->fgColor,
+					  arg->bgColor,
+					  map(phase, 0, max_phase, 0, 100)
+					  )
+			      );
       }
     }
 
     phase++;
-    if (phase == 0) fadeup = !fadeup;
+    if (phase > max_phase) {
+      fadeup = !fadeup;
+      phase_start = now;
+    }
   }
 }
 
@@ -353,6 +373,98 @@ void squaresAllOn(Square *squares, int size, int periodms,
 		  boolean init, pattern_args_t *arg) {
   if (init) {
     next_time = millis();
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
     setAllSquares(squares, size, arg->fgColor);
   }
 }
+
+/*
+ * This mode reacts to the capacitive touch sensors
+ */
+void squaresStaticNoise(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg) {
+  if (init) {
+    next_time = millis();
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    /* Set the leds randomly to on off in white */
+    for (int square = 0; square < size; square++) {
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+	if (random(0, 100) < 60) {
+	  squares[square].setColor(led, arg->bgColor);
+	} else {
+	  int facter = random(0, 7);
+	  byte red = pixel_red(arg->fgColor) >> facter;
+	  byte green = pixel_green(arg->fgColor) >> facter;
+	  byte blue = pixel_blue(arg->fgColor) >> facter;
+	  //DEBUG_VALUE(DEBUG_HIGH, "r=", red);
+	  //DEBUG_VALUE(DEBUG_HIGH, " g=", green);
+	  //DEBUG_VALUELN(DEBUG_HIGH, " b=", blue);
+	  squares[square].setColor(led, red, green, blue);
+	}
+      }
+    }
+  }
+}
+
+void squaresSwitchRandom(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg) {
+  if (init) {
+    next_time = millis();
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    byte square = random(0, 5);
+    byte led = random(0, Square::NUM_LEDS);
+
+    if (squares[square].getColor(led) != arg->bgColor) {
+      squares[square].setColor(led, arg->bgColor);
+    } else {
+      squares[square].setColor(led, arg->fgColor);
+    }
+  }
+}
+
+
+/*
+ * This mode reacts to the capacitive touch sensors
+ */
+void squaresCapResponse(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg) {
+  
+}
+
+
+/******************************************************************************
+ * Followup functions
+ */
+
+unsigned long next_followup;
+
+/* 
+ * Set the center LED of each square to the indicated color
+ */
+void squaresLightCenter(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg) {
+  if (init) {
+    next_followup = millis();
+  }
+
+  if (millis() > next_followup) {
+    next_followup += periodms;
+    for (int square = 0; square < 6; square++) {
+      squares[square].setColor(4, arg->fgColor);
+    }
+  }
+}
+
