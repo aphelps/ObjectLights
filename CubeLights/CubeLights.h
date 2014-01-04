@@ -1,53 +1,19 @@
 /*******************************************************************************
- * 
- * 
- * XXX: Put a license here
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
  ******************************************************************************/
 #ifndef CUBELIGHTS_H
 #define CUBELIGHTS_H
 
+#include "MPR121.h"
 #include "SquareStructure.h"
 
 /* Setup all pins */
 void initializePins();
 
-// XXX - Below here is old
-
-/***** LED modes **************************************************************/
-
-/* Return the current mode value */
-int get_current_mode(void);
-
-/* Set the mode */
-void set_current_mode(uint8_t new_mode);
-void restore_current_mode(void);
-
-/* Mode for lights */
-#define MODE_SET_ALL          0
-#define MODE_SWAP_ONE         1
-#define MODE_FADE_ONE         2
-#define MODE_COUNT_UP         3
-#define MODE_FLASH_ORDERED    4
-#define MODE_RANDOM_FADES     5
-#define MODE_SENSE_DISTANCE   6
-
-#define MODE_TOTAL            7 /* 1+ higest mode value */
-
-/* Definition of sign mode function */
-typedef int (*mode_function_t)(void *arg);
-
-/* Mode functions */
-int mode_set_all(void *arg);
-int mode_swap_one(void *arg);
-int mode_fade_one(void *arg);
-int mode_count_up(void *arg);
-int mode_flash_ordered(void *arg);
-int mode_random_fades(void *arg);
-int mode_sense_distance(void *arg);
-
-void send_update();
-
 /***** Sensor info ********************************************************** */
+
+void handle_sensors();
 
 /***** Range finder *****/
 #define PING_TRIG_PIN 9
@@ -69,30 +35,56 @@ extern boolean photo_dark;   /* If its "dark" based on threshold values */
 void sensor_photo(void);     /* Update the photo sensor values */
 
 /***** Capacitive side sensors *****/
-extern boolean touch_states[];
-
-#define NUM_CAP_SENSORS 2
-#define CAP_TOUCH_1 0
-#define CAP_TOUCH_2 2
-
-#define CAP_TOUCH_PIN 2
+extern MPR121 touch_sensor;
 
 #define CAP_DELAY_MS 250    /* Minimum time between readings */
 void sensor_cap_init(void);
 void sensor_cap(void);
 
 
-/*
- * Cube light mores
- */
+/***** Cube light modes *******************************************************/
+
+/* Return the current mode value */
+int get_current_mode(void);
+int get_current_followup(void);
+
+/* Set the mode */
+void set_mode(uint8_t new_mode);
+void increment_mode(void);
+void restore_mode(void);
+
+void set_followup(uint8_t new_followup);
+void increment_followup(void);
+void restore_followup(void);
 
 typedef struct {
   uint32_t bgColor;
   uint32_t fgColor;
 } pattern_args_t;
 
+extern pattern_args_t modeConfig;
+extern pattern_args_t followupConfig;
+
 typedef void (*square_mode_t)(Square *squares, int size, int periodms,
 				boolean init, pattern_args_t *arg);
+
+extern square_mode_t modeFunctions[];
+extern uint16_t modePeriods[];
+extern square_mode_t followupFunctions[];
+extern uint16_t followupPeriods[];
+
+/* Index into the modeFunctions array */
+#define MODE_ALL_ON          0
+#define MODE_TEST_PATTERN    1
+#define MODE_SETUP_PATTERN   2
+#define MODE_RANDOM_NEIGHBOR 3
+#define MODE_CYCLE_PATTERN   4
+#define MODE_CIRCLE_PATTERN  5
+#define MODE_FADE_CYCLE      6
+#define MODE_CAP_RESPONSE    7
+#define MODE_STATIC_NOISE    8
+#define MODE_SWITCH_RANDOM   9
+#define MODE_LIGHT_CENTER   10
 
 void squaresTestPattern(Square *squares, int size, int periodms,
 			  boolean init, pattern_args_t *arg);
@@ -108,5 +100,13 @@ void squaresFadeCycle(Square *squares, int size, int periodms,
 		      boolean init, pattern_args_t *arg);
 void squaresAllOn(Square *squares, int size, int periodms,
 		  boolean init, pattern_args_t *arg);
+void squaresCapResponse(Square *squares, int size, int periodms,
+			  boolean init, pattern_args_t *arg);
+void squaresStaticNoise(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg);
+void squaresSwitchRandom(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg);
+void squaresLightCenter(Square *squares, int size, int periodms,
+			boolean init, pattern_args_t *arg);
 
 #endif

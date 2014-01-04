@@ -1,7 +1,6 @@
 /*******************************************************************************
- * Copyright: 2013, Adam Phelps
- * 
- * XXX: Put a license here
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
  ******************************************************************************/
 
 #include <Arduino.h>
@@ -20,7 +19,6 @@
 #include "CubeLights.h"
 #include "MPR121.h"
 
-#define SETUP_STATE 0 // Used during structure configuration
 #define DEBUG_LED 13
 
 int numLeds = 45;
@@ -29,30 +27,14 @@ PixelUtil pixels;
 int numSquares = 6;
 Square *squares;
 
-square_mode_t modeFunctions[] = {
-  squaresAllOn,          // 0
-  squaresTestPattern,    // 1
-  squaresSetupPattern,   // 2
-  squaresRandomNeighbor, // 3
-  squaresCyclePattern,   // 4
-  squaresCirclePattern,  // 5
-  squaresFadeCycle       // 6
-};
-#define NUM_MODES (sizeof (modeFunctions) / sizeof (cube_mode_t))
-
-uint16_t modePeriods[] = {
-  1000,
-  1000,
-  500,
-  500,
-  500,
-  500,
-  1
-};
-
-pattern_args_t patternConfig = {
+pattern_args_t modeConfig = {
   pixel_color(0, 0, 0), // bgColor
-  pixel_color(0xF, 0xF, 0xF) // fgColor
+  pixel_color(0xFF, 0xFF, 0xFF) // fgColor
+};
+
+pattern_args_t followupConfig = {
+  pixel_color(0, 0, 0), // bgColor
+  pixel_color(0xFF, 0x00, 0x00) // fgColor
 };
 
 /******************************************************************************
@@ -61,7 +43,7 @@ pattern_args_t patternConfig = {
 void setup()
 {
   Serial.begin(9600);
-  DEBUG_PRINT(DEBUG_HIGH, "Baud is 9600");
+  DEBUG_PRINTLN(DEBUG_HIGH, "Baud is 9600");
   //Serial.print("Set baud rate to 115200");
   //Serial.begin(115200);
 
@@ -72,7 +54,7 @@ void setup()
 
   /* Setup the sensors */
   initializePins();
-  //sensor_cap_init(); /* Initialize the capacitive sensors */
+  sensor_cap_init(); /* Initialize the capacitive sensors */
 
   /* Generate the geometry */
   squares = buildCube(&numSquares, numLeds);
@@ -88,32 +70,34 @@ void setup()
  *****************************************************************************/
 void loop()
 {
-#if SETUP_STATE == 1
-  setupMode(); 
-  return;
-#endif
-
   static byte prev_mode = -1;
-  byte mode = 0;
+  byte mode = 0, followup = 0;
 
-  mode = 4; //getButtonValue() % NUM_MODES;
-  if (mode != prev_mode) {
-    DEBUG_VALUE(DEBUG_HIGH, "mode=", mode);
-    DEBUG_MEMORY(DEBUG_HIGH);
-  }
+  /* Check the sensor values */
+  //sensor_photo();
+  sensor_cap();
+  sensor_range();
 
-  /* Check for update of light sensor value */
-  sensor_photo();
+  handle_sensors();
 
   /* Run the current mode and update the squares */
+  mode = get_current_mode();
   modeFunctions[mode](squares, numSquares, modePeriods[mode],
-		      prev_mode != mode, &patternConfig);
+		      prev_mode != mode, &modeConfig);
+
+  /* Run any follup function */
+  followup = get_current_followup();
+  if (followup != (byte)-1) {
+    modeFunctions[followup](squares, numSquares, modePeriods[followup],
+				prev_mode != mode, &followupConfig);  
+  }
+
+  /* Send any changes */
   updateSquarePixels(squares, numSquares, &pixels);
+
   prev_mode = mode;
 
-  DEBUG_VALUELN(DEBUG_HIGH, "time:", millis());
-
-  DEBUG_COMMAND(DEBUG_TRACE,
+  DEBUG_COMMAND(DEBUG_TRACE, // Flash the debug LED
 		static unsigned long next_millis = 0;
 		if (millis() > next_millis) {
 		  if (next_millis % 2 == 0) {
