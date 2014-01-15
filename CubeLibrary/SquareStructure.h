@@ -72,7 +72,7 @@ void updateSquarePixels(Square *squares, int numSquares,
 			  PixelUtil *pixels);
 
 /* Allocate and return a fully connected cube */
-Square* buildCube(int *numSquares, int numLeds);
+Square* buildCube(int *numSquares, int numLeds, int firstLed);
 
 /* Macros for rotating around the vertices of a square */
 #define VERTEX_CW(v) ((v + 1) % SQUARE_NUM_VERTICES)

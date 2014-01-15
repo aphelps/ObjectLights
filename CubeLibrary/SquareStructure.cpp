@@ -3,7 +3,6 @@
 #define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
-#include "CubeConfig.h"
 #include "PixelUtil.h"
 #include "SquareStructure.h"
 
@@ -206,12 +205,12 @@ void makeEdge(Square *squares, int tri, int edge, int neighbor) {
 
 
 Square squareArray[6];
-Square* buildCube(int *numSquares, int numLeds) {
+Square* buildCube(int *numSquares, int numLeds, int firstLed) {
   int squareCount = 6;
 
   Square *squares = &(squareArray[0]);
 
-  int led = FIRST_LED;
+  int led = firstLed;
 
   // XXX: Build topology
   *numSquares = 0;

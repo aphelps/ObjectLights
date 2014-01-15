@@ -58,7 +58,7 @@ void setup()
   sensor_cap_init(); /* Initialize the capacitive sensors */
 
   /* Generate the geometry */
-  squares = buildCube(&numSquares, numLeds);
+  squares = buildCube(&numSquares, numLeds, FIRST_LED);
   DEBUG_VALUELN(DEBUG_HIGH, "Inited with numSquares:", numSquares);
 
   DEBUG_VALUELN(DEBUG_MID, "Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
