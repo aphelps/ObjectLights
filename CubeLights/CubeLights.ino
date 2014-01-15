@@ -17,6 +17,7 @@
 
 #include "SquareStructure.h"
 #include "CubeLights.h"
+#include "CubeConfig.h"
 #include "MPR121.h"
 
 #define DEBUG_LED 13
@@ -60,7 +61,7 @@ void setup()
   squares = buildCube(&numSquares, numLeds);
   DEBUG_VALUELN(DEBUG_HIGH, "Inited with numSquares:", numSquares);
 
-  DEBUG_PRINTLN(DEBUG_MID, "Setup complete");
+  DEBUG_VALUELN(DEBUG_MID, "Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
 }
 
 

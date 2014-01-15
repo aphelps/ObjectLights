@@ -3,6 +3,7 @@
 #define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
+#include "CubeConfig.h"
 #include "PixelUtil.h"
 #include "SquareStructure.h"
 
@@ -210,15 +211,17 @@ Square* buildCube(int *numSquares, int numLeds) {
 
   Square *squares = &(squareArray[0]);
 
+  int led = FIRST_LED;
+
   // XXX: Build topology
   *numSquares = 0;
   makeEdge(squares, 0, 0, 4);
   makeEdge(squares, 0, 1, 3);
   makeEdge(squares, 0, 2, 5);
   makeEdge(squares, 0, 3, 1);
-  squares[*numSquares].setLedPixels(2, 1, 0,
-				    3, 4, 5,
-				    8, 7, 6);
+  squares[*numSquares].setLedPixels(led + 2, led + 1, led + 0,
+				    led + 3, led + 4, led + 5,
+				    led + 8, led + 7, led + 6);
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
@@ -226,9 +229,9 @@ Square* buildCube(int *numSquares, int numLeds) {
   makeEdge(squares, 1, 1, 0);
   makeEdge(squares, 1, 2, 5);
   makeEdge(squares, 1, 3, 2);
-  squares[*numSquares].setLedPixels(17, 16, 15,
-				    12, 13, 14,
-				    11, 10, 9);
+  squares[*numSquares].setLedPixels(led + 17, led + 16, led + 15,
+				    led + 12, led + 13, led + 14,
+				    led + 11, led + 10, led + 9);
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
@@ -236,9 +239,9 @@ Square* buildCube(int *numSquares, int numLeds) {
   makeEdge(squares, 2, 1, 1);
   makeEdge(squares, 2, 2, 5);
   makeEdge(squares, 2, 3, 3);
-  squares[*numSquares].setLedPixels(20, 19, 18,
-				    21, 22, 23,
-				    26, 25, 24);
+  squares[*numSquares].setLedPixels(led + 20, led + 19, led + 18,
+				    led + 21, led + 22, led + 23,
+				    led + 26, led + 25, led + 24);
  (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
@@ -246,9 +249,9 @@ Square* buildCube(int *numSquares, int numLeds) {
   makeEdge(squares, 3, 1, 2);
   makeEdge(squares, 3, 2, 5);
   makeEdge(squares, 3, 3, 0);
-  squares[*numSquares].setLedPixels(35, 34, 33,
-				    30, 31, 32,
-				    29, 28, 27);
+  squares[*numSquares].setLedPixels(led + 35, led + 34, led + 33,
+				    led + 30, led + 31, led + 32,
+				    led + 29, led + 28, led + 27);
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
@@ -256,9 +259,9 @@ Square* buildCube(int *numSquares, int numLeds) {
   makeEdge(squares, 4, 1, 1);
   makeEdge(squares, 4, 2, 2);
   makeEdge(squares, 4, 3, 3);
-  squares[*numSquares].setLedPixels(44, 39, 38,
-  				    43, 40, 37,
-				    42, 41, 36);
+  squares[*numSquares].setLedPixels(led + 44, led + 39, led + 38,
+				    led + 43, led + 40, led + 37,
+				    led + 42, led + 41, led + 36);
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 

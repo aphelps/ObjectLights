@@ -14,3 +14,7 @@ Todo
 * Try using the timer based NewPing methods
 
 * Get rid of the "mode delay" and replace with in-mode time checks
+
+Hardware
+--------
+* Tab on the insert for the cap sensors should have a less tall bump
