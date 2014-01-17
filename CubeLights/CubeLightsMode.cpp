@@ -60,7 +60,7 @@ uint16_t modePeriods[] = {
   1     // MODE_LIGHT_FUNCTION
 };
 
-uint8_t current_mode = 2;
+uint8_t current_mode = 0;
 uint8_t previous_mode = 0;
 
 

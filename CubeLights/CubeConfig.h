@@ -8,23 +8,27 @@
 
 #define CUBE_NUMBER ADAM_CUBE
 
-#define CAP_SENSOR_1 0
-#define CAP_SENSOR_2 1
 
 #define CAP_TOUCH_IRQ 2
 
 // Touch sensor trigger and release values
 #if CUBE_NUMBER == PARENT_CUBE
+  #define CAP_SENSOR_1 0
+  #define CAP_SENSOR_2 1
   #define CAP_SENSOR_1_TOUCH 6
   #define CAP_SENSOR_1_RELEASE 2
   #define CAP_SENSOR_2_TOUCH 6
   #define CAP_SENSOR_2_RELEASE 2
 #elif CUBE_NUMBER == ADAM_CUBE
-  #define CAP_SENSOR_1_TOUCH 9
-  #define CAP_SENSOR_1_RELEASE 1
-  #define CAP_SENSOR_2_TOUCH 9
-  #define CAP_SENSOR_2_RELEASE 4
+  #define CAP_SENSOR_1 0
+  #define CAP_SENSOR_2 1
+  #define CAP_SENSOR_1_TOUCH 12
+  #define CAP_SENSOR_1_RELEASE 2
+  #define CAP_SENSOR_2_TOUCH 12
+  #define CAP_SENSOR_2_RELEASE 2
 #else
+  #define CAP_SENSOR_1 0
+  #define CAP_SENSOR_2 1
   #define CAP_SENSOR_1_TOUCH 6
   #define CAP_SENSOR_1_RELEASE 2
   #define CAP_SENSOR_2_TOUCH 6

@@ -22,7 +22,7 @@
 
 #define DEBUG_LED 13
 
-int numLeds = 45;
+int numLeds = 45 + FIRST_LED;
 PixelUtil pixels;
 
 int numSquares = 6;
