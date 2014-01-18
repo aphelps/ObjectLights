@@ -21,7 +21,7 @@ void handle_sensors();
 #define PING_MAX_CM 100   /* Maximum distance in cm, limits the sensor delay */
 #define PING_DELAY_MS 250 /* Minimum time between readings */
 
-extern uint16_t range_cm; /* Last value of the range finger */
+extern int range_cm; /* Last value of the range finger */
 void sensor_range(void);  /* Update the range finder value */
 
 /***** Photo sensor *****/

@@ -20,7 +20,7 @@
 
 NewPing sonar(PING_TRIG_PIN, PING_ECHO_PIN, PING_MAX_CM);
 
-uint16_t range_cm = 10;
+int range_cm = 10;
 void sensor_range(void)
 {
   static unsigned long nextPing = millis();
@@ -28,11 +28,16 @@ void sensor_range(void)
   if (now >= nextPing) {
     nextPing = now + PING_DELAY_MS;
 
-    uint16_t new_range = sonar.ping() / US_ROUNDTRIP_CM;
+    int new_range = sonar.ping() / US_ROUNDTRIP_CM;
     if (new_range == 0) new_range = PING_MAX_CM;
     if (new_range != range_cm) {
-      DEBUG_VALUE(DEBUG_HIGH, F(" Ping cm:"), range_cm);
-      DEBUG_VALUELN(DEBUG_HIGH, F(" time:"), millis() - now);
+      DEBUG_COMMAND(DEBUG_HIGH,
+		    if (abs(new_range - range_cm) > 5) {
+		      DEBUG_VALUE(DEBUG_HIGH, F(" Ping cm:"), new_range);
+		      DEBUG_VALUE(DEBUG_HIGH, F(" old_cm:"), range_cm);
+		      DEBUG_VALUELN(DEBUG_HIGH, F(" time:"), millis() - now);
+		    }
+		    );
       range_cm = new_range;
     }
   }
