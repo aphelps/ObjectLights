@@ -77,7 +77,7 @@ void set_mode(uint8_t new_mode)
     restorable = true;
     previous_mode = current_mode;
     current_mode = new_mode;
-    DEBUG_VALUELN(DEBUG_HIGH, F("Set mode="), current_mode);
+    DEBUG_VALUELN(DEBUG_HIGH, "Set mode=", current_mode);
   }
 }
 
@@ -92,7 +92,7 @@ void restore_mode(void)
     restorable = false;
     previous_mode = current_mode;
     current_mode = previous_mode;
-    DEBUG_VALUELN(DEBUG_HIGH, F("Restore mode="), current_mode);
+    DEBUG_VALUELN(DEBUG_HIGH, "Restore mode=", current_mode);
   }
 }
 
@@ -136,7 +136,7 @@ void set_followup(uint8_t new_followup)
     restorableFollowup = true;
     previous_followup = current_followup;
     current_followup = new_followup;
-    DEBUG_VALUELN(DEBUG_HIGH, F("Set followup="), current_followup);
+    DEBUG_VALUELN(DEBUG_HIGH, "Set followup=", current_followup);
   }
 }
 
@@ -151,6 +151,6 @@ void restore_followup(void)
     restorableFollowup = false;
     previous_followup = current_followup;
     current_followup = previous_followup;
-    DEBUG_VALUELN(DEBUG_HIGH, F("Restore followup="), current_followup);
+    DEBUG_VALUELN(DEBUG_HIGH, "Restore followup=", current_followup);
   }
 }

@@ -33,9 +33,9 @@ void sensor_range(void)
     if (new_range != range_cm) {
       DEBUG_COMMAND(DEBUG_HIGH,
 		    if (abs(new_range - range_cm) > 5) {
-		      DEBUG_VALUE(DEBUG_HIGH, F(" Ping cm:"), new_range);
-		      DEBUG_VALUE(DEBUG_HIGH, F(" old_cm:"), range_cm);
-		      DEBUG_VALUELN(DEBUG_HIGH, F(" time:"), millis() - now);
+		      DEBUG_VALUE(DEBUG_HIGH, " Ping cm:", new_range);
+		      DEBUG_VALUE(DEBUG_HIGH, " old_cm:", range_cm);
+		      DEBUG_VALUELN(DEBUG_HIGH, " time:", millis() - now);
 		    }
 		    );
       range_cm = new_range;
@@ -61,7 +61,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = false;
     }
-    DEBUG_VALUE(DEBUG_HIGH, F(" Photo:"), photo_value);
+    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
   }
 }
 
@@ -71,6 +71,8 @@ MPR121 touch_sensor; // MPR121 must be initialized after Wire.begin();
 
 void sensor_cap_init() 
 {
+
+#if 1
   Wire.begin();
 
   touch_sensor = MPR121(CAP_TOUCH_IRQ, false); // XXX - Problem with interrupt?
@@ -79,7 +81,7 @@ void sensor_cap_init()
 			    CAP_SENSOR_1_TOUCH, CAP_SENSOR_1_RELEASE);
   touch_sensor.setThreshold(CAP_SENSOR_2,
 			    CAP_SENSOR_2_TOUCH, CAP_SENSOR_2_RELEASE);
-
+#endif
   DEBUG_PRINTLN(DEBUG_MID, "Cap touch initialized");
 }
 
@@ -98,11 +100,11 @@ void sensor_cap(void)
 #endif
 
   if (touch_sensor.readTouchInputs()) {
-    DEBUG_PRINT(DEBUG_HIGH, F("Cap:"));
+    DEBUG_PRINT(DEBUG_HIGH, "Cap:");
     for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
-      DEBUG_VALUE(DEBUG_HIGH, F(" "), touch_sensor.touched(i));
+      DEBUG_VALUE(DEBUG_HIGH, " ", touch_sensor.touched(i));
     }
-    DEBUG_VALUELN(DEBUG_HIGH, F(" ms:"), millis());
+    DEBUG_VALUELN(DEBUG_HIGH, " ms:", millis());
   }
 }
 
@@ -123,7 +125,7 @@ void handle_sensors() {
     static byte color = 0;
     color++;
     modeConfig.fgColor = pixel_wheel(color);
-    //    DEBUG_VALUELN(DEBUG_HIGH, F("Color="), color);
+    //    DEBUG_VALUELN(DEBUG_HIGH, "Color=", color);
 
     if (touch_sensor.touched(CAP_SENSOR_1)) {
       modeConfig.fgColor = pixel_color(255, 255, 255);
