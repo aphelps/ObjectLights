@@ -4,6 +4,7 @@
  ******************************************************************************/
 
 #include <Arduino.h>
+#include "EEPROM.h"
 #include <NewPing.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -19,6 +20,9 @@
 #include "CubeLights.h"
 #include "CubeConfig.h"
 #include "MPR121.h"
+
+#include "EEPromUtils.h"
+#include "HMTLTypes.h"
 
 #define DEBUG_LED 13
 
@@ -38,6 +42,40 @@ pattern_args_t followupConfig = {
   pixel_color(0xFF, 0x00, 0x00) // fgColor
 };
 
+#define CONFIG_ENABLED
+#ifdef CONFIG_ENABLED
+#define CUBE_MAX_OUTPUTS 3
+config_hdr_t config;
+output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
+config_max_t readoutputs[CUBE_MAX_OUTPUTS];
+
+void readConfig() {
+  /* Attempt to read the configuration */
+  if (hmtl_read_config(&config, readoutputs, CUBE_MAX_OUTPUTS) < 0) {
+    hmtl_default_config(&config);
+    DEBUG_PRINTLN(DEBUG_LOW, "Using default config");
+  }
+ if (config.num_outputs > CUBE_MAX_OUTPUTS) {
+    DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
+    config.num_outputs = CUBE_MAX_OUTPUTS;
+  }
+  for (int i = 0; i < config.num_outputs; i++) {
+    outputs[i] = (output_hdr_t *)&readoutputs[i];
+  }
+  DEBUG_COMMAND(DEBUG_HIGH, hmtl_print_config(&config, outputs));
+
+  /* Initialize the outputs */
+  for (int i = 0; i < config.num_outputs; i++) {
+    void *data = NULL;
+    switch (((output_hdr_t *)outputs[i])->type) {
+    case HMTL_OUTPUT_PIXELS: data = &pixels; break;
+    case HMTL_OUTPUT_MPR121: data = &touch_sensor; break;
+    }
+    hmtl_setup_output((output_hdr_t *)outputs[i], data);
+  }
+}
+#endif
+
 /******************************************************************************
  * Initialization
  *****************************************************************************/
@@ -51,17 +89,23 @@ void setup()
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
+#ifdef CONFIG_ENABLED
+  Wire.begin();
+  readConfig();
+#else
   pixels = PixelUtil(numLeds, 12, 8);
+  sensor_cap_init(); /* Initialize the capacitive sensors */
+#endif
 
   /* Setup the sensors */
   initializePins();
-  sensor_cap_init(); /* Initialize the capacitive sensors */
 
   /* Generate the geometry */
   squares = buildCube(&numSquares, numLeds, FIRST_LED);
   DEBUG_VALUELN(DEBUG_HIGH, "Inited with numSquares:", numSquares);
 
   DEBUG_VALUELN(DEBUG_MID, "Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
+  DEBUG_MEMORY(DEBUG_HIGH);
 }
 
 
