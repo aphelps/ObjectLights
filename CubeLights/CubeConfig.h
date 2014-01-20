@@ -22,9 +22,9 @@
 #elif CUBE_NUMBER == ADAM_CUBE
   #define CAP_SENSOR_1 0
   #define CAP_SENSOR_2 1
-  #define CAP_SENSOR_1_TOUCH 12
+  #define CAP_SENSOR_1_TOUCH 16
   #define CAP_SENSOR_1_RELEASE 2
-  #define CAP_SENSOR_2_TOUCH 12
+  #define CAP_SENSOR_2_TOUCH 16
   #define CAP_SENSOR_2_RELEASE 2
 #else
   #define CAP_SENSOR_1 0

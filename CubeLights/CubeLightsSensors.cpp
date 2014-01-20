@@ -28,7 +28,7 @@ void sensor_range(void)
   if (now >= nextPing) {
     nextPing = now + PING_DELAY_MS;
 
-    int new_range = sonar.ping() / US_ROUNDTRIP_CM;
+    int new_range = sonar.ping_cm();
     if (new_range == 0) new_range = PING_MAX_CM;
     if (new_range != range_cm) {
       DEBUG_COMMAND(DEBUG_HIGH,
