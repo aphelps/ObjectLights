@@ -9,12 +9,15 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_WS2801.h>
+#include <SoftwareSerial.h>
+#include <RS485_non_blocking.h>
 
 #define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
 #include "GeneralUtils.h"
 #include "PixelUtil.h"
+#include "RS485Utils.h"
 
 #include "SquareStructure.h"
 #include "CubeLights.h"
@@ -99,6 +102,9 @@ void setup()
 
   /* Setup the sensors */
   initializePins();
+
+  /* Setup the external connection */
+  initializeConnect();
 
   /* Generate the geometry */
   squares = buildCube(&numSquares, numLeds, FIRST_LED);

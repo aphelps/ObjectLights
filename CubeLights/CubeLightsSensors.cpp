@@ -111,6 +111,17 @@ void sensor_cap(void)
 /* ***** Handle sensor input *************************************************/
 
 void handle_sensors() {
+  unsigned long now = millis();
+
+  if (touch_sensor.touched(CAP_SENSOR_1) ||
+      (touch_sensor.touched(CAP_SENSOR_2))) {
+    /* A sensor is touch, send update to remotes */
+    static unsigned long next_send = millis();
+    if (now >= next_send) {
+      sendData();
+      next_send += 10;
+    }
+  }
 
   /* Sensor 1 controls the mode */
   if (touch_sensor.changed(CAP_SENSOR_1) &&

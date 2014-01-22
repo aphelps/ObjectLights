@@ -41,6 +41,9 @@ extern MPR121 touch_sensor;
 void sensor_cap_init(void);
 void sensor_cap(void);
 
+/***** Cube Light Connectivity ***********************************************/
+void initializeConnect();
+void sendData();
 
 /***** Cube light modes *******************************************************/
 
