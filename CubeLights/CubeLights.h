@@ -5,6 +5,7 @@
 #ifndef CUBELIGHTS_H
 #define CUBELIGHTS_H
 
+#include "RS485Utils.h"
 #include "MPR121.h"
 #include "SquareStructure.h"
 
@@ -46,6 +47,8 @@ void sensor_cap(void);
 #define PIN_RS485_RECV     4 // 2 on board v1, 4 on board v2
 #define PIN_RS485_XMIT     7
 #define PIN_RS485_ENABLE   5 // 4 on board v1, 5 on board v2
+
+extern RS485Socket rs485;
 
 void initializeConnect();
 void sendInt(int value);

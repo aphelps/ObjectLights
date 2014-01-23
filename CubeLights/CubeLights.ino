@@ -47,7 +47,7 @@ pattern_args_t followupConfig = {
 
 #define CONFIG_ENABLED
 #ifdef CONFIG_ENABLED
-#define CUBE_MAX_OUTPUTS 3
+#define CUBE_MAX_OUTPUTS 4
 config_hdr_t config;
 output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
 config_max_t readoutputs[CUBE_MAX_OUTPUTS];
@@ -73,6 +73,7 @@ void readConfig() {
     switch (((output_hdr_t *)outputs[i])->type) {
     case HMTL_OUTPUT_PIXELS: data = &pixels; break;
     case HMTL_OUTPUT_MPR121: data = &touch_sensor; break;
+    case HMTL_OUTPUT_RS485: data = &rs485; break;
     }
     hmtl_setup_output((output_hdr_t *)outputs[i], data);
   }

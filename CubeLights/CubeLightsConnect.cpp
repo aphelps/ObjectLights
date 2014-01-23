@@ -26,8 +26,7 @@
 #include "CubeConfig.h"
 
 
-RS485Socket rs485(PIN_RS485_RECV, PIN_RS485_XMIT, PIN_RS485_ENABLE,
-		  false); // Whether to enable debugging text in RS485Socket
+RS485Socket rs485;
 
 #define SEND_BUFFER_SIZE (sizeof (rs485_socket_msg_t) + sizeof (msg_hdr_t) + sizeof (msg_max_t) + 64)
 
@@ -35,7 +34,12 @@ byte databuffer[SEND_BUFFER_SIZE];
 byte *send_buffer;
 
 void initializeConnect() {
-  /* Setup the RS485 connection */  
+  /* Setup the RS485 connection */
+  if (!rs485.initialized) {
+    DEBUG_ERR("RS485 was not initialized, check config");
+    DEBUG_ERR_STATE(DEBUG_ERR_UNINIT);
+  }
+
   rs485.setup();
   send_buffer = rs485.initBuffer(databuffer);
 }

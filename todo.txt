@@ -3,11 +3,15 @@ Todo
 
 * Add CLI to CubeConfigure that aids in setting up LED->Square mappings
 
+* TEST: Store RS485 info in EEPROM
+
 * Store Range finder in EEPROM
 
 * Try using the timer based NewPing methods
 
 * Convert MPR121 arrays from booleans for flags
+
+* Add a "error only" option to Debug.h that only defines the error commands
 
 Hardware
 --------
