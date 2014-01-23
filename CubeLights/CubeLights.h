@@ -42,8 +42,13 @@ void sensor_cap_init(void);
 void sensor_cap(void);
 
 /***** Cube Light Connectivity ***********************************************/
+
+#define PIN_RS485_RECV     4 // 2 on board v1, 4 on board v2
+#define PIN_RS485_XMIT     7
+#define PIN_RS485_ENABLE   5 // 4 on board v1, 5 on board v2
+
 void initializeConnect();
-void sendData();
+void sendInt(int value);
 
 /***** Cube light modes *******************************************************/
 

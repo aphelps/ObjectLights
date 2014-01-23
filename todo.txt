@@ -1,15 +1,13 @@
 Todo
 ----
 
-* Add meta-code to all debug-only code (such as value range checks, etc)
-  - Maybe as an assertion to flash lights or something
+* Add CLI to CubeConfigure that aids in setting up LED->Square mappings
 
-* Map the channels to the geometry
-
-* Store thresholds in EEProm?
-  - Could also store values if a scheme for cycling the address is used to prevent burnout
+* Store Range finder in EEPROM
 
 * Try using the timer based NewPing methods
+
+* Convert MPR121 arrays from booleans for flags
 
 Hardware
 --------

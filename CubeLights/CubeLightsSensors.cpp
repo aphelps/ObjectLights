@@ -115,19 +115,25 @@ void handle_sensors() {
 
   if (touch_sensor.touched(CAP_SENSOR_1) ||
       (touch_sensor.touched(CAP_SENSOR_2))) {
-    /* A sensor is touch, send update to remotes */
+    /* A sensor is touched, send update to remotes */
     static unsigned long next_send = millis();
     if (now >= next_send) {
-      sendData();
+      int command =
+	(touch_sensor.touched(CAP_SENSOR_1) << CAP_SENSOR_1) ||
+	(touch_sensor.touched(CAP_SENSOR_2) << CAP_SENSOR_2);
+      sendInt(command);
       next_send += 10;
     }
+  } else if (touch_sensor.changed(CAP_SENSOR_1) ||
+	     (touch_sensor.changed(CAP_SENSOR_2))){
+    sendInt(0);
   }
 
   /* Sensor 1 controls the mode */
   if (touch_sensor.changed(CAP_SENSOR_1) &&
       touch_sensor.touched(CAP_SENSOR_1) &&
      !touch_sensor.touched(CAP_SENSOR_2)) {
-    /* The sensor was just touched */
+    /* The sensor was just touched on its own */
     increment_mode();
   }
 
