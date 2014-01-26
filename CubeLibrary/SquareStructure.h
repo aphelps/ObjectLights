@@ -37,6 +37,7 @@ class Square {
   Square *getVertex(byte vertex, byte index);
   void setVertex(byte vertex, byte index, Square *square);
 
+  void setLedPixel(byte led, uint16_t pixel);
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2,
 		    uint16_t p3, uint16_t p4, uint16_t p5,
 		    uint16_t p6, uint16_t p7, uint16_t p8);

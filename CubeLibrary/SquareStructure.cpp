@@ -57,6 +57,11 @@ void Square::setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2,
   leds[8].pixel = p8;
 }
 
+void Square::setLedPixel(byte led, uint16_t pixel) {
+  hasLeds = true;
+  leds[led].pixel = pixel;
+}
+
 void Square::setColor(byte r, byte g, byte b) {
   if (hasLeds) {
     for (int i = 0; i < NUM_LEDS; i++) {
