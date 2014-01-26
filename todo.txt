@@ -5,6 +5,7 @@ Todo
 
 * TEST: Store RS485 info in EEPROM
 
+* Add a module header with version numbers
 * Store Range finder in EEPROM
 
 * Try using the timer based NewPing methods

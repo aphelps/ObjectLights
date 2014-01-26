@@ -60,7 +60,7 @@ void readConfig() {
   }
  if (config.num_outputs > CUBE_MAX_OUTPUTS) {
     DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
-    config.num_outputs = CUBE_MAX_OUTPUTS;
+    DEBUG_ERR_STATE(DEBUG_ERR_INVALID);
   }
   for (int i = 0; i < config.num_outputs; i++) {
     outputs[i] = (output_hdr_t *)&readoutputs[i];
