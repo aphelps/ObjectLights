@@ -167,7 +167,7 @@ void setup()
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
-  pixels = PixelUtil(numLeds, 12, 8);
+  pixels.init(numLeds, 12, 8); // Should come from config?
 
   DEBUG_VALUELN(DEBUG_LOW, "Configure initialized.  End address=",
 		configOffset);

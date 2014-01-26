@@ -99,6 +99,9 @@ void setup()
 #ifdef CONFIG_ENABLED
   Wire.begin();
   readConfig();
+
+  /* Setup the external connection */
+  initializeConnect();
 #else
   pixels = PixelUtil(numLeds, 12, 8);
   sensor_cap_init(); /* Initialize the capacitive sensors */
@@ -106,9 +109,6 @@ void setup()
 
   /* Setup the sensors */
   initializePins();
-
-  /* Setup the external connection */
-  initializeConnect();
 
   /* Generate the geometry */
   squares = buildCube(&numSquares, numLeds, FIRST_LED);
