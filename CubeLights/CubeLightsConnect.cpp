@@ -1,6 +1,9 @@
-/*
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ *
  * Code for communicating with remote modules
- */
+ ******************************************************************************/
 
 #include <Arduino.h>
 #include "EEPROM.h"
@@ -11,7 +14,7 @@
 #include "Adafruit_WS2801.h"
 
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
 #include "GeneralUtils.h"
@@ -28,7 +31,7 @@
 
 RS485Socket rs485;
 
-#define SEND_BUFFER_SIZE (sizeof (rs485_socket_msg_t) + sizeof (msg_hdr_t) + sizeof (msg_max_t) + 64)
+#define SEND_BUFFER_SIZE (sizeof (rs485_socket_msg_t) + sizeof (msg_hdr_t) + sizeof (msg_max_t) + 16) // XXX: Could this be smaller?
 
 byte databuffer[SEND_BUFFER_SIZE];
 byte *send_buffer;
@@ -42,6 +45,11 @@ void initializeConnect() {
 
   rs485.setup();
   send_buffer = rs485.initBuffer(databuffer);
+
+  DEBUG_VALUE(DEBUG_LOW, "Initialized RS485. rcv=", rs485.recvPin);
+  DEBUG_VALUE(DEBUG_LOW, " xmit=", rs485.xmitPin);
+  DEBUG_VALUE(DEBUG_LOW, " enable=", rs485.enablePin);
+  DEBUG_VALUELN(DEBUG_LOW, " bufsize=", SEND_BUFFER_SIZE);
 }
 
 

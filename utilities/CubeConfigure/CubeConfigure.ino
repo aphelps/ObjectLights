@@ -23,6 +23,7 @@
 #include "SquareStructure.h"
 #include "CubeLights.h"
 #include "CubeConfig.h"
+#include "CubeConfiguration.h"
 
 boolean wrote_config = false;
 
@@ -161,19 +162,7 @@ void setup()
     }
 
     // XXX - This is where we would also read the Cube specific config
-    byte bytes[32];
-    int offset = configOffset;
-    for (int face = 0; face < numSquares; face++) {
-      offset = EEPROM_safe_read(offset, bytes, 32);
-      if (offset <= 0) {
-	DEBUG_ERR("Failed to read squares data");
-	break;
-      }
-      squares[face].fromBytes(bytes, 32);
-
-      DEBUG_VALUE(DEBUG_LOW, "Read face=", face);
-      DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
-    }
+    readConfiguration(squares, numSquares, configOffset);
   }
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
@@ -281,20 +270,7 @@ void cliHandler(char **tokens, byte numtokens) {
 
   case 'w': {
     if (strcmp(tokens[0], "write") == 0) {
-      byte bytes[32];
-      int offset = configOffset;
-      for (int face = 0; face < numSquares; face++) {
-	int size = squares[face].toBytes(bytes, 32);
-
-	offset = EEPROM_safe_write(offset, bytes, size);
-	if (offset < size) {
-	  DEBUG_ERR("Failed to write squares data");
-	  break;
-	}
-	DEBUG_VALUE(DEBUG_LOW, "Wrote face=", face);
-	DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
-      }
-      DEBUG_VALUELN(DEBUG_LOW, "Wrote config. end address=", offset)
+      writeConfiguration(squares, numSquares, configOffset);
     }
     break;
   }

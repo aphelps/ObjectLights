@@ -1,9 +1,7 @@
 /*******************************************************************************
- * 
- * 
- * XXX: Put a license here
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
  ******************************************************************************/
-
 
 #define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
@@ -72,7 +70,6 @@ MPR121 touch_sensor; // MPR121 must be initialized after Wire.begin();
 void sensor_cap_init() 
 {
 
-#if 1
   Wire.begin();
 
   touch_sensor = MPR121(CAP_TOUCH_IRQ, false); // XXX - Problem with interrupt?
@@ -81,7 +78,6 @@ void sensor_cap_init()
 			    CAP_SENSOR_1_TOUCH, CAP_SENSOR_1_RELEASE);
   touch_sensor.setThreshold(CAP_SENSOR_2,
 			    CAP_SENSOR_2_TOUCH, CAP_SENSOR_2_RELEASE);
-#endif
   DEBUG_PRINTLN(DEBUG_MID, "Cap touch initialized");
 }
 
@@ -119,13 +115,13 @@ void handle_sensors() {
     static unsigned long next_send = millis();
     if (now >= next_send) {
       int command =
-	(touch_sensor.touched(CAP_SENSOR_1) << CAP_SENSOR_1) ||
+	(touch_sensor.touched(CAP_SENSOR_1) << CAP_SENSOR_1) |
 	(touch_sensor.touched(CAP_SENSOR_2) << CAP_SENSOR_2);
       sendInt(command);
-      next_send += 10;
+      next_send = now + 10;
     }
   } else if (touch_sensor.changed(CAP_SENSOR_1) ||
-	     (touch_sensor.changed(CAP_SENSOR_2))){
+	     touch_sensor.changed(CAP_SENSOR_2)) {
     sendInt(0);
   }
 

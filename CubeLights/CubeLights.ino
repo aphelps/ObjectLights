@@ -88,7 +88,8 @@ void readConfig() {
 void setup()
 {
   Serial.begin(9600);
-  DEBUG_PRINTLN(DEBUG_HIGH, "Baud is 9600");
+  DEBUG_PRINTLN(DEBUG_LOW, "*** CubeLights Initializing ***");
+  DEBUG_PRINTLN(DEBUG_LOW, "* Baud is 9600");
   //Serial.print("Set baud rate to 115200");
   //Serial.begin(115200);
 
@@ -111,9 +112,9 @@ void setup()
 
   /* Generate the geometry */
   squares = buildCube(&numSquares, numLeds, FIRST_LED);
-  DEBUG_VALUELN(DEBUG_HIGH, "Inited with numSquares:", numSquares);
+  DEBUG_VALUELN(DEBUG_LOW, "* Inited with numSquares:", numSquares);
 
-  DEBUG_VALUELN(DEBUG_MID, "Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
+  DEBUG_VALUELN(DEBUG_LOW, "* Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
   DEBUG_MEMORY(DEBUG_HIGH);
 }
 
