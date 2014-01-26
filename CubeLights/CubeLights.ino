@@ -67,6 +67,8 @@ void readConfig() {
   }
   DEBUG_COMMAND(DEBUG_HIGH, hmtl_print_config(&config, outputs));
 
+  // XXX: Perform output validation, check that pins are used only once, etc
+
   /* Initialize the outputs */
   for (int i = 0; i < config.num_outputs; i++) {
     void *data = NULL;

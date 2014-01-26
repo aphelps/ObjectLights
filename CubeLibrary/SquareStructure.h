@@ -56,6 +56,9 @@ class Square {
   byte getBlue();
   byte getBlue(byte vertex);
 
+  int toBytes(byte *bytes, int size);
+  void fromBytes(byte *bytes, int size);
+
   void print(byte level);
 
   // Variables - be careful of object size

@@ -47,7 +47,7 @@ config_rs485_t rs485_output;
 #define MASTER_ADDRESS 0
 #define ADDRESS 0
 
-boolean force_write = true; // XXX - Should not be enabled except for debugging
+boolean force_write = false; // XXX - Should not be enabled except for debugging
 
 SerialCLI serialcli(128, cliHandler);
 
@@ -111,6 +111,8 @@ void config_init()
 config_hdr_t readconfig;
 config_max_t readoutputs[MAX_OUTPUTS];
 
+int configOffset = -1;
+
 void setup() 
 {
   Serial.begin(9600);
@@ -119,18 +121,29 @@ void setup()
     DEBUG_PRINTLN(0, "XXX WARNING: FORCE_WRITE IS ENABLED!!! XXX");
   }
 
+  // Initialize the squares
+  squares = buildCube(&numSquares, numLeds, FIRST_LED);
+  clearSquares();
+
   readconfig.address = -1;
-  if ((hmtl_read_config(&readconfig, readoutputs, MAX_OUTPUTS) < 0) ||
+  configOffset = hmtl_read_config(&readconfig, 
+				  readoutputs, 
+				  MAX_OUTPUTS);
+  if ((configOffset < 0) ||
       (readconfig.address != config.address) ||
       force_write) {
     // Setup and write the configuration
     config_init();
-    if (hmtl_write_config(&config, outputs) < 0) {
-      DEBUG_PRINTLN(0, "Failed to write config");
+
+    configOffset = hmtl_write_config(&config, outputs);
+    if (configOffset < 0) {
+      DEBUG_ERR("Failed to write config");
     } else {
       wrote_config = true;
     }
+
   } else {
+    DEBUG_VALUELN(DEBUG_LOW, "Read config.  offset=", configOffset);
     memcpy(&config, &readconfig, sizeof (config_hdr_t));
     for (int i = 0; i < config.num_outputs; i++) {
 
@@ -146,14 +159,29 @@ void setup()
       }
       outputs[i] = (output_hdr_t *)&readoutputs[i];
     }
-  }
 
-  // XXX: Perform output validation, check that pins are used only once, etc
+    // XXX - This is where we would also read the Cube specific config
+    byte bytes[32];
+    int offset = configOffset;
+    for (int face = 0; face < numSquares; face++) {
+      offset = EEPROM_safe_read(offset, bytes, 32);
+      if (offset <= 0) {
+	DEBUG_ERR("Failed to read squares data");
+	break;
+      }
+      squares[face].fromBytes(bytes, 32);
+
+      DEBUG_VALUE(DEBUG_LOW, "Read face=", face);
+      DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
+    }
+  }
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
   pixels = PixelUtil(numLeds, 12, 8);
-  squares = buildCube(&numSquares, numLeds, FIRST_LED);
+
+  DEBUG_VALUELN(DEBUG_LOW, "Configure initialized.  End address=",
+		configOffset);
 }
 
 boolean output_data = false;
@@ -161,18 +189,26 @@ void loop()
 {
   if (!output_data) {
     DEBUG_VALUE(0, "My address:", config.address);
-    DEBUG_VALUELN(0, " Was address written: ", wrote_config);
+    DEBUG_VALUELN(0, " Was config written: ", wrote_config);
     hmtl_print_config(&config, outputs);
     output_data = true;
   }
 
   serialcli.checkSerial();
 
+  //  for (int tri = 0; tri < numSquares; tri++) {
+  //    squares[tri].setColor(pixel_color(255, 0, 0));
+  //    squares[tri].mark = 0;
+  //  }
+
   blink_value(PIN_DEBUG_LED, config.address, 250, 4);
   delay(10);
 }
 
 byte currentPixel = 0;
+byte current_face = -1;
+byte current_led = -1;
+
 /*
  * CLI Handler to setup the cube geometry
  *
@@ -183,6 +219,7 @@ byte currentPixel = 0;
  */
 void cliHandler(char **tokens, byte numtokens) {
 
+#if 0
   Serial.print(numtokens);
   Serial.print(" tokens: ");
   for (int token = 0; token < numtokens; token++) {
@@ -190,27 +227,37 @@ void cliHandler(char **tokens, byte numtokens) {
     Serial.print(tokens[token]);
   }
   Serial.println();
+#endif
 
-  if (numtokens > 3) {
-    switch (tokens[0][0]) {
+  switch (tokens[0][0]) {
     case 'l': {
+      if (numtokens < 3) return;
       byte face = atoi(tokens[1]);
       byte led = atoi(tokens[2]);
       setSquareLED(face, led, pixel_color(255, 255, 255));
+      DEBUG_VALUE(DEBUG_LOW, "Light Face:", face);
+      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
+      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", squares[face].leds[led].pixel);
       break;
     }
 
     case 's': {
+      if (numtokens < 3) return;
       byte face = atoi(tokens[1]);
       byte led = atoi(tokens[2]);
       squares[face].setLedPixel(led, currentPixel);
       setSquareLED(face, led, pixel_color(255, 0, 0));
+      DEBUG_VALUE(DEBUG_LOW, "Set Face:", face);
+      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
+      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", currentPixel);
       break;
     }
 
-    case 'c': {
+  case 'c': {
       clearPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
+      pixels.update();
+      DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
       break;
     }
 
@@ -218,27 +265,69 @@ void cliHandler(char **tokens, byte numtokens) {
       clearPixels();
       currentPixel = (currentPixel + 1) % pixels.numPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
+      pixels.update();
+      DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
+      break;
     }
+
+    case 'p': {
+      clearPixels();
+      currentPixel = (currentPixel + pixels.numPixels() - 1) % pixels.numPixels();
+      pixels.setPixelRGB(currentPixel, 255, 255, 255);
+      pixels.update();
+      DEBUG_VALUELN(DEBUG_LOW, "next:", currentPixel);
+      break;
     }
+
+  case 'w': {
+    if (strcmp(tokens[0], "write") == 0) {
+      byte bytes[32];
+      int offset = configOffset;
+      for (int face = 0; face < numSquares; face++) {
+	int size = squares[face].toBytes(bytes, 32);
+
+	offset = EEPROM_safe_write(offset, bytes, size);
+	if (offset < size) {
+	  DEBUG_ERR("Failed to write squares data");
+	  break;
+	}
+	DEBUG_VALUE(DEBUG_LOW, "Wrote face=", face);
+	DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
+      }
+      DEBUG_VALUELN(DEBUG_LOW, "Wrote config. end address=", offset)
+    }
+    break;
   }
+
+  }
+
 }
 
 void clearPixels() {
+  // current_face = -1;
   for (byte led = 0; led < pixels.numPixels(); led++) {
     pixels.setPixelRGB(led, 0);
   }
   pixels.update();
+  for (int face = 0; face < numSquares; face++) {
+    squares[face].setColor(0);
+  }
+  updateSquarePixels(squares, numSquares, &pixels);
 }
 
 void setSquareLED(byte face, byte led, uint32_t color) {
-  static byte current_face = 0;
-  static byte current_led = 0;
-
   // Turn off the current led and turn on the new one
   squares[current_face].setColor(current_led, 0);
   squares[face].setColor(led, color);
   current_face = face;
   current_led = led;
-
   updateSquarePixels(squares, numSquares, &pixels);
+}
+
+void clearSquares() {
+  for (int face = 0; face < numSquares; face++) {
+    for (int led = 0; led < Square::NUM_LEDS; led++) {
+      squares[face].setLedPixel(led, -1);
+    }
+  }
 }

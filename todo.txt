@@ -2,10 +2,12 @@ Todo
 ----
 
 * Add CLI to CubeConfigure that aids in setting up LED->Square mappings
+  - Need face configuration
 
 * TEST: Store RS485 info in EEPROM
 
 * Add a module header with version numbers
+* Store square structure in EEPROM
 * Store Range finder in EEPROM
 
 * Try using the timer based NewPing methods

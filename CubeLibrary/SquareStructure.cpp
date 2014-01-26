@@ -162,6 +162,43 @@ byte Square::getBlue(byte vertex) {
   }
 }
 
+int Square::toBytes(byte *bytes, int size) {
+  int i = 0;
+
+  // Write out the ID
+  bytes[i++] = id;
+
+  // Write out the IDs of the adjacent edges
+  for (int face = 0; face < NUM_EDGES; face++) {
+    bytes[i++] = edges[face]->id;
+  }
+
+  // Write out the pixel values
+  for (int led = 0; led < NUM_LEDS; led++ ) {
+    bytes[i++] = leds[led].pixel;
+  }
+
+  return i;
+}
+
+void Square::fromBytes(byte *bytes, int size) {
+  int i = 0;
+
+  // Write out the ID
+  id = bytes[i++];
+
+  // Write out the IDs of the adjacent edges
+  for (int face = 0; face < NUM_EDGES; face++) {
+    edges[face]->id = bytes[i++];
+  }
+
+  // Write out the pixel values
+  for (int led = 0; led < NUM_LEDS; led++ ) {
+    leds[led].pixel = bytes[i++];
+  }
+}
+
+
 /* Send updated values to a Pixel chain */
 void updateSquarePixels(Square *squares, int numSquares,
 			  PixelUtil *pixels) {
