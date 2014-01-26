@@ -34,7 +34,7 @@ RS485Socket rs485;
 #define SEND_BUFFER_SIZE (sizeof (rs485_socket_msg_t) + sizeof (msg_hdr_t) + sizeof (msg_max_t) + 16) // XXX: Could this be smaller?
 
 byte databuffer[SEND_BUFFER_SIZE];
-byte *send_buffer;
+byte *send_buffer; // Pointer to use for start of send data
 
 void initializeConnect() {
   /* Setup the RS485 connection */
