@@ -48,11 +48,12 @@ pattern_args_t followupConfig = {
 #define CONFIG_ENABLED
 #ifdef CONFIG_ENABLED
 #define CUBE_MAX_OUTPUTS 4
-config_hdr_t config;
-output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
-config_max_t readoutputs[CUBE_MAX_OUTPUTS];
 
 void readConfig() {
+  config_hdr_t config;
+  output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
+  config_max_t readoutputs[CUBE_MAX_OUTPUTS];
+
   /* Attempt to read the configuration */
   if (hmtl_read_config(&config, readoutputs, CUBE_MAX_OUTPUTS) < 0) {
     hmtl_default_config(&config);
