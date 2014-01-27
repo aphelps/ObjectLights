@@ -27,6 +27,7 @@ uint8_t validModes[] = {
   , MODE_STATIC_NOISE
   , MODE_SWITCH_RANDOM
   //  , MODE_LIGHT_CENTER
+  , MODE_BAR_CIRCLE
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
@@ -41,7 +42,8 @@ square_mode_t modeFunctions[] = {
   squaresCapResponse,
   squaresStaticNoise,
   squaresSwitchRandom,
-  squaresLightCenter
+  squaresLightCenter,
+  squaresBarCircle
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
 
@@ -57,10 +59,11 @@ uint16_t modePeriods[] = {
   500,  // MODE_CAP_RESPONSE
   250,  // MODE_STATIC_NOISE
   100,  // MODE_SWITCH_RANDOM
-  1     // MODE_LIGHT_FUNCTION
+  1,    // MODE_LIGHT_FUNCTION
+  500   // MODE_BAR_CIRCLE
 };
 
-uint8_t current_mode = 0;
+uint8_t current_mode = VALID_MODES - 1; // XXX
 uint8_t previous_mode = 0;
 
 

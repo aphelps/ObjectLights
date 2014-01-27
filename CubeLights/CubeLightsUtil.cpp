@@ -445,6 +445,32 @@ void squaresCapResponse(Square *squares, int size, int periodms,
 }
 
 
+void squaresBarCircle(Square *squares, int size, int periodms,
+		      boolean init, pattern_args_t *arg) {
+  static Square *face = NULL;
+  static byte current_bar = 0;
+
+  if (init) {
+    face = &squares[0];
+    next_time = millis();
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    face->setColorColumn(current_bar, arg->bgColor);
+
+    current_bar = (current_bar + 1) % 3;
+    if (current_bar == 0) {
+      face = face->edges[Square::RIGHT];//(current_face + 1) % size;
+    }
+
+    face->setColorColumn(current_bar, arg->fgColor);
+  }
+}
+
+
 /******************************************************************************
  * Followup functions
  */

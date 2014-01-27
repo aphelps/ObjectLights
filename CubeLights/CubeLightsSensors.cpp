@@ -118,7 +118,7 @@ void handle_sensors() {
 	(touch_sensor.touched(CAP_SENSOR_1) << CAP_SENSOR_1) |
 	(touch_sensor.touched(CAP_SENSOR_2) << CAP_SENSOR_2);
       sendInt(command);
-      next_send = now + 10;
+      next_send = now + 100;
     }
   } else if (touch_sensor.changed(CAP_SENSOR_1) ||
 	     touch_sensor.changed(CAP_SENSOR_2)) {
