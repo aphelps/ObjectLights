@@ -28,6 +28,11 @@ class Square {
   static const byte VERTEX_ORDER = 1;
   static const byte NUM_LEDS = SQUARE_LED_ROWS * SQUARE_LED_COLS;
 
+  static const byte TOP = 0;
+  static const byte RIGHT = 1;
+  static const byte BOTTOM = 2;
+  static const byte LEFT = 3;
+
   Square() {};
   Square(unsigned int id);
 
@@ -47,6 +52,8 @@ class Square {
   void setColor(byte led, byte r, byte g, byte b);
   void setColor(byte led, uint32_t c);
 
+  void setColorColumn(byte col, uint32_t c);
+
   uint32_t getColor();
   uint32_t getColor(byte led);
   byte getRed();
@@ -57,7 +64,7 @@ class Square {
   byte getBlue(byte vertex);
 
   int toBytes(byte *bytes, int size);
-  void fromBytes(byte *bytes, int size);
+  void fromBytes(byte *bytes, int size, Square *squares, int numSquares);
 
   void print(byte level);
 

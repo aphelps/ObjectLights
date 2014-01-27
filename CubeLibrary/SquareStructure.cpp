@@ -94,6 +94,29 @@ void Square::setColor(byte led, uint32_t c) {
   }
 }
 
+void Square::setColorColumn(byte col, uint32_t c) {
+  switch (col) {
+    case 0: {
+      setColor(0, c);
+      setColor(3, c);
+      setColor(6, c);
+      break;
+    }
+    case 1: {
+      setColor(1, c);
+      setColor(4, c);
+      setColor(7, c);
+      break;
+    }
+    case 2: {
+      setColor(2, c);
+      setColor(5, c);
+      setColor(8, c);
+      break;
+    }
+  }
+}
+
 extern PixelUtil pixels;
 
 uint32_t Square::getColor() {
@@ -181,18 +204,21 @@ int Square::toBytes(byte *bytes, int size) {
   return i;
 }
 
-void Square::fromBytes(byte *bytes, int size) {
+void Square::fromBytes(byte *bytes, int size, Square *squares, int numSquares) {
   int i = 0;
 
-  // Write out the ID
+  // Read the ID
   id = bytes[i++];
 
-  // Write out the IDs of the adjacent edges
+  // Read the IDs of the adjacent edges
   for (int face = 0; face < NUM_EDGES; face++) {
-    edges[face]->id = bytes[i++];
+    int id = bytes[i++];
+    for (int f = 0; f < numSquares; f++) {
+      if (squares[f].id == id) edges[face] = &squares[f];
+    }
   }
 
-  // Write out the pixel values
+  // Read the pixel values
   for (int led = 0; led < NUM_LEDS; led++ ) {
     leds[led].pixel = bytes[i++];
   }
@@ -235,13 +261,13 @@ void makeEdge(Square *squares, int tri, int edge, int neighbor) {
  * Construct a cube
  *
  * Flattened Layout:
- *     +---+
- *     | 4 |
+ * +---+
+ * | 4 |
  * +---+---+---+---+
  * | 0 | 1 | 2 | 3 |
  * +---+---+---+---+
- *     | 5 |
- *     +---+
+ * | 5 |
+ * +---+
  *
  */
 
@@ -256,60 +282,66 @@ Square* buildCube(int *numSquares, int numLeds, int firstLed) {
 
   // XXX: Build topology
   *numSquares = 0;
-  makeEdge(squares, 0, 0, 4);
-  makeEdge(squares, 0, 1, 3);
-  makeEdge(squares, 0, 2, 5);
-  makeEdge(squares, 0, 3, 1);
+  makeEdge(squares, 0, Square::TOP,    4);
+  makeEdge(squares, 0, Square::RIGHT,  1);
+  makeEdge(squares, 0, Square::BOTTOM, 5);
+  makeEdge(squares, 0, Square::LEFT,   3);
   squares[*numSquares].setLedPixels(led + 2, led + 1, led + 0,
 				    led + 3, led + 4, led + 5,
 				    led + 8, led + 7, led + 6);
+  squares[*numSquares].id = *numSquares;
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
-  makeEdge(squares, 1, 0, 4);
-  makeEdge(squares, 1, 1, 0);
-  makeEdge(squares, 1, 2, 5);
-  makeEdge(squares, 1, 3, 2);
+  makeEdge(squares, 1, Square::TOP,    4);
+  makeEdge(squares, 1, Square::RIGHT,  2);
+  makeEdge(squares, 1, Square::BOTTOM, 5);
+  makeEdge(squares, 1, Square::LEFT,   0);
   squares[*numSquares].setLedPixels(led + 17, led + 16, led + 15,
 				    led + 12, led + 13, led + 14,
 				    led + 11, led + 10, led + 9);
+  squares[*numSquares].id = *numSquares;
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
-  makeEdge(squares, 2, 0, 4);
-  makeEdge(squares, 2, 1, 1);
-  makeEdge(squares, 2, 2, 5);
-  makeEdge(squares, 2, 3, 3);
+  makeEdge(squares, 2, Square::TOP,    4);
+  makeEdge(squares, 2, Square::RIGHT,  3);
+  makeEdge(squares, 2, Square::BOTTOM, 5);
+  makeEdge(squares, 2, Square::LEFT,   1);
   squares[*numSquares].setLedPixels(led + 20, led + 19, led + 18,
 				    led + 21, led + 22, led + 23,
 				    led + 26, led + 25, led + 24);
- (*numSquares)++;
+  squares[*numSquares].id = *numSquares;
+  (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
-  makeEdge(squares, 3, 0, 4);
-  makeEdge(squares, 3, 1, 2);
-  makeEdge(squares, 3, 2, 5);
-  makeEdge(squares, 3, 3, 0);
+  makeEdge(squares, 3, Square::TOP,    4);
+  makeEdge(squares, 3, Square::RIGHT,  0);
+  makeEdge(squares, 3, Square::BOTTOM, 5);
+  makeEdge(squares, 3, Square::LEFT,   2);
   squares[*numSquares].setLedPixels(led + 35, led + 34, led + 33,
 				    led + 30, led + 31, led + 32,
 				    led + 29, led + 28, led + 27);
+  squares[*numSquares].id = *numSquares;
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
-  makeEdge(squares, 4, 0, 0);
-  makeEdge(squares, 4, 1, 1);
-  makeEdge(squares, 4, 2, 2);
-  makeEdge(squares, 4, 3, 3);
+  makeEdge(squares, 4, Square::TOP,    2);
+  makeEdge(squares, 4, Square::RIGHT,  1);
+  makeEdge(squares, 4, Square::BOTTOM, 0);
+  makeEdge(squares, 4, Square::LEFT,   3);
   squares[*numSquares].setLedPixels(led + 44, led + 39, led + 38,
 				    led + 43, led + 40, led + 37,
 				    led + 42, led + 41, led + 36);
+  squares[*numSquares].id = *numSquares;
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 
-  makeEdge(squares, 5, 0, 2);
-  makeEdge(squares, 5, 1, 1);
-  makeEdge(squares, 5, 2, 0);
-  makeEdge(squares, 5, 3, 3);
+  makeEdge(squares, 5, Square::TOP,    0);
+  makeEdge(squares, 5, Square::RIGHT,  1);
+  makeEdge(squares, 5, Square::BOTTOM, 2);
+  makeEdge(squares, 5, Square::LEFT,   3);
+  squares[*numSquares].id = *numSquares;
   (*numSquares)++;
   if (*numSquares == squareCount) goto CUBE_DONE;
 

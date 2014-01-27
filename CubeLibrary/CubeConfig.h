@@ -8,6 +8,7 @@
 
 #define CUBE_NUMBER ADAM_CUBE
 
+#define CUBE_VERSION 1
 
 #define CAP_TOUCH_IRQ 2
 

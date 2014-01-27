@@ -122,6 +122,8 @@ void setup()
     DEBUG_PRINTLN(0, "XXX WARNING: FORCE_WRITE IS ENABLED!!! XXX");
   }
 
+  DEBUG_PRINTLN(DEBUG_LOW, "*** CubeConfigure started ***");
+
   // Initialize the squares
   squares = buildCube(&numSquares, numLeds, FIRST_LED);
   clearSquares();
@@ -161,16 +163,17 @@ void setup()
       outputs[i] = (output_hdr_t *)&readoutputs[i];
     }
 
-    // XXX - This is where we would also read the Cube specific config
+    // Read the Cube-specific configuration
     readConfiguration(squares, numSquares, configOffset);
   }
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
-  pixels.init(numLeds, 12, 8); // Should come from config?
+  pixels.init(numLeds, 12, 8); //pixel_output.dataPin, pixel_output.clockPin);
 
   DEBUG_VALUELN(DEBUG_LOW, "Configure initialized.  End address=",
 		configOffset);
+  DEBUG_MEMORY(DEBUG_HIGH);
 }
 
 boolean output_data = false;
@@ -205,6 +208,8 @@ byte current_led = -1;
  * s <face> <led> - Set the geometry of the current pixel
  * c - Display current pixel
  * n - Advance to the next pixel
+ * p - Return to the previous pixel
+ * f <face> - Light the indicated face
  */
 void cliHandler(char **tokens, byte numtokens) {
 
@@ -223,12 +228,21 @@ void cliHandler(char **tokens, byte numtokens) {
       if (numtokens < 3) return;
       byte face = atoi(tokens[1]);
       byte led = atoi(tokens[2]);
-      setSquareLED(face, led, pixel_color(255, 255, 255));
       DEBUG_VALUE(DEBUG_LOW, "Light Face:", face);
       DEBUG_VALUE(DEBUG_LOW, " LED:", led);
       DEBUG_VALUELN(DEBUG_LOW, " Pixel:", squares[face].leds[led].pixel);
+      setSquareLED(face, led, pixel_color(255, 255, 255));
       break;
     }
+
+    case 'f': {
+      if (numtokens < 2) return;
+      byte face = atoi(tokens[1]);
+      DEBUG_VALUELN(DEBUG_LOW, "Light Face:", face);
+      setSquareFace(face, pixel_color(255, 255, 255), true);
+      break;
+    }
+
 
     case 's': {
       if (numtokens < 3) return;
@@ -297,6 +311,34 @@ void setSquareLED(byte face, byte led, uint32_t color) {
   squares[face].setColor(led, color);
   current_face = face;
   current_led = led;
+  updateSquarePixels(squares, numSquares, &pixels);
+}
+
+void setSquareFace(byte face, uint32_t color, boolean neighbors) {
+  // Turn off the current face and turn on the new one
+  for (int f = 0; f < numSquares; f++) {
+    squares[f].setColor(0);
+  }
+
+  squares[face].setColor(color);
+  squares[face].setColor(1, 0);
+
+  current_face = face;
+
+  if (neighbors) {
+    squares[face].edges[Square::TOP]->setColor(128, 0, 0);
+    squares[face].edges[Square::TOP]->setColor(1, 0, 0, 0);
+
+    squares[face].edges[Square::RIGHT]->setColor(0, 128, 0);
+    squares[face].edges[Square::RIGHT]->setColor(1, 0, 0, 0);
+
+    squares[face].edges[Square::BOTTOM]->setColor(0, 0, 128);
+    squares[face].edges[Square::BOTTOM]->setColor(1, 0, 0, 0);
+
+    squares[face].edges[Square::LEFT]->setColor(128, 0, 128);
+    squares[face].edges[Square::LEFT]->setColor(1, 0, 0, 0);
+  }
+
   updateSquarePixels(squares, numSquares, &pixels);
 }
 

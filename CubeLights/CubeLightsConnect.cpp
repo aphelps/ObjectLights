@@ -46,10 +46,7 @@ void initializeConnect() {
   rs485.setup();
   send_buffer = rs485.initBuffer(databuffer);
 
-  DEBUG_VALUE(DEBUG_LOW, "Initialized RS485. rcv=", rs485.recvPin);
-  DEBUG_VALUE(DEBUG_LOW, " xmit=", rs485.xmitPin);
-  DEBUG_VALUE(DEBUG_LOW, " enable=", rs485.enablePin);
-  DEBUG_VALUELN(DEBUG_LOW, " bufsize=", SEND_BUFFER_SIZE);
+  DEBUG_VALUE(DEBUG_LOW, "Initialized RS485. bufsize=", SEND_BUFFER_SIZE);
 }
 
 

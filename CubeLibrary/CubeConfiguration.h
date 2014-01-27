@@ -3,6 +3,11 @@
 
 #include "SquareStructure.h"
 
+typedef struct {
+  byte version;
+  byte reserved[7];
+} cube_config_t;
+
 int readConfiguration(Square *squares, int numSquares, int offset);
 int writeConfiguration(Square *squares, int numSquares, int offset);
 

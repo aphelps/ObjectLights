@@ -18,14 +18,15 @@
 #include "GeneralUtils.h"
 #include "PixelUtil.h"
 #include "RS485Utils.h"
-
-#include "SquareStructure.h"
-#include "CubeLights.h"
-#include "CubeConfig.h"
 #include "MPR121.h"
-
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
+
+#include "CubeConfig.h"
+#include "CubeConfiguration.h"
+#include "SquareStructure.h"
+#include "CubeLights.h"
+
 
 #define DEBUG_LED 13
 
@@ -53,11 +54,13 @@ void readConfig() {
   config_hdr_t config;
   output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
   config_max_t readoutputs[CUBE_MAX_OUTPUTS];
+  int offset;
 
   /* Attempt to read the configuration */
-  if (hmtl_read_config(&config, readoutputs, CUBE_MAX_OUTPUTS) < 0) {
+  offset = hmtl_read_config(&config, readoutputs, CUBE_MAX_OUTPUTS);
+  if (offset < 0) {
     hmtl_default_config(&config);
-    DEBUG_PRINTLN(DEBUG_LOW, "Using default config");
+    DEBUG_PRINTLN(DEBUG_LOW, "ERROR: Using default config");
   }
  if (config.num_outputs > CUBE_MAX_OUTPUTS) {
     DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
@@ -80,6 +83,8 @@ void readConfig() {
     }
     hmtl_setup_output((output_hdr_t *)outputs[i], data);
   }
+
+  offset = readConfiguration(squares, numSquares, offset);
 }
 #endif
 
@@ -97,6 +102,10 @@ void setup()
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
+  /* Generate the geometry */
+  squares = buildCube(&numSquares, numLeds, FIRST_LED);
+  DEBUG_VALUELN(DEBUG_LOW, "* Inited with numSquares:", numSquares);
+
 #ifdef CONFIG_ENABLED
   Wire.begin();
   readConfig();
@@ -110,10 +119,6 @@ void setup()
 
   /* Setup the sensors */
   initializePins();
-
-  /* Generate the geometry */
-  squares = buildCube(&numSquares, numLeds, FIRST_LED);
-  DEBUG_VALUELN(DEBUG_LOW, "* Inited with numSquares:", numSquares);
 
   DEBUG_VALUELN(DEBUG_LOW, "* Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
   DEBUG_MEMORY(DEBUG_HIGH);
