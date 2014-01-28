@@ -47,12 +47,14 @@ class Square {
 		    uint16_t p3, uint16_t p4, uint16_t p5,
 		    uint16_t p6, uint16_t p7, uint16_t p8);
 
-  void setColor(byte r, byte g, byte b);
-  void setColor(uint32_t c);
+  void setColor(byte r, byte g, byte b); // Set color of entire square
+  void setColor(uint32_t c);             // Set color of entire square
   void setColor(byte led, byte r, byte g, byte b);
   void setColor(byte led, uint32_t c);
 
+  void setColorRC(byte col, byte row, uint32_t c);
   void setColorColumn(byte col, uint32_t c);
+  void setColorRow(byte row, uint32_t c);
 
   uint32_t getColor();
   uint32_t getColor(byte led);

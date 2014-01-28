@@ -94,26 +94,22 @@ void Square::setColor(byte led, uint32_t c) {
   }
 }
 
+/* Set the color of an led based on row and column */
+void Square::setColorRC(byte col, byte row, uint32_t c) {
+  setColor(row * 3 + col, c);
+}
+
+/* Set the color of an entire column */
 void Square::setColorColumn(byte col, uint32_t c) {
-  switch (col) {
-    case 0: {
-      setColor(0, c);
-      setColor(3, c);
-      setColor(6, c);
-      break;
-    }
-    case 1: {
-      setColor(1, c);
-      setColor(4, c);
-      setColor(7, c);
-      break;
-    }
-    case 2: {
-      setColor(2, c);
-      setColor(5, c);
-      setColor(8, c);
-      break;
-    }
+  for (byte row = 0; row < SQUARE_LED_ROWS; row++) {
+    setColorRC(col, row, c);
+  }
+}
+
+/* Set the color of an entire row */
+void Square::setColorRow(byte row, uint32_t c) {
+  for (byte col = 0; col < SQUARE_LED_COLS; col++) {
+    setColorRC(col, row, c);
   }
 }
 

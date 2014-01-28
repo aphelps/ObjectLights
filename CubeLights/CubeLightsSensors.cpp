@@ -72,7 +72,7 @@ void sensor_cap_init()
 
   Wire.begin();
 
-  touch_sensor = MPR121(CAP_TOUCH_IRQ, false); // XXX - Problem with interrupt?
+  touch_sensor = MPR121(CAP_TOUCH_IRQ, false, false); // XXX - Problem with interrupt?
  
   touch_sensor.setThreshold(CAP_SENSOR_1,
 			    CAP_SENSOR_1_TOUCH, CAP_SENSOR_1_RELEASE);
