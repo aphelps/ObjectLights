@@ -215,7 +215,7 @@ void handle_sensors() {
 
 
   if (capboth) {
-    if ((doubleTime > 0) && ((now - doubleTime) > 1000)) {
+    if ((doubleTime > 0) && ((now - doubleTime) > 750)) {
       // Long touch period
       DEBUG_PRINTLN(DEBUG_HIGH, "Long double touch");
       longdouble = true;
@@ -266,7 +266,9 @@ void handle_sensors() {
       // Just entered mode changing state
       modeConfig.fgColor = pixel_color(255, 255, 255);
       followupConfig.fgColor = pixel_color(0, 0, 255);
-      set_followup_mode(MODE_BLINK_FACE);
+      followupConfig.data = (0xFF << Square::NUM_LEDS) | 
+	(1 << 0) | (1 << 2) | (1 << 6) | (1 << 8);
+      set_followup_mode(MODE_BLINK_PATTERN);
       DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
     }
 
@@ -282,5 +284,19 @@ void handle_sensors() {
     break;
   }
   }
+
+  if (cap1 || cap2) {
+    /* A sensor is touched, send update to remotes */
+    static unsigned long next_send = millis();
+    if (now >= next_send) {
+      int command = (cap1 << CAP_SENSOR_1) | (cap2 << CAP_SENSOR_2);
+      sendInt(command);
+      next_send = now + 100;
+    }
+  } else if (change1 || change2) {
+    /* Touch was removed */
+    sendInt(0);
+  }
+
 #endif
 }

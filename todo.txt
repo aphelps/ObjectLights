@@ -1,6 +1,8 @@
 Todo
 ----
 
+* Add a method of enabling a function for a limited time
+
 * Allow chains of light modes
   - Make arrays of modes, arguments, periods, and timers
 

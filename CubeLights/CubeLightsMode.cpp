@@ -19,34 +19,34 @@ uint8_t validModes[] = {
   MODE_ALL_ON
   //   , MODE_TEST_PATTERN
   //   , MODE_SETUP_PATTERN
-  , MODE_RANDOM_NEIGHBOR
+  //   , MODE_RANDOM_NEIGHBOR
   , MODE_CYCLE_PATTERN
-  , MODE_CIRCLE_PATTERN
+  //  , MODE_CIRCLE_PATTERN
   //  , MODE_FADE_CYCLE
   //  , MODE_CAP_RESPONSE
   , MODE_STATIC_NOISE
   , MODE_SWITCH_RANDOM
   //  , MODE_LIGHT_CENTER
-  , MODE_BAR_CIRCLE
+  //, MODE_BAR_CIRCLE
   , MODE_CRAWL
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
 square_mode_t modeFunctions[] = {
   squaresAllOn,
-  squaresTestPattern,
-  squaresSetupPattern,
-  squaresRandomNeighbor,
+  NULL, //squaresTestPattern,
+  NULL, //squaresSetupPattern,
+  NULL, //squaresRandomNeighbor,
   squaresCyclePattern,
-  squaresCirclePattern,
-  squaresFadeCycle,
-  squaresCapResponse,
+  NULL, //squaresCirclePattern,
+  NULL, //squaresFadeCycle,
+  NULL, //squaresCapResponse,
   squaresStaticNoise,
   squaresSwitchRandom,
   squaresLightCenter,
-  squaresBarCircle,
+  NULL, //squaresBarCircle,
   squaresCrawl,
-  squaresBlinkFace
+  squaresBlinkPattern
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
 
@@ -65,7 +65,7 @@ uint16_t modePeriods[] = {
   1,    // MODE_LIGHT_CENTER
   500,  // MODE_BAR_CIRCLE
   100,  // MODE_CRAWL
-  500   // MODE_BLINK_FACE
+  250   // MODE_BLINK_PATTERN
 };
 
 uint8_t current_mode = VALID_MODES - 1; // XXX
@@ -121,13 +121,13 @@ uint8_t validFollowups[] = {
   //  , MODE_STATIC_NOISE
   //  , MODE_SWITCH_RANDOM
   MODE_LIGHT_CENTER,
-  MODE_BLINK_FACE,
+  MODE_BLINK_PATTERN,
   (uint8_t)-1
 };
 #define VALID_FOLLOWUPS (sizeof (validFollowups) / sizeof (uint8_t))
 
 uint8_t current_followup = (uint8_t)-1;
-uint8_t previous_followup = 0;
+uint8_t previous_followup = (uint8_t)-1;
 
 
 /* Return the current followup value */

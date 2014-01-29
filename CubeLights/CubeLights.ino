@@ -45,7 +45,7 @@ pattern_args_t modeConfig = {
 pattern_args_t followupConfig = {
   pixel_color(0, 0, 0), // bgColor
   pixel_color(0xFF, 0x00, 0x00), // fgColor
-  CUBE_FRONT // data
+  CUBE_TOP // data
 };
 
 #define CONFIG_ENABLED

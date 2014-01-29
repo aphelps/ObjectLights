@@ -492,13 +492,12 @@ void squaresCrawl(Square *squares, int size, int periodms,
   }
 
   if (millis() > next_time) {
+    int timeincrement = periodms;
+    if (touch_sensor.touched(CAP_SENSOR_1))
+      timeincrement = timeincrement / 2;
     if (touch_sensor.touched(CAP_SENSOR_2))
-      if (touch_sensor.touched(CAP_SENSOR_1))
-	next_time += (periodms) / 4;
-      else
-	next_time += (periodms) / 2;
-    else
-      next_time += periodms;
+      timeincrement = timeincrement / 4;
+    next_time += timeincrement;
 
     face->setColor(led, pixel_wheel(color++));
 
@@ -550,17 +549,15 @@ void squaresLightCenter(Square *squares, int size, int periodms,
 
   if (millis() > next_followup) {
     next_followup += periodms;
-    for (int square = 0; square < 6; square++) {
+    for (int square = 0; square < size; square++) {
       squares[square].setColor(4, arg->fgColor);
     }
   }
 }
 
-
-void squaresBlinkFace(Square *squares, int size, int periodms,
+void squaresBlinkPattern(Square *squares, int size, int periodms,
 			   boolean init, pattern_args_t *arg) {
   static boolean on = false;
-  byte side = arg->data;
 
   if (init) {
     next_followup = millis();
@@ -569,18 +566,21 @@ void squaresBlinkFace(Square *squares, int size, int periodms,
 
   if (millis() > next_followup) {
     next_followup += periodms;
+    on = !on;
+  }
 
-    if (squares[side].getColor() == arg->bgColor) {
-      on = true;
-    } else {
-      on = false;
+  uint32_t color;
+  if (on) color = arg->fgColor;
+  else color = arg->bgColor;
+
+  byte face_mask = (arg->data >> Square::NUM_LEDS);
+  for (byte face = 0; face < size; face++) {
+    if (face_mask & (1 << face)) {
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+	if (arg->data & (1 << led)) {
+	  squares[face].setColor(led, color);
+	}
+      }
     }
   }
-
-  if (on) {
-    squares[side].setColor(arg->fgColor);
-  } else {
-    squares[side].setColor(arg->bgColor);
-  }
 }
-
