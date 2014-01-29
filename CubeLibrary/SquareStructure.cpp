@@ -213,7 +213,8 @@ byte Square::matchEdge(Square *square) {
  * 1|       |1
  * 0|       |2
  *  +-------+
- */  2  1  0
+ *   2  1  0
+ */
 byte Square::getEdgeIndex(byte edge, byte led) {
   switch (led) {
   case 0: {
