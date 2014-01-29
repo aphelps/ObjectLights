@@ -98,6 +98,8 @@ void updateSquarePixels(Square *squares, int numSquares,
 			  PixelUtil *pixels);
 
 /* Allocate and return a fully connected cube */
+#define CUBE_TOP    4
+#define CUBE_BOTTOM 5
 Square* buildCube(int *numSquares, int numLeds, int firstLed);
 
 /* Macros for rotating around the vertices of a square */

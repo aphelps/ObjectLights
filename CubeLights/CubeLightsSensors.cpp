@@ -109,6 +109,7 @@ void sensor_cap(void)
 void handle_sensors() {
   unsigned long now = millis();
 
+#if 1
   if (touch_sensor.touched(CAP_SENSOR_1) ||
       (touch_sensor.touched(CAP_SENSOR_2))) {
     /* A sensor is touched, send update to remotes */
@@ -141,13 +142,27 @@ void handle_sensors() {
     //    DEBUG_VALUELN(DEBUG_HIGH, "Color=", color);
 
     if (touch_sensor.touched(CAP_SENSOR_1)) {
-      modeConfig.fgColor = pixel_color(255, 255, 255);
+      set_followup(1);
+      //modeConfig.fgColor = pixel_color(255, 255, 255);
+    }
+  }
+
+  /* Not both sensors */
+  if (!(touch_sensor.touched(CAP_SENSOR_1) &&
+	touch_sensor.touched(CAP_SENSOR_2))) {
+    switch (get_current_followup()) {
+    case MODE_BLINK_FACE:
+      set_followup((byte)-1);
+      break;
     }
   }
 
   if (range_cm < 50) {
     set_followup(0);
   } else {
-    set_followup((byte)-1);
+    if (get_current_followup() == MODE_LIGHT_CENTER) set_followup((byte)-1);
   }
+#else
+
+#endif
 }

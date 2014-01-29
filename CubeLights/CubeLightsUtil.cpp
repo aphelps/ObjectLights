@@ -537,7 +537,7 @@ void squaresCrawl(Square *squares, int size, int periodms,
  * Followup functions
  */
 
-unsigned long next_followup;
+unsigned long next_followup = 0;
 
 /* 
  * Set the center LED of each square to the indicated color
@@ -553,6 +553,37 @@ void squaresLightCenter(Square *squares, int size, int periodms,
     for (int square = 0; square < 6; square++) {
       squares[square].setColor(4, arg->fgColor);
     }
+  }
+}
+
+
+void squaresBlinkFace(Square *squares, int size, int periodms,
+			   boolean init, pattern_args_t *arg) {
+  static boolean on = false;
+  byte side = CUBE_TOP;
+
+  if (init) {
+    next_followup = millis();
+    on = false;
+  }
+
+  if (millis() > next_followup) {
+    next_followup += periodms;
+
+    if (squares[side].getColor() == arg->bgColor) {
+      on = true;
+    } else {
+      on = false;
+    }
+
+    DEBUG_VALUE(DEBUG_HIGH, "BlinkTop:", on);
+    DEBUG_VALUELN(DEBUG_HIGH, " Period:", periodms);
+  }
+
+  if (on) {
+    squares[side].setColor(arg->fgColor);
+  } else {
+    squares[side].setColor(arg->bgColor);
   }
 }
 

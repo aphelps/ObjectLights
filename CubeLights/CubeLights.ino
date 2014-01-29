@@ -131,7 +131,7 @@ void setup()
  *****************************************************************************/
 void loop()
 {
-  static byte prev_mode = -1;
+  static byte prev_mode = -1, prev_followup = -1;
   byte mode = 0, followup = 0;
 
   /* Check the sensor values */
@@ -150,13 +150,14 @@ void loop()
   followup = get_current_followup();
   if (followup != (byte)-1) {
     modeFunctions[followup](squares, numSquares, modePeriods[followup],
-				prev_mode != mode, &followupConfig);  
+				prev_followup != followup, &followupConfig);
   }
 
   /* Send any changes */
   updateSquarePixels(squares, numSquares, &pixels);
 
   prev_mode = mode;
+  prev_followup = followup;
 
   DEBUG_COMMAND(DEBUG_TRACE, // Flash the debug LED
 		static unsigned long next_millis = 0;
