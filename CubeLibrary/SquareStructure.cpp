@@ -113,6 +113,16 @@ void Square::setColorRow(byte row, uint32_t c) {
   }
 }
 
+/* Set the color of the indicated edge */
+void Square::setColorEdge(byte edge, uint32_t c) {
+  switch (edge) {
+  case TOP: setColorRow(0, c); break;
+  case RIGHT: setColorColumn(2, c); break;
+  case BOTTOM: setColorRow(2, c); break;
+  case LEFT: setColorColumn(0, c); break;
+  }
+}
+
 extern PixelUtil pixels;
 
 uint32_t Square::getColor() {
@@ -181,6 +191,150 @@ byte Square::getBlue(byte vertex) {
   }
 }
 
+/******************************************************************************
+ * Geometry functions
+ */
+
+/* Returns the edge of this square adjacent to the target square */
+byte Square::matchEdge(Square *square) {
+  for (byte edge = 0; edge < NUM_EDGES; edge++) {
+    if (edges[edge] == square) return edge;
+  }
+  return NOEDGE;
+}
+
+/*
+ *  Return the index of an LED within a given edge.  The LEDs are indexed in
+ *  a clockwise ordering:
+ *
+ *   0  1  2
+ *  +-------+
+ * 2|       |0
+ * 1|       |1
+ * 0|       |2
+ *  +-------+
+ */  2  1  0
+byte Square::getEdgeIndex(byte edge, byte led) {
+  switch (led) {
+  case 0: {
+    switch (edge) {
+    case TOP: return 0; break;
+    case LEFT: return 2; break;
+    }
+    break;
+  }
+  case 1: {
+    switch (edge) {
+    case TOP: return 1; break;
+    }
+    break;
+  }
+  case 2: {
+    switch (edge) {
+    case TOP: return 2; break;
+    case RIGHT: return 0; break;
+    }
+    break;
+  }
+  case 3: {
+    switch (edge) {
+    case LEFT: return 1; break;
+    }
+    break;
+  }
+  case 5: {
+    switch (edge) {
+    case RIGHT: return 1; break;
+    }
+    break;
+  }
+  case 6: {
+    switch (edge) {
+    case LEFT: return 0; break;
+    case BOTTOM: return 2; break;
+    }
+    break;
+  }
+  case 7: {
+    switch (edge) {
+    case BOTTOM: return 1; break;
+    }
+    break;
+  }
+  case 8: {
+    switch (edge) {
+    case BOTTOM: return 0; break;
+    case RIGHT: return 2; break;
+    }
+    break;
+  }
+  }
+  return (byte)-1;
+}
+
+/* Returns the led at the indicated index in an edge */
+byte Square::ledInEdge(byte edge, byte index) {
+  // index should be 0-2
+  switch (edge) {
+  case TOP: {
+    return index; //  0 1 2
+    break;
+  }
+  case RIGHT: {
+    return 2 + 3*index; // 2 5 8
+    break;
+  }
+  case BOTTOM: {
+    return 8 - index; // 8 7 6
+    break;
+  }
+  case LEFT: {
+    return 6 - 3*index; // 6 3 0
+    break;
+  }
+  }
+
+  return (byte)-1;
+}
+
+/*
+ *  Returns the led in this square adjacent to an led in neighboring square 
+ *
+ *  +-------+-------+
+ *  |       |       |
+ *  |       |       |
+ *  |      X|?      |
+ *  +-------+-------+
+ */
+
+byte Square::matchLED(Square *square, byte led) {
+  // Determine which edge matches
+  byte my_edge = matchEdge(square);
+
+  // Determine the edge on the adjacent square and the index of the led in
+  // that edge.
+  byte other_edge = square->matchEdge(this);
+  byte other_index = square->getEdgeIndex(other_edge, led);
+
+  byte my_index = (byte)-1;
+  switch (other_index) {
+  case 0: my_index = 2; break;
+  case 1: my_index = 1; break;
+  case 2: my_index = 0; break;
+  default: return (byte)-1; break;
+  }
+
+  byte match = ledInEdge(my_edge, my_index);
+
+  return match;
+}
+
+
+
+
+/******************************************************************************
+ * Serialization functions
+ */
 int Square::toBytes(byte *bytes, int size) {
   int i = 0;
 

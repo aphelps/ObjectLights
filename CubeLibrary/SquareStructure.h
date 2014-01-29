@@ -28,10 +28,15 @@ class Square {
   static const byte VERTEX_ORDER = 1;
   static const byte NUM_LEDS = SQUARE_LED_ROWS * SQUARE_LED_COLS;
 
+  /* Edge values */
   static const byte TOP = 0;
   static const byte RIGHT = 1;
   static const byte BOTTOM = 2;
   static const byte LEFT = 3;
+  static const byte NOEDGE = (byte)-1;
+
+  /* LED values */
+  static const byte CENTER = 4;
 
   Square() {};
   Square(unsigned int id);
@@ -55,6 +60,7 @@ class Square {
   void setColorRC(byte col, byte row, uint32_t c);
   void setColorColumn(byte col, uint32_t c);
   void setColorRow(byte row, uint32_t c);
+  void setColorEdge(byte edge, uint32_t c);
 
   uint32_t getColor();
   uint32_t getColor(byte led);
@@ -65,6 +71,13 @@ class Square {
   byte getBlue();
   byte getBlue(byte vertex);
 
+  /* Geometry functions */
+  byte matchEdge(Square *square);
+  byte matchLED(Square *square, byte led);
+  byte getEdgeIndex(byte edge, byte led);
+  byte ledInEdge(byte edge, byte index);
+
+  /* Serialization functions */
   int toBytes(byte *bytes, int size);
   void fromBytes(byte *bytes, int size, Square *squares, int numSquares);
 
@@ -90,6 +103,5 @@ Square* buildCube(int *numSquares, int numLeds, int firstLed);
 /* Macros for rotating around the vertices of a square */
 #define VERTEX_CW(v) ((v + 1) % SQUARE_NUM_VERTICES)
 #define VERTEX_CCW(v) ((v + SQUARE_NUM_VERTICES - 1) % SQUARE_NUM_VERTICES)
-
 
 #endif
