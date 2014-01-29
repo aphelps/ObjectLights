@@ -84,7 +84,7 @@ void set_mode(uint8_t new_mode)
   if (current_mode != new_mode) {
     restorable = true;
     previous_mode = current_mode;
-    current_mode = new_mode;
+    current_mode = new_mode % VALID_MODES;
     DEBUG_VALUELN(DEBUG_HIGH, "Set mode=", current_mode);
   }
 }
@@ -121,7 +121,8 @@ uint8_t validFollowups[] = {
   //  , MODE_STATIC_NOISE
   //  , MODE_SWITCH_RANDOM
   MODE_LIGHT_CENTER,
-  MODE_BLINK_FACE
+  MODE_BLINK_FACE,
+  (uint8_t)-1
 };
 #define VALID_FOLLOWUPS (sizeof (validFollowups) / sizeof (uint8_t))
 
@@ -144,22 +145,33 @@ void set_followup(uint8_t new_followup)
   if (current_followup != new_followup) {
     restorableFollowup = true;
     previous_followup = current_followup;
-    current_followup = new_followup;
+    current_followup = new_followup % VALID_FOLLOWUPS;
     DEBUG_VALUELN(DEBUG_HIGH, "Set followup=", current_followup);
+  }
+}
+
+void set_followup_mode(uint8_t mode) {
+  for (byte i = 0; i < VALID_FOLLOWUPS; i++) {
+    if (validFollowups[i] == mode) {
+      set_followup(i);
+      return;
+    }
   }
 }
 
 void increment_followup()
 {
-  set_followup(current_followup + 1);
+  set_followup(current_followup + 1 );
 }
 
 void restore_followup(void)
 {
   if (restorableFollowup) {
+    uint8_t tmp;
     restorableFollowup = false;
+    tmp = previous_followup;
     previous_followup = current_followup;
-    current_followup = previous_followup;
+    current_followup = tmp;
     DEBUG_VALUELN(DEBUG_HIGH, "Restore followup=", current_followup);
   }
 }

@@ -98,6 +98,10 @@ void updateSquarePixels(Square *squares, int numSquares,
 			  PixelUtil *pixels);
 
 /* Allocate and return a fully connected cube */
+#define CUBE_FRONT  0
+#define CUBE_RIGHT  1
+#define CUBE_BACK   2
+#define CUBE_LEFT   3
 #define CUBE_TOP    4
 #define CUBE_BOTTOM 5
 Square* buildCube(int *numSquares, int numLeds, int firstLed);

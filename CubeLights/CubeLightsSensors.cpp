@@ -109,7 +109,7 @@ void sensor_cap(void)
 void handle_sensors() {
   unsigned long now = millis();
 
-#if 1
+#if 0
   if (touch_sensor.touched(CAP_SENSOR_1) ||
       (touch_sensor.touched(CAP_SENSOR_2))) {
     /* A sensor is touched, send update to remotes */
@@ -163,6 +163,124 @@ void handle_sensors() {
     if (get_current_followup() == MODE_LIGHT_CENTER) set_followup((byte)-1);
   }
 #else
+#define NUM_UI_MODES 2
+  static byte uiMode = 0;
 
+  boolean cap1 = false, cap2 = false, capboth = false, capnone = false;
+  boolean change1 = false, change2 = false, changeboth = false, changenone = true, changeany = false;
+  boolean doubleDoubleTap = false;
+  boolean longdouble = false;
+  boolean shortrange = false;
+
+  /*
+   * State determination
+   */
+
+  // Short range detected
+  if (range_cm < 50) shortrange = true;
+
+  // Sensor 1 pushed
+  if (touch_sensor.touched(CAP_SENSOR_1)) cap1 = true;
+  if (touch_sensor.changed(CAP_SENSOR_1)) change1 = true;
+
+  // Sensor 2 pushed
+  if (touch_sensor.touched(CAP_SENSOR_2)) cap2 = true;
+  if (touch_sensor.changed(CAP_SENSOR_2)) change2 = true;
+
+  // Both pushed
+  if (cap1 && cap2) capboth = true;
+  if (change1 && change2) changeboth = true;
+
+  // None pushed
+  if (!cap1 && !cap2) capnone = true;
+  if (!change1 && !change2) changenone = true;
+
+  if (change1 || change2) changeany = true;
+
+  static unsigned long doubleTime = 0;
+
+  // Both became touched (could be one then the other)
+  if (capboth && changeany) {
+    static unsigned long taptime = 0;
+    
+    if (now - taptime < 500) {
+      // Rapid double tap
+      doubleDoubleTap = true;
+      DEBUG_VALUELN(DEBUG_HIGH, "Double tap ms:", now - taptime);
+    }
+
+    doubleTime = now;
+    taptime = now;
+  }
+
+
+  if (capboth) {
+    if ((doubleTime > 0) && ((now - doubleTime) > 1000)) {
+      // Long touch period
+      DEBUG_PRINTLN(DEBUG_HIGH, "Long double touch");
+      longdouble = true;
+      doubleTime = 0;
+    }
+  }
+
+  // Neither sensor is touched
+  if (capnone) {
+    doubleTime = 0;
+  }
+
+  /*
+   * Handling
+   */
+
+  if (longdouble) {
+    uiMode = (uiMode + 1) % NUM_UI_MODES;
+  }
+  
+
+  switch (uiMode) {
+  case 0: {
+    // If just sensor 1 is being touched
+    if (cap1 && !capboth) {
+      // Set followup color
+      static byte color = 0;
+      color++;
+      followupConfig.fgColor = pixel_wheel(color);
+    }
+
+    // If just sensor 2 is being touched
+    if (cap2 && !capboth) {
+      static byte color = 0;
+      color++;
+      modeConfig.fgColor = pixel_wheel(color);
+    }
+
+    if (shortrange) {
+      set_followup_mode(MODE_LIGHT_CENTER);
+    } else {
+      if (get_current_followup() == MODE_LIGHT_CENTER) restore_followup();
+    }
+    break;
+  }
+  case 1: {
+    if (longdouble) {
+      // Just entered mode changing state
+      modeConfig.fgColor = pixel_color(255, 255, 255);
+      followupConfig.fgColor = pixel_color(0, 0, 255);
+      set_followup_mode(MODE_BLINK_FACE);
+      DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
+    }
+
+    if (cap1 && change1 && !capboth) {
+      increment_mode();
+    }
+
+    if (cap2 && change2 && !capboth) {
+      followupConfig.fgColor = pixel_color(255, 0, 0);
+      increment_followup();
+    }
+    
+    break;
+  }
+  }
 #endif
 }

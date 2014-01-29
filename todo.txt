@@ -1,6 +1,9 @@
 Todo
 ----
 
+* Allow chains of light modes
+  - Make arrays of modes, arguments, periods, and timers
+
 * Clockwise and counterclockwise functions
 
 * RGB class should only store three bytes

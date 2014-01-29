@@ -61,12 +61,14 @@ void increment_mode(void);
 void restore_mode(void);
 
 void set_followup(uint8_t new_followup);
+void set_followup_mode(uint8_t mode);
 void increment_followup(void);
 void restore_followup(void);
 
 typedef struct {
   uint32_t bgColor;
   uint32_t fgColor;
+  uint32_t data;
 } pattern_args_t;
 
 extern pattern_args_t modeConfig;

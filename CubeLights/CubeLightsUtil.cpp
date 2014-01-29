@@ -560,7 +560,7 @@ void squaresLightCenter(Square *squares, int size, int periodms,
 void squaresBlinkFace(Square *squares, int size, int periodms,
 			   boolean init, pattern_args_t *arg) {
   static boolean on = false;
-  byte side = CUBE_TOP;
+  byte side = arg->data;
 
   if (init) {
     next_followup = millis();
@@ -575,9 +575,6 @@ void squaresBlinkFace(Square *squares, int size, int periodms,
     } else {
       on = false;
     }
-
-    DEBUG_VALUE(DEBUG_HIGH, "BlinkTop:", on);
-    DEBUG_VALUELN(DEBUG_HIGH, " Period:", periodms);
   }
 
   if (on) {
