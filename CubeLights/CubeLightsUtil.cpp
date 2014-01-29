@@ -3,6 +3,7 @@
 #define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
+#include "CubeConfig.h"
 #include "CubeLights.h"
 
 void initializePins() {
@@ -328,7 +329,7 @@ void squaresFadeCycle(Square *squares, int size, int periodms,
   long max_phase = 15 * 1000;
   static boolean fadeup = true;
 
-  long now = millis();
+  unsigned long now = millis();
 
   if (init) {
     phase_start = now;
@@ -459,17 +460,78 @@ void squaresBarCircle(Square *squares, int size, int periodms,
   if (millis() > next_time) {
     next_time += periodms;
 
+    Square *top = face->edges[Square::TOP];
+    top->setColorEdge(top->matchEdge(face), arg->bgColor);
     face->setColorColumn(current_bar, arg->bgColor);
 
     current_bar = (current_bar + 1) % 3;
     if (current_bar == 0) {
-      face = face->edges[Square::RIGHT];//(current_face + 1) % size;
+      face = face->edges[Square::RIGHT];
+      top = face->edges[Square::TOP];
     }
 
+    top->setColorEdge(top->matchEdge(face), arg->fgColor);
     face->setColorColumn(current_bar, arg->fgColor);
   }
 }
 
+/*
+ * 
+ */
+void squaresCrawl(Square *squares, int size, int periodms,
+		  boolean init, pattern_args_t *arg) {
+  static Square *face = NULL;
+  static byte led = 0;
+  static byte color = 0;
+
+  if (init) {
+    face = &squares[0];
+    led = 0;
+    next_time = millis();
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > next_time) {
+    if (touch_sensor.touched(CAP_SENSOR_2))
+      if (touch_sensor.touched(CAP_SENSOR_1))
+	next_time += (periodms) / 4;
+      else
+	next_time += (periodms) / 2;
+    else
+      next_time += periodms;
+
+    face->setColor(led, pixel_wheel(color++));
+
+    byte newled = led;
+    Square *newface = face;
+
+    byte mode = random(0, 2);
+    switch (mode) {
+    case 0: {
+      do {
+	if (led == Square::CENTER) break;
+	newface = face->edges[random(0, Square::NUM_EDGES)];
+	//	if (newface->hasLeds) {
+	  newled = newface->matchLED(face, led);
+	  //}
+      } while(newled == (byte)-1);
+      break;
+    }
+    case 1: {
+      newled = random(0, 8);
+      break;
+    }
+    }
+    led = newled;
+    face = newface;
+
+    DEBUG_VALUE(DEBUG_TRACE, "crawl: mode=", mode);
+    DEBUG_VALUE(DEBUG_TRACE, " face=", face->id);
+    DEBUG_VALUELN(DEBUG_TRACE, " led=", led);
+ 
+    face->setColor(led, arg->bgColor);
+  }
+}
 
 /******************************************************************************
  * Followup functions

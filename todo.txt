@@ -1,8 +1,9 @@
 Todo
 ----
 
-* Convert MPR121 arrays from booleans for flags
-  - TEST THIS
+* Clockwise and counterclockwise functions
+
+* RGB class should only store three bytes
 
 * Store Range finder in EEPROM
 
