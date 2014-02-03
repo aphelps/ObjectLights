@@ -532,6 +532,40 @@ void squaresCrawl(Square *squares, int size, int periodms,
   }
 }
 
+void squaresOrbits(Square *squares, int size, int periodms,
+		  boolean init, pattern_args_t *arg) {
+  static Square *face = NULL;
+  static Square *prevface = NULL;
+  static byte led = 0;
+  //  static byte color = 0;
+
+  if (init) {
+    face = &squares[0];
+    prevface = face->edges[Square::TOP];
+    led = 8;
+    next_time = millis();
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    face->setColor(led, arg->bgColor);
+
+    uint16_t next = face->ledAwayFrom(prevface, led);
+    if (FACE_FROM_COMBO(next) == face->id) {
+      led = LED_FROM_COMBO(next);
+    } else {
+      prevface = face;
+      face = &squares[FACE_FROM_COMBO(next)];
+    }
+    face->setColor(led, arg->fgColor);
+
+    DEBUG_VALUE(DEBUG_HIGH, "Orbit: ", face->id);
+    DEBUG_VALUELN(DEBUG_HIGH, ":", led);
+  }
+}
+
 /******************************************************************************
  * Followup functions
  */
@@ -573,7 +607,7 @@ void squaresBlinkPattern(Square *squares, int size, int periodms,
   if (on) color = arg->fgColor;
   else color = arg->bgColor;
 
-  byte face_mask = (arg->data >> Square::NUM_LEDS);
+  byte face_mask = FACES_FROM_MASK(arg->data);
   for (byte face = 0; face < size; face++) {
     if (face_mask & (1 << face)) {
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
