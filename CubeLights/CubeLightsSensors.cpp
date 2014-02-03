@@ -13,6 +13,7 @@
 
 #include "CubeLights.h"
 #include "CubeConfig.h"
+#include "SquareStructure.h"
 
 /* ***** Range sensor *********************************************************/
 
@@ -43,6 +44,7 @@ void sensor_range(void)
 
 /* ***** Photo sensor *********************************************************/
 
+#if 0
 uint16_t photo_value = 1024;
 boolean photo_dark = false;
 void sensor_photo(void)
@@ -62,14 +64,15 @@ void sensor_photo(void)
     DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
   }
 }
+#endif
 
 /* ***** Capacitive Sensors ***************************************************/
 
 MPR121 touch_sensor; // MPR121 must be initialized after Wire.begin();
 
+#if 0
 void sensor_cap_init() 
 {
-
   Wire.begin();
 
   touch_sensor = MPR121(CAP_TOUCH_IRQ, false, false); // XXX - Problem with interrupt?
@@ -80,6 +83,7 @@ void sensor_cap_init()
 			    CAP_SENSOR_2_TOUCH, CAP_SENSOR_2_RELEASE);
   DEBUG_PRINTLN(DEBUG_MID, "Cap touch initialized");
 }
+#endif
 
 void sensor_cap(void) 
 {
@@ -167,12 +171,13 @@ void handle_sensors() {
   static byte uiMode = 0;
 
   boolean cap1 = false, cap2 = false, capboth = false, capnone = false;
-  boolean change1 = false, change2 = false, changeboth = false, changenone = true, changeany = false;
-  boolean doubleDoubleTap = false;
+  boolean change1 = false, change2 = false, changeboth = false,
+    changenone = true, changeany = false;
+  boolean doubleTap = false, doubleDoubleTap = false;
   boolean longdouble = false;
   boolean shortrange = false;
 
-  /*
+  /****************************************************************************
    * State determination
    */
 
@@ -200,8 +205,14 @@ void handle_sensors() {
   static unsigned long doubleTime = 0;
 
   // Both became touched (could be one then the other)
+  // XXX: One-then-other required as the sense time is fine enough that
+  //      it often is triggered that way when trying to touch both.  This
+  //      could be improved by tracking the time for the individual sensors
+  //      and setting double-tap only if the delay is very short.
   if (capboth && changeany) {
     static unsigned long taptime = 0;
+
+    doubleTap = true;
     
     if (now - taptime < 500) {
       // Rapid double tap
@@ -228,7 +239,7 @@ void handle_sensors() {
     doubleTime = 0;
   }
 
-  /*
+  /****************************************************************************
    * Handling
    */
 
@@ -254,6 +265,14 @@ void handle_sensors() {
       modeConfig.fgColor = pixel_wheel(color);
     }
 
+    if (doubleTap) {
+      modeConfig.fgColor = pixel_color(255, 255, 255);
+    }
+
+    if (doubleDoubleTap) {
+      increment_mode();
+    }
+
     if (shortrange) {
       set_followup_mode(MODE_LIGHT_CENTER);
     } else {
@@ -266,8 +285,8 @@ void handle_sensors() {
       // Just entered mode changing state
       modeConfig.fgColor = pixel_color(255, 255, 255);
       followupConfig.fgColor = pixel_color(0, 0, 255);
-      followupConfig.data = (0xFF << Square::NUM_LEDS) | 
-	(1 << 0) | (1 << 2) | (1 << 6) | (1 << 8);
+      followupConfig.data =
+	FACE_LED_MASK(0xFF, ((1 << 0) | (1 << 2) | (1 << 6) | (1 << 8)));
       set_followup_mode(MODE_BLINK_PATTERN);
       DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
     }

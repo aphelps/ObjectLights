@@ -1,10 +1,21 @@
 Todo
 ----
 
+In YVR:
+  * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module
+    - Make light weight on Arduino side so that it can be included in HMTL library
+  * Get Python based webserver working
+  
+* BUG: Get ledInDirection(), ledAwayFrom(), and squaresOrbits() working
+
 * Add a method of enabling a function for a limited time
 
 * Allow chains of light modes
   - Make arrays of modes, arguments, periods, and timers
+
+* Mode specific event handlers
+
+* Double tap of individual sensors
 
 * Clockwise and counterclockwise functions
 
@@ -16,6 +27,12 @@ Todo
 
 * Add a "error only" option to Debug.h that only defines the error commands
 
+* Play with Pi, get Henry’s web app working, maybe control RGB light on test board
+
 Hardware
 --------
 * Tab on the insert for the cap sensors should have a less tall bump
+
+PCB
+---
+* Need diode between VCC and voltage regulator
