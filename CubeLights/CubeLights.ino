@@ -39,12 +39,14 @@ Square *squares;
 pattern_args_t modeConfig = {
   pixel_color(0, 0, 0), // bgColor
   pixel_color(0xFF, 0xFF, 0xFF), // fgColor
+  0, // next_time
   0 // data
 };
 
 pattern_args_t followupConfig = {
   pixel_color(0, 0, 0), // bgColor
   pixel_color(0xFF, 0x00, 0x00), // fgColor
+  0, // next_time
   CUBE_TOP // data
 };
 
@@ -145,14 +147,16 @@ void loop()
 
   /* Run the current mode and update the squares */
   mode = get_current_mode();
-  modeFunctions[mode](squares, numSquares, modePeriods[mode],
+  modeConfig.periodms = modePeriods[mode];
+  modeFunctions[mode](squares, numSquares,
 		      prev_mode != mode, &modeConfig);
 
   /* Run any follup function */
   followup = get_current_followup();
   if (followup != (byte)-1) {
-    modeFunctions[followup](squares, numSquares, modePeriods[followup],
-				prev_followup != followup, &followupConfig);
+    followupConfig.periodms = modePeriods[followup];
+    modeFunctions[followup](squares, numSquares,
+			    prev_followup != followup, &followupConfig);
   }
 
   /* Send any changes */

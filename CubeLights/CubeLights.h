@@ -68,14 +68,16 @@ void restore_followup(void);
 typedef struct {
   uint32_t bgColor;
   uint32_t fgColor;
+  uint32_t next_time;
+  uint16_t periodms;
   uint32_t data;
 } pattern_args_t;
 
 extern pattern_args_t modeConfig;
 extern pattern_args_t followupConfig;
 
-typedef void (*square_mode_t)(Square *squares, int size, int periodms,
-				boolean init, pattern_args_t *arg);
+typedef void (*square_mode_t)(Square *squares, int size,
+			      boolean init, pattern_args_t *arg);
 
 extern square_mode_t modeFunctions[];
 extern uint16_t modePeriods[];
@@ -99,37 +101,37 @@ extern uint16_t followupPeriods[];
 #define MODE_BLINK_PATTERN  13
 #define MODE_ORBITS         14
 
-void squaresTestPattern(Square *squares, int size, int periodms,
+void squaresTestPattern(Square *squares, int size,
 			  boolean init, pattern_args_t *arg);
-void squaresSetupPattern(Square *squares, int size, int periodms,
+void squaresSetupPattern(Square *squares, int size,
 			  boolean init, pattern_args_t *arg);
-void squaresRandomNeighbor(Square *squares, int size, int periodms,
+void squaresRandomNeighbor(Square *squares, int size,
 			  boolean init, pattern_args_t *arg);
-void squaresCyclePattern(Square *squares, int size, int periodms,
+void squaresCyclePattern(Square *squares, int size,
 			 boolean init, pattern_args_t *arg);
-void squaresCirclePattern(Square *squares, int size, int periodms,
+void squaresCirclePattern(Square *squares, int size,
 			 boolean init, pattern_args_t *arg);
-void squaresFadeCycle(Square *squares, int size, int periodms,
+void squaresFadeCycle(Square *squares, int size,
 		      boolean init, pattern_args_t *arg);
-void squaresAllOn(Square *squares, int size, int periodms,
+void squaresAllOn(Square *squares, int size,
 		  boolean init, pattern_args_t *arg);
-void squaresCapResponse(Square *squares, int size, int periodms,
+void squaresCapResponse(Square *squares, int size,
 			  boolean init, pattern_args_t *arg);
-void squaresStaticNoise(Square *squares, int size, int periodms,
+void squaresStaticNoise(Square *squares, int size,
 			boolean init, pattern_args_t *arg);
-void squaresSwitchRandom(Square *squares, int size, int periodms,
+void squaresSwitchRandom(Square *squares, int size,
 			boolean init, pattern_args_t *arg);
-void squaresBarCircle(Square *squares, int size, int periodms,
+void squaresBarCircle(Square *squares, int size,
 			boolean init, pattern_args_t *arg);
-void squaresCrawl(Square *squares, int size, int periodms,
+void squaresCrawl(Square *squares, int size,
 			boolean init, pattern_args_t *arg);
-void squaresOrbits(Square *squares, int size, int periodms,
+void squaresOrbits(Square *squares, int size,
 			boolean init, pattern_args_t *arg);
 
 
-void squaresLightCenter(Square *squares, int size, int periodms,
+void squaresLightCenter(Square *squares, int size,
 			boolean init, pattern_args_t *arg);
-void squaresBlinkPattern(Square *squares, int size, int periodms,
+void squaresBlinkPattern(Square *squares, int size,
 			 boolean init, pattern_args_t *arg);
 
 #endif

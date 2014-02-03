@@ -108,21 +108,19 @@ void incrementAll(Square *squares, int size,
  * Square Patterns
  */
 
-static unsigned long next_time = 0;
-
 /* This iterates through the squares, lighting the ones with leds */
-void squaresTestPattern(Square *squares, int size, int periodms,
+void squaresTestPattern(Square *squares, int size,
 			  boolean init, pattern_args_t *arg) {
   static int current = 0;
 
   if (init) {
     current = 0;
-    next_time = millis();
+    arg->next_time = millis();
     clearSquares(squares, size);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     /* Clear the color of the previous square and its edges*/
     squares[current % size].setColor(0, 0, 0);
@@ -144,7 +142,7 @@ void squaresTestPattern(Square *squares, int size, int periodms,
  * This setup pattern iterates through the squares, iterating through the LEDs
  * on each one.
  */
-void squaresSetupPattern(Square *squares, int size, int periodms,
+void squaresSetupPattern(Square *squares, int size,
 			  boolean init, pattern_args_t *arg) {
   static byte current = 0;
   static byte led = 0;
@@ -152,12 +150,12 @@ void squaresSetupPattern(Square *squares, int size, int periodms,
   if (init) {
     current = 0;
     led = 0;
-    next_time = millis();
+    arg->next_time = millis();
     clearSquares(squares, size);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     /* Clear the color of the previous square */
     squares[current % size].setColor(0, 0, 0);
@@ -179,18 +177,18 @@ void squaresSetupPattern(Square *squares, int size, int periodms,
 
 
 /* This iterates through the squares, lighting the ones with leds */
-void squaresRandomNeighbor(Square *squares, int size, int periodms,
+void squaresRandomNeighbor(Square *squares, int size,
 			     boolean init, pattern_args_t *arg) {
   static Square *current = &squares[0];
 
   if (init) {
     current = &squares[0];
-    next_time = millis();
+    arg->next_time = millis();
     clearSquares(squares, size);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     /* Clear the color of the previous square */
     current->setColor(0, 0, 0);
@@ -214,18 +212,18 @@ void squaresRandomNeighbor(Square *squares, int size, int periodms,
 
 }
 
-void squaresCyclePattern(Square *squares, int size, int periodms,
+void squaresCyclePattern(Square *squares, int size,
 			  boolean init, pattern_args_t *arg) {
   static byte phase = 0;
 
   if (init) {
     phase = 0;
-    next_time = millis();
+    arg->next_time = millis();
     clearSquares(squares, size);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     for (int i = 0; i < size; i++) {
       for (int j = 0; j < Square::NUM_LEDS; j++) {
@@ -261,18 +259,18 @@ void squaresCyclePattern(Square *squares, int size, int periodms,
 }
 
 
-void squaresCirclePattern(Square *squares, int size, int periodms,
+void squaresCirclePattern(Square *squares, int size,
 			  boolean init, pattern_args_t *arg) {
   static byte phase = 0;
 
   if (init) {
     phase = 0;
-    next_time = millis();
+    arg->next_time = millis();
     clearSquares(squares, size);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     for (int i = 0; i < size; i++) {
       switch (phase % 8) {
@@ -323,7 +321,7 @@ void squaresCirclePattern(Square *squares, int size, int periodms,
   }
 }
 
-void squaresFadeCycle(Square *squares, int size, int periodms,
+void squaresFadeCycle(Square *squares, int size,
 			  boolean init, pattern_args_t *arg) {
   static long phase_start = 0;
   long max_phase = 15 * 1000;
@@ -333,14 +331,14 @@ void squaresFadeCycle(Square *squares, int size, int periodms,
 
   if (init) {
     phase_start = now;
-    next_time = now;
+    arg->next_time = now;
     clearSquares(squares, size);
   }
 
-  if (now > next_time) {
+  if (now > arg->next_time) {
     long phase = now - phase_start;
 
-    next_time += periodms;
+    arg->next_time += arg->periodms;
 
     for (int i = 0; i < size; i++) {
       if (fadeup) {
@@ -370,14 +368,14 @@ void squaresFadeCycle(Square *squares, int size, int periodms,
   }
 }
 
-void squaresAllOn(Square *squares, int size, int periodms,
+void squaresAllOn(Square *squares, int size,
 		  boolean init, pattern_args_t *arg) {
   if (init) {
-    next_time = millis();
+    arg->next_time = millis();
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
     setAllSquares(squares, size, arg->fgColor);
   }
 }
@@ -385,15 +383,15 @@ void squaresAllOn(Square *squares, int size, int periodms,
 /*
  * This mode reacts to the capacitive touch sensors
  */
-void squaresStaticNoise(Square *squares, int size, int periodms,
+void squaresStaticNoise(Square *squares, int size,
 			boolean init, pattern_args_t *arg) {
   if (init) {
-    next_time = millis();
+    arg->next_time = millis();
     setAllSquares(squares, size, arg->bgColor);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     /* Set the leds randomly to on off in white */
     for (int square = 0; square < size; square++) {
@@ -415,15 +413,15 @@ void squaresStaticNoise(Square *squares, int size, int periodms,
   }
 }
 
-void squaresSwitchRandom(Square *squares, int size, int periodms,
+void squaresSwitchRandom(Square *squares, int size,
 			boolean init, pattern_args_t *arg) {
   if (init) {
-    next_time = millis();
+    arg->next_time = millis();
     setAllSquares(squares, size, arg->bgColor);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     byte square = random(0, 5);
     byte led = random(0, Square::NUM_LEDS);
@@ -440,25 +438,25 @@ void squaresSwitchRandom(Square *squares, int size, int periodms,
 /*
  * This mode reacts to the capacitive touch sensors
  */
-void squaresCapResponse(Square *squares, int size, int periodms,
+void squaresCapResponse(Square *squares, int size,
 			boolean init, pattern_args_t *arg) {
   
 }
 
 
-void squaresBarCircle(Square *squares, int size, int periodms,
+void squaresBarCircle(Square *squares, int size,
 		      boolean init, pattern_args_t *arg) {
   static Square *face = NULL;
   static byte current_bar = 0;
 
   if (init) {
     face = &squares[0];
-    next_time = millis();
+    arg->next_time = millis();
     setAllSquares(squares, size, arg->bgColor);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     Square *top = face->edges[Square::TOP];
     top->setColorEdge(top->matchEdge(face), arg->bgColor);
@@ -478,7 +476,7 @@ void squaresBarCircle(Square *squares, int size, int periodms,
 /*
  * 
  */
-void squaresCrawl(Square *squares, int size, int periodms,
+void squaresCrawl(Square *squares, int size,
 		  boolean init, pattern_args_t *arg) {
   static Square *face = NULL;
   static byte led = 0;
@@ -487,17 +485,17 @@ void squaresCrawl(Square *squares, int size, int periodms,
   if (init) {
     face = &squares[0];
     led = 0;
-    next_time = millis();
+    arg->next_time = millis();
     setAllSquares(squares, size, arg->bgColor);
   }
 
-  if (millis() > next_time) {
-    int timeincrement = periodms;
+  if (millis() > arg->next_time) {
+    int timeincrement = arg->periodms;
     if (touch_sensor.touched(CAP_SENSOR_1))
       timeincrement = timeincrement / 2;
     if (touch_sensor.touched(CAP_SENSOR_2))
       timeincrement = timeincrement / 4;
-    next_time += timeincrement;
+    arg->next_time += timeincrement;
 
     face->setColor(led, pixel_wheel(color++));
 
@@ -532,7 +530,7 @@ void squaresCrawl(Square *squares, int size, int periodms,
   }
 }
 
-void squaresOrbits(Square *squares, int size, int periodms,
+void squaresOrbits(Square *squares, int size,
 		  boolean init, pattern_args_t *arg) {
   static Square *face = NULL;
   static Square *prevface = NULL;
@@ -543,12 +541,12 @@ void squaresOrbits(Square *squares, int size, int periodms,
     face = &squares[0];
     prevface = face->edges[Square::TOP];
     led = 8;
-    next_time = millis();
+    arg->next_time = millis();
     setAllSquares(squares, size, arg->bgColor);
   }
 
-  if (millis() > next_time) {
-    next_time += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
 
     face->setColor(led, arg->bgColor);
 
@@ -570,36 +568,34 @@ void squaresOrbits(Square *squares, int size, int periodms,
  * Followup functions
  */
 
-unsigned long next_followup = 0;
-
 /* 
  * Set the center LED of each square to the indicated color
  */
-void squaresLightCenter(Square *squares, int size, int periodms,
+void squaresLightCenter(Square *squares, int size,
 			boolean init, pattern_args_t *arg) {
   if (init) {
-    next_followup = millis();
+    arg->next_time = millis();
   }
 
-  if (millis() > next_followup) {
-    next_followup += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
     for (int square = 0; square < size; square++) {
       squares[square].setColor(4, arg->fgColor);
     }
   }
 }
 
-void squaresBlinkPattern(Square *squares, int size, int periodms,
+void squaresBlinkPattern(Square *squares, int size,
 			   boolean init, pattern_args_t *arg) {
   static boolean on = false;
 
   if (init) {
-    next_followup = millis();
+    arg->next_time = millis();
     on = false;
   }
 
-  if (millis() > next_followup) {
-    next_followup += periodms;
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
     on = !on;
   }
 
