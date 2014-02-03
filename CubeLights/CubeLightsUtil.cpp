@@ -553,9 +553,9 @@ void squaresOrbits(Square *squares, int size, int periodms,
     face->setColor(led, arg->bgColor);
 
     uint16_t next = face->ledAwayFrom(prevface, led);
-    if (FACE_FROM_COMBO(next) == face->id) {
-      led = LED_FROM_COMBO(next);
-    } else {
+    led = LED_FROM_COMBO(next);
+
+    if (FACE_FROM_COMBO(next) != face->id) {
       prevface = face;
       face = &squares[FACE_FROM_COMBO(next)];
     }

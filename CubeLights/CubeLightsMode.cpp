@@ -48,7 +48,7 @@ square_mode_t modeFunctions[] = {
   NULL, //squaresBarCircle,
   squaresCrawl,
   squaresBlinkPattern,
-  NULL //squaresOrbits
+  squaresOrbits
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
 

@@ -33,10 +33,16 @@ class Square {
   static const byte RIGHT = 1;
   static const byte BOTTOM = 2;
   static const byte LEFT = 3;
-  static const byte NOEDGE = (byte)-1;
 
   /* LED values */
   static const byte CENTER = 4;
+
+  /* Constants for no-values */
+  static const byte NO_LED = (byte)-1;
+  static const byte NO_FACE = (byte)-1;
+  static const byte NO_DIRECTION = (byte)-1;
+  static const byte NO_INDEX = (byte)-1;
+  static const byte NO_EDGE = (byte)-1;
 
   Square() {};
   Square(unsigned int id);
@@ -119,9 +125,5 @@ Square* buildCube(int *numSquares, int numLeds, int firstLed);
 #define LEDS_FROM_MASK(mask) (mask & (0xFFFF << Square::NUM_LEDS))
 #define FACES_FROM_MASK(mask) (mask >> Square::NUM_LEDS)
 
-
-// Convenience #defines
-#define NO_LED (byte)-1
-#define NO_FACE (byte)-1
 
 #endif

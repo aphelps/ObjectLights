@@ -36,3 +36,10 @@ Hardware
 PCB
 ---
 * Need diode between VCC and voltage regulator
+
+Ideas
+-----
+* Transmit executable code
+  - Send code via RS485, read directly into PROGMEM
+  - Set function pointers to appropriate place in PROGMEM
+  - Magic?

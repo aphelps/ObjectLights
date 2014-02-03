@@ -200,7 +200,7 @@ byte Square::matchEdge(Square *square) {
   for (byte edge = 0; edge < NUM_EDGES; edge++) {
     if (edges[edge] == square) return edge;
   }
-  return NOEDGE;
+  return NO_EDGE;
 }
 
 /*
@@ -270,7 +270,7 @@ byte Square::getEdgeIndex(byte edge, byte led) {
     break;
   }
   }
-  return (byte)-1;
+  return NO_INDEX;
 }
 
 /* Returns the led at the indicated index in an edge */
@@ -279,23 +279,17 @@ byte Square::ledInEdge(byte edge, byte index) {
   switch (edge) {
   case TOP: {
     return index; //  0 1 2
-    break;
   }
   case RIGHT: {
     return 2 + 3*index; // 2 5 8
-    break;
   }
   case BOTTOM: {
     return 8 - index; // 8 7 6
-    break;
   }
   case LEFT: {
     return 6 - 3*index; // 6 3 0
-    break;
   }
   }
-
-  return (byte)-1;
 }
 
 /*
@@ -317,12 +311,12 @@ byte Square::matchLED(Square *square, byte led) {
   byte other_edge = square->matchEdge(this);
   byte other_index = square->getEdgeIndex(other_edge, led);
 
-  byte my_index = (byte)-1;
+  byte my_index = NO_LED;
   switch (other_index) {
   case 0: my_index = 2; break;
   case 1: my_index = 1; break;
   case 2: my_index = 0; break;
-  default: return (byte)-1; break;
+  default: return NO_LED; break;
   }
 
   byte match = ledInEdge(my_edge, my_index);
@@ -336,26 +330,22 @@ byte Square::matchLED(Square *square, byte led) {
 byte Square::ledInDirection(byte led, byte direction) {
  switch (direction) {
  case TOP: {
-   if (led < 3) return NO_LED;
-   return (led - 3);
+   if (led >= 3) return (led - 3);
    break;
  }
 
  case RIGHT: {
-   if ((led % 3) == 2) return NO_LED;
-   return (led + 1);
+   if ((led % 3) != 2) return (led + 1);
    break;
  }
 
  case BOTTOM: {
-   if (led > 5) return NO_LED;
-   return (led + 3);
+   if (led <= 5) return (led + 3);
    break;
  }
 
  case LEFT: {
-   if ((led % 3) == 0) return NO_LED;
-   return (led - 1);
+   if ((led % 3) != 0) return (led - 1);
    break;
  }
  }
@@ -372,7 +362,7 @@ uint16_t Square::ledAwayFrom(Square *square, byte led) {
    * is the last in that direction.
    */
   byte direction = matchEdge(square);
-  if (direction == (byte)-1) {
+  if (direction == NO_DIRECTION) {
     DEBUG_PRINTLN(DEBUG_HIGH, "ledAwayFrom: invalid");
     return (uint16_t)-1;
   }
