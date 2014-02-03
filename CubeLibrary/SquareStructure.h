@@ -76,6 +76,9 @@ class Square {
   byte matchLED(Square *square, byte led);
   byte getEdgeIndex(byte edge, byte led);
   byte ledInEdge(byte edge, byte index);
+  byte ledInDirection(byte led, byte direction);
+
+  uint16_t ledAwayFrom(Square *square, byte led);
 
   /* Serialization functions */
   int toBytes(byte *bytes, int size);
@@ -106,8 +109,19 @@ void updateSquarePixels(Square *squares, int numSquares,
 #define CUBE_BOTTOM 5
 Square* buildCube(int *numSquares, int numLeds, int firstLed);
 
-/* Macros for rotating around the vertices of a square */
-#define VERTEX_CW(v) ((v + 1) % SQUARE_NUM_VERTICES)
-#define VERTEX_CCW(v) ((v + SQUARE_NUM_VERTICES - 1) % SQUARE_NUM_VERTICES)
+// Store both face and led in a uint16_t
+#define FACE_AND_LED(face, led) (face << 8 | led)
+#define LED_FROM_COMBO(faceled) (faceled & 0xF)
+#define FACE_FROM_COMBO(faceled) ((faceled >> 8) & 0xF)
+
+// Store mask of all faces and leds in a uint16_t
+#define FACE_LED_MASK(faces, leds) ((faces << Square::NUM_LEDS) | leds)
+#define LEDS_FROM_MASK(mask) (mask & (0xFFFF << Square::NUM_LEDS))
+#define FACES_FROM_MASK(mask) (mask >> Square::NUM_LEDS)
+
+
+// Convenience #defines
+#define NO_LED (byte)-1
+#define NO_FACE (byte)-1
 
 #endif
