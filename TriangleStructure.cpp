@@ -152,15 +152,19 @@ byte Triangle::getBlue(byte vertex) {
   }
 }
 
+/******************************************************************************
+ * Topology traversal functions
+ */
+
 /*
  * This is used to find the LED adjacent to a corner triangle
- *      S
+ *     N
  *     \/
  *     ^
  *    /?\
  *   /   \
  *  /     \
- * /?_____?\
+ * /_______\
  *
  */
 byte Triangle::matchVertex(Triangle *neighbor) {
@@ -186,6 +190,7 @@ byte Triangle::matchVertexRight(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
   for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
     if (edges[edge] == neighbor) {
+      // XXX - This doesn't consider the vertex at all!!!
       return edge;
     }
   }
@@ -204,6 +209,7 @@ byte Triangle::matchVertexLeft(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
   for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
     if (edges[edge] == neighbor) {
+      // XXX - This doesn't consider the vertex at all!!!
       return (edge + 1) % TRIANGLE_NUM_EDGES;
     }
   }
@@ -224,7 +230,7 @@ Triangle *Triangle::leftOfVertex(byte vertex) {
   case 1: return edges[0]; break;
   case 2: return edges[1]; break;
   default:
-    DEBUG_ERR(F("leftOfVertex: invalid vertex"));
+    DEBUG_ERR("leftOfVertex: invalid vertex");
     return NULL;
     break;
   }
@@ -305,7 +311,7 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   Triangle *triangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
   DEBUG_COMMAND(DEBUG_ERROR,
 		if (triangles == NULL) {
-		  DEBUG_ERR(F("Failed to malloc triangles"));
+		  DEBUG_ERR("Failed to malloc triangles");
 		  debug_err_state(DEBUG_ERR_MALLOC);
 		}
 		);

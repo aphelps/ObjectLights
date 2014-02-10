@@ -10,9 +10,9 @@
  *          0
  *          ^
  *         / \
- *        / * \
+ *        / 0 \
  *     2 /     \ 0
- *      / *   * \
+ *      / 2   1 \
  *     /_________\
  *    2     1     1
  *
@@ -41,8 +41,8 @@ class Triangle {
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2);
 
   void setColor(byte r, byte g, byte b);
-  void setColor(byte led, byte r, byte g, byte b);
   void setColor(uint32_t c);
+  void setColor(byte led, byte r, byte g, byte b);
   void setColor(byte led, uint32_t c);
 
   uint32_t getColor();

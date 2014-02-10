@@ -22,10 +22,13 @@ Triangle *triangles;
 
 #define MODE_PERIOD 50
 triangle_mode_t modeFunctions[] = {
+  trianglesVertexMergeFade,
+  trianglesVertexMerge,
+  trianglesVertexShift,
+  trianglesSnake2,
   trianglesLooping,
   //  trianglesSetAll,
   trianglesCircle,
-  trianglesSnake,
   trianglesCircleCorner2,
   trianglesRandomNeighbor,
   trianglesLifePattern,
@@ -40,8 +43,11 @@ triangle_mode_t modeFunctions[] = {
 
 uint16_t modePeriods[] = {
   MODE_PERIOD,
-  //  1000,
   MODE_PERIOD,
+  MODE_PERIOD * 2,
+  MODE_PERIOD,
+  MODE_PERIOD,
+  //  1000,
   MODE_PERIOD,
   MODE_PERIOD,
   MODE_PERIOD,

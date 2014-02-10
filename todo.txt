@@ -15,6 +15,8 @@ General todo
 * Figure out why Life2 has only red
 * Mode that lights up the points
 
+* Global color effects to functions
+
 Light pattern ideas
 -------------------
 
@@ -28,3 +30,10 @@ Light pattern ideas
     * Repeat
 
 (Will likely average out globally over time, add an additional cyclic or random color cycle to keep it going)
+
+2) Based on trianglesVertexMerge.
+  * Set a random triangle
+  * Apply spread
+  * Apply fade to black
+
+3) Make spread routine that fades within triangle as well

@@ -56,7 +56,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = true;
     }
-    //    DEBUG_VALUELN(DEBUG_HIGH, F(" Photo:"), photo_value);
+    //    DEBUG_VALUELN(DEBUG_HIGH, " Photo:", photo_value);
   }
 }
 
@@ -130,9 +130,9 @@ void incrementAll(Triangle *triangles, int size,
                   char r, char g, char b) {
   for (int tri = 0; tri < size; tri++) {
       for (byte c = 0; c < 3; c++) {
-	int red = triangles[tri].leds[c].red();
-	int green = triangles[tri].leds[c].green();
-	int blue = triangles[tri].leds[c].blue();
+	int red = triangles[tri].leds[c].red;
+	int green = triangles[tri].leds[c].green;
+	int blue = triangles[tri].leds[c].blue;
 
 	red = red + r;
 	if (red < 0) red = 0;
@@ -174,12 +174,12 @@ void colorWhiteBuildupFade(Triangle *current, byte currVertex,
 /* Pixels are set to a pixel_wheel value and face over time */
 void colorRainbowTrail(Triangle *current, byte currVertex,
 		       Triangle *next, byte nextVertex,
-		       Triangle *triangles, byte size) {
+		       Triangle *triangles, byte size,
+		       int increment) {
   static byte wheel_position = 0;
 
   // Perhaps a shift instead?  How to achieve an evenish fade?
-  //  incrementAll(triangles, size, -10, -10, -10);
-  incrementAll(triangles, size, 1, 1, 1);
+  incrementAll(triangles, size, increment, increment, increment);
 
   next->setColor(nextVertex, pixel_wheel(wheel_position));
   wheel_position += 5;
@@ -298,7 +298,29 @@ void movementBelt2(Triangle *currentTriangle, byte vertex,
   phase++;
 }
 
+/******************************************************************************
+ * Global effects
+ */
+void mergeAdjacent(Triangle *triangles, int size) {
+  Triangle *rightT, *leftT;
+  byte rightV, leftV;
+  uint32_t color;
 
+  for (int tri = 0; tri < size; tri++) {
+    for (byte vertex = 0; vertex < TRIANGLE_NUM_VERTICES; vertex++) {
+      movementCornerCCW(&triangles[tri], vertex, &rightT, &rightV);
+      movementCornerCW(&triangles[tri], vertex, &leftT, &leftV);
+
+      // Get the midpoint of the neighbors
+      color = fadeTowards(leftT->getColor(leftV), rightT->getColor(rightV),
+			  50);
+      // Fade towards the midpoint color
+      color = fadeTowards(triangles[tri].getColor(vertex), color, 5);
+
+      triangles[tri].setColor(vertex, color);
+    }
+  }
+}
 
 /******************************************************************************
  * Triangle Patterns
@@ -402,8 +424,8 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
  
     uint32_t currentColor = triangles[current].getColor();
     uint32_t edgeColor = triangles[current].edges[edge]->getColor();
-    DEBUG_VALUE(DEBUG_TRACE, F("curr color:"), currentColor);
-    DEBUG_VALUELN(DEBUG_TRACE, F("edge color:"), edgeColor);
+    DEBUG_VALUE(DEBUG_TRACE, "curr color:", currentColor);
+    DEBUG_VALUELN(DEBUG_TRACE, "edge color:", edgeColor);
 
     triangles[current].setColor(edgeColor);
     triangles[current].edges[edge]->setColor(currentColor);
@@ -433,7 +455,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
     }
 
     for (int tri = 0; tri < size; tri++) {
-      DEBUG_VALUE(DEBUG_TRACE, F(" "), set[tri]);
+      DEBUG_VALUE(DEBUG_TRACE, " ", set[tri]);
       switch (set[tri]) {
       case 0:
       case 3:
@@ -446,7 +468,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
 	break;
       }
     }
-    DEBUG_PRINTLN(DEBUG_TRACE, F(""));
+    DEBUG_PRINTLN(DEBUG_TRACE, "");
   }
 }
 
@@ -534,8 +556,8 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
       next->setColor(vertex, 0, next->getRed(vertex), 0);
     }
 
-    DEBUG_VALUE(DEBUG_TRACE, F("next="), next->id);
-    DEBUG_VALUELN(DEBUG_TRACE, F(" vert="), vertex);
+    DEBUG_VALUE(DEBUG_TRACE, "next=", next->id);
+    DEBUG_VALUELN(DEBUG_TRACE, " vert=", vertex);
 
     next->setColor(vertex, 255, 0, next->getGreen(vertex));
     current = next;
@@ -688,7 +710,9 @@ void trianglesLooping(Triangle *triangles, int size, int periodms,
 
     //colorWhiteBuildupFade(current, vertex, next, nextVertex, triangles, size, increment);
 
-    colorRainbowTrail(current, vertex, next, nextVertex, triangles, size);
+    colorRainbowTrail(current, vertex, next, nextVertex, triangles, size,
+		      -5);
+    // -5);
 
     current = next;
     vertex = nextVertex;
@@ -774,7 +798,7 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 
 
 /* Run a snake randomly around the light */
-#define SNAKE_LENGTH 7
+#define SNAKE_LENGTH 8
 void trianglesSnake(Triangle *triangles, int size, int periodms,
 			  boolean init, pattern_args_t *arg) {
   pattern_args_t *config = (pattern_args_t *)arg;
@@ -787,7 +811,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
   static byte colorMode = 0;
 
   if (init || (currentIndex == (byte)-1)) {
-    DEBUG_PRINT(DEBUG_HIGH, F("Initializing:"));
+    DEBUG_PRINT(DEBUG_HIGH, "Initializing:");
     next_time = millis();
     setAllTriangles(triangles, size, config->bgColor);
     for (int i = 0; i < SNAKE_LENGTH; i++) {
@@ -855,6 +879,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
 
     /* Choose the next location */
     Triangle *current = &triangles[snakeTriangles[currentIndex]];
+    byte currentVertex = snakeVertices[currentIndex];
     tri = (byte)-1;
     boolean found = false;
 
@@ -864,24 +889,24 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       case 0:
       default:
 	// Triangle to the left
-	tri = current->leftOfVertex(snakeVertices[currentIndex])->id;
+	tri = current->leftOfVertex(currentVertex)->id;
 	vert = triangles[tri].matchVertexRight(current, 
-					       snakeVertices[currentIndex]);	
+					       currentVertex);	
 	break;
       case 1:
 	// Triangle to the right
-	tri = current->rightOfVertex(snakeVertices[currentIndex])->id;
+	tri = current->rightOfVertex(currentVertex)->id;
 	vert = triangles[tri].matchVertexLeft(current, 
-					       snakeVertices[currentIndex]);
+					       currentVertex);
 	break;
       case 2:
 	// Same triangle, vertex to the left
-	vert = (snakeVertices[currentIndex] + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
+	vert = (currentVertex + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
 	tri = snakeTriangles[currentIndex];
 	break;
       case 3: {
 	// Same triangle, vertex to the right
-	vert = (snakeVertices[currentIndex] + 1) % TRIANGLE_NUM_EDGES;
+	vert = (currentVertex + 1) % TRIANGLE_NUM_EDGES;
 	tri = snakeTriangles[currentIndex];
 	break;
       }
@@ -896,7 +921,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     }
     if (!found) {
       currentIndex = (byte)-1;
-      DEBUG_PRINTLN(DEBUG_HIGH, F("End of snake"));
+      DEBUG_PRINTLN(DEBUG_HIGH, "End of snake");
       return;
     }
 
@@ -925,11 +950,177 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       }
     }
 
-    DEBUG_VALUE(DEBUG_TRACE, F(" i:"), currentIndex);
-    DEBUG_VALUE(DEBUG_TRACE, F(" tri:"), tri);
-    DEBUG_VALUELN(DEBUG_TRACE, F(" vert:"), vert);
+    DEBUG_VALUE(DEBUG_TRACE, " i:", currentIndex);
+    DEBUG_VALUE(DEBUG_TRACE, " tri:", tri);
+    DEBUG_VALUELN(DEBUG_TRACE, " vert:", vert);
   }
 }
+
+/* Run a snake randomly around the light */
+#define SNAKE_LENGTH 12
+void trianglesSnake2(Triangle *triangles, int size, int periodms,
+			  boolean init, pattern_args_t *arg) {
+  pattern_args_t *config = (pattern_args_t *)arg;
+  static byte snakeTriangles[SNAKE_LENGTH];
+  static byte snakeVertices[SNAKE_LENGTH];
+  uint32_t values[SNAKE_LENGTH] = {
+    255, 128, 64, 32, 16, 8, 4//, 2, 1
+  };
+  static byte currentIndex = (byte)-1;
+  static byte colorMode = 0;
+
+  if (init || (currentIndex == (byte)-1)) {
+    DEBUG_PRINT(DEBUG_HIGH, "Initializing:");
+    next_time = millis();
+    setAllTriangles(triangles, size, config->bgColor);
+    for (int i = 0; i < SNAKE_LENGTH; i++) {
+      snakeTriangles[i] = (byte)-1;
+      snakeVertices[i] = (byte)-1;
+    }
+
+    /* Start from a random triangle */
+    byte tri;
+    do {
+      tri = random(0, size);
+    } while (!triangles[tri].hasLeds);
+    currentIndex = 0;
+    snakeTriangles[currentIndex] = tri;
+    snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
+
+    colorMode++;
+    DEBUG_VALUE(DEBUG_HIGH, " colormode=", colorMode);
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    /* Determine which colors to use for the snake */
+    switch (colorMode % 1) {
+    case 0: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
+      }
+      break;
+    }
+    case 1: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte red = 255 >> i;
+	values[i] = pixel_color(red, 0, 0);
+      }
+      break;
+    }
+    case 2: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte green = 255 >> i;
+	values[i] = pixel_color(0, green, 0);
+      }
+      break;
+    }
+    case 3: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte blue = 255 >> i;
+	values[i] = pixel_color(0, 0, blue);
+      }
+      break;
+    }
+    case 4: {
+      for (int i = 0; i < SNAKE_LENGTH; i++) {
+	byte color = 255 >> i;
+	values[i] = pixel_color(color, color, color);
+      }
+      break;
+    }
+    }
+
+    /* Clear the tail */
+    byte tri, vert;
+    byte nextIndex;
+    boolean found = false;
+
+    /* Choose the next location */
+    for (byte i = 0; i < SNAKE_LENGTH; i++) {
+      byte activeIndex = currentIndex - i;
+      Triangle *current = &triangles[snakeTriangles[activeIndex]];
+      byte currentVertex = snakeVertices[activeIndex];
+      tri = (byte)-1;
+
+      byte startDirection = random(0, 4);
+      for (byte direction = 0; direction < 4; direction++) {
+	switch ((startDirection + direction) % 4) {
+	case 0:
+	default:
+	  // Triangle to the left
+	  tri = current->leftOfVertex(currentVertex)->id;
+	  vert = triangles[tri].matchVertexRight(current, 
+						 currentVertex);	
+	  break;
+	case 1:
+	  // Triangle to the right
+	  tri = current->rightOfVertex(currentVertex)->id;
+	  vert = triangles[tri].matchVertexLeft(current, 
+						currentVertex);
+	  break;
+	case 2:
+	  // Same triangle, vertex to the left
+	  vert = (currentVertex + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
+	  tri = snakeTriangles[activeIndex];
+	  break;
+	case 3: {
+	  // Same triangle, vertex to the right
+	  vert = (currentVertex + 1) % TRIANGLE_NUM_EDGES;
+	  tri = snakeTriangles[activeIndex];
+	  break;
+	}
+	}
+
+	if ((triangles[tri].leds[vert].color() == config->bgColor) &&
+	    (triangles[tri].hasLeds)) {
+	  // Verify that the choosen vertex is dark
+	  found = true;
+	  goto FOUND;
+	}
+      }
+    }
+
+  FOUND:
+
+    if (!found) {
+      currentIndex = (byte)-1;
+      DEBUG_PRINTLN(DEBUG_HIGH, "End of snake");
+      return;
+    }
+
+    if (currentIndex == 0) {
+      nextIndex = SNAKE_LENGTH - 1;
+    } else {
+      nextIndex = currentIndex - 1;
+    }
+    if ((snakeTriangles[nextIndex] < size) && 
+	(snakeVertices[nextIndex] < TRIANGLE_NUM_VERTICES)) 
+      triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex], 
+						    config->bgColor);
+
+    /* Move the array index*/
+    currentIndex = nextIndex;
+    snakeTriangles[currentIndex] = tri;
+    snakeVertices[currentIndex] = vert;
+
+    /* Set the led values */
+    for (byte i = 0; i < SNAKE_LENGTH; i++) {
+      byte valueIndex = (i + SNAKE_LENGTH - currentIndex) % SNAKE_LENGTH;
+      if (snakeTriangles[i] != (byte)-1) {
+	
+        triangles[snakeTriangles[i]].setColor(snakeVertices[i],
+                                              values[valueIndex]);
+      }
+    }
+
+    DEBUG_VALUE(DEBUG_TRACE, " i:", currentIndex);
+    DEBUG_VALUE(DEBUG_TRACE, " tri:", tri);
+    DEBUG_VALUELN(DEBUG_TRACE, " vert:", vert);
+  }
+}
+
 
 /* Just set all triangles to the indicate foreground color */
 void trianglesSetAll(Triangle *triangles, int size, int periodms,
@@ -948,3 +1139,122 @@ void trianglesSetAll(Triangle *triangles, int size, int periodms,
     DEBUG_HEXVALLN(DEBUG_HIGH, " getBlue=", triangles[0].getBlue());
   }
 }
+
+/* Shift the color of a vertex randomly around */
+void trianglesVertexShift(Triangle *triangles, int size, int periodms,
+			    boolean init, pattern_args_t *arg) {
+  static byte mode = 0;
+  byte num_modes = 4;
+
+  if (init) {
+    next_time = millis() + periodms;
+    randomTriangles(triangles, size);
+    //    triangles[0].setColor(0, 255, 0, 0);
+    mode = 0;
+  }
+
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    mode = random(0, num_modes);
+
+    for (int tri = 0; tri < size; tri++) {
+      for (byte vertex = 0; vertex < TRIANGLE_NUM_VERTICES; vertex++) {
+	Triangle *sourceT;
+	byte sourceV;
+	uint32_t color;
+
+	for (int i = 0; i < num_modes; i++ ) {
+        switch ((i + mode) % num_modes) {
+           case 0: {
+             // Set the color of the vertex to that of the vertex to its right
+             movementCornerCCW(&triangles[tri], vertex, &sourceT, &sourceV);
+	     break;
+           }
+           case 1: {
+             sourceT = &triangles[tri];
+	     sourceV = VERTEX_CW(vertex);
+	     break;
+           }
+           case 2: {
+             // Set the color of the vertex to that of the vertex to its right
+             movementCornerCCW(&triangles[tri], vertex, &sourceT, &sourceV);
+	     break;
+           }
+           case 3: {
+             sourceT = &triangles[tri];
+	     sourceV = VERTEX_CW(vertex);
+	     break;
+           }
+        }
+
+	   color = sourceT->getColor(sourceV);
+	   if (color != 0) break;
+        }
+
+       	triangles[tri].setColor(vertex, color);
+      }
+    }
+    mode++;
+  }
+}
+    
+void trianglesVertexMerge(Triangle *triangles, int size, int periodms,
+			  boolean init, pattern_args_t *arg) {
+  static unsigned long next_mutation;
+  static byte mutation = 0;
+
+  if (init) {
+    next_time = millis() + periodms;
+    next_mutation = next_time + periodms * 20;
+    //    wheelTriangles(triangles, size);
+    clearTriangles(triangles, size);
+  }
+  
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    mergeAdjacent(triangles, size);
+  }
+
+  if (millis() > next_mutation) {
+    next_mutation += periodms * 40;
+    //mutation++; triangles[random(0, size)].setColor(pixel_wheel(mutation));
+    mutation += 11; triangles[random(0, size)].setColor(pixel_primary(mutation));
+  }
+}
+
+void trianglesVertexMergeFade(Triangle *triangles, int size, int periodms,
+			      boolean init, pattern_args_t *arg) {
+  static unsigned long next_mutation;
+  static unsigned long next_fade;
+  static byte mutation = 0;
+
+  if (init) {
+    next_time = millis() + periodms;
+    next_mutation = next_time + periodms * 20;
+    next_fade = next_time + periodms * 20;
+
+    //    wheelTriangles(triangles, size);
+    clearTriangles(triangles, size);
+  }
+  
+  if (millis() > next_time) {
+    next_time += periodms;
+
+    mergeAdjacent(triangles, size);
+  }
+
+  if (millis() > next_fade) {
+    next_fade += periodms * 8;
+    incrementAll(triangles, size, -1, -1, -1);
+  }
+
+  if (millis() > next_mutation) {
+    next_mutation += periodms * 40;
+    //mutation++; triangles[random(0, size)].setColor(pixel_wheel(mutation));
+    mutation += 11; triangles[random(0, size)].setColor(pixel_primary(mutation));
+    //triangles[random(0, size)].setColor(255, 0, 0);
+  }
+}
+

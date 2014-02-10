@@ -57,9 +57,17 @@ void trianglesCircle(Triangle *triangles, int size, int periodms,
 			   boolean init, pattern_args_t *arg);
 void trianglesSnake(Triangle *triangles, int size, int periodms,
 		    boolean init, pattern_args_t *arg);
+void trianglesSnake2(Triangle *triangles, int size, int periodms,
+		    boolean init, pattern_args_t *arg);
 void trianglesSetAll(Triangle *triangles, int size, int periodms,
 		     boolean init, pattern_args_t *arg);
 void trianglesLooping(Triangle *triangles, int size, int periodms,
+		      boolean init, pattern_args_t *arg);
+void trianglesVertexShift(Triangle *triangles, int size, int periodms,
+		      boolean init, pattern_args_t *arg);
+void trianglesVertexMerge(Triangle *triangles, int size, int periodms,
+		      boolean init, pattern_args_t *arg);
+void trianglesVertexMergeFade(Triangle *triangles, int size, int periodms,
 		      boolean init, pattern_args_t *arg);
 
 
