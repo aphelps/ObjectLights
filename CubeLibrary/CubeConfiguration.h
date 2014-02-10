@@ -14,7 +14,10 @@ typedef struct {
   byte reserved[7];
 } cube_config_t;
 
-int readConfiguration(Square *squares, int numSquares, int offset);
-int writeConfiguration(Square *squares, int numSquares, int offset);
+#define CONFIG_BUFFER_SZ 32 // Buffer size for reading and writing configs
+
+void readHMTLConfiguration();
+int readCubeConfiguration(Square *squares, int numSquares, int offset);
+int writeCubeConfiguration(Square *squares, int numSquares, int offset);
 
 #endif

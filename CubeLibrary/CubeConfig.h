@@ -1,6 +1,14 @@
 #ifndef CUBE_CONFIG_H
 #define CUBE_CONFIG_H
 
+/*
+ * If CONFIG_ENABLED is defined then the configuration for this light will be
+ * read in from EEPROM.
+ */
+#define CONFIG_ENABLED
+
+#define NUM_SQUARES 6
+
 #define ADAM_CUBE   0
 #define DEE_CUBE    1
 #define PARENT_CUBE 2

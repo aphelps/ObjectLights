@@ -32,10 +32,6 @@
 #define DEBUG_LED 13
 
 int numLeds = 45 + FIRST_LED;
-PixelUtil pixels;
-
-int numSquares = 6;
-Square *squares;
 
 pattern_args_t modeConfig = {
   pixel_color(0, 0, 0), // bgColor
@@ -51,48 +47,6 @@ pattern_args_t followupConfig = {
   CUBE_TOP // data
 };
 
-#define CONFIG_ENABLED
-#ifdef CONFIG_ENABLED
-#define CUBE_MAX_OUTPUTS 4
-
-void readConfig() {
-  config_hdr_t config;
-  output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
-  config_max_t readoutputs[CUBE_MAX_OUTPUTS];
-  int offset;
-
-  /* Attempt to read the configuration */
-  offset = hmtl_read_config(&config, readoutputs, CUBE_MAX_OUTPUTS);
-  if (offset < 0) {
-    hmtl_default_config(&config);
-    DEBUG_PRINTLN(DEBUG_LOW, "ERROR: Using default config");
-  }
- if (config.num_outputs > CUBE_MAX_OUTPUTS) {
-    DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
-    DEBUG_ERR_STATE(DEBUG_ERR_INVALID);
-  }
-  for (int i = 0; i < config.num_outputs; i++) {
-    outputs[i] = (output_hdr_t *)&readoutputs[i];
-  }
-  DEBUG_COMMAND(DEBUG_HIGH, hmtl_print_config(&config, outputs));
-
-  // XXX: Perform output validation, check that pins are used only once, etc
-
-  /* Initialize the outputs */
-  for (int i = 0; i < config.num_outputs; i++) {
-    void *data = NULL;
-    switch (((output_hdr_t *)outputs[i])->type) {
-    case HMTL_OUTPUT_PIXELS: data = &pixels; break;
-    case HMTL_OUTPUT_MPR121: data = &touch_sensor; break;
-    case HMTL_OUTPUT_RS485: data = &rs485; break;
-    }
-    hmtl_setup_output((output_hdr_t *)outputs[i], data);
-  }
-
-  offset = readConfiguration(squares, numSquares, offset);
-}
-#endif
-
 /******************************************************************************
  * Initialization
  *****************************************************************************/
@@ -107,17 +61,17 @@ void setup()
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
-  /* Generate the geometry */
-  squares = buildCube(&numSquares, numLeds, FIRST_LED);
-  DEBUG_VALUELN(DEBUG_LOW, "* Inited with numSquares:", numSquares);
-
 #ifdef CONFIG_ENABLED
   Wire.begin();
-  readConfig();
+  readHMTLConfiguration();
 
   /* Setup the external connection */
   initializeConnect();
 #else
+  /* Generate the geometry */
+  squares = buildCube(&NUM_SQUARES, numLeds, FIRST_LED);
+  DEBUG_VALUELN(DEBUG_LOW, "* Inited with NUM_SQUARES:", NUM_SQUARES);
+
   pixels = PixelUtil(numLeds, 12, 8);
   sensor_cap_init(); /* Initialize the capacitive sensors */
 #endif
@@ -149,19 +103,19 @@ void loop()
   /* Run the current mode and update the squares */
   mode = get_current_mode();
   modeConfig.periodms = modePeriods[mode];
-  modeFunctions[mode](squares, numSquares,
+  modeFunctions[mode](squares, NUM_SQUARES,
 		      prev_mode != mode, &modeConfig);
 
   /* Run any follup function */
   followup = get_current_followup();
   if (followup != (byte)-1) {
     followupConfig.periodms = modePeriods[followup];
-    modeFunctions[followup](squares, numSquares,
+    modeFunctions[followup](squares, NUM_SQUARES,
 			    prev_followup != followup, &followupConfig);
   }
 
   /* Send any changes */
-  updateSquarePixels(squares, numSquares, &pixels);
+  updateSquarePixels(squares, NUM_SQUARES, &pixels);
 
   prev_mode = mode;
   prev_followup = followup;

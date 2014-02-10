@@ -12,6 +12,10 @@
 /* Setup all pins */
 void initializePins();
 
+/***** Geometry and LEDS **************************************************** */
+extern PixelUtil pixels;
+extern Square *squares;
+
 /***** Sensor info ********************************************************** */
 
 void handle_sensors();
