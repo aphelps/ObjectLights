@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
+ ******************************************************************************/
+
 #include <Arduino.h>
 
 #define DEBUG_LEVEL DEBUG_HIGH
@@ -81,9 +87,9 @@ void incrementAll(Square *squares, int size,
                   char r, char g, char b) {
   for (int tri = 0; tri < size; tri++) {
       for (byte c = 0; c < 3; c++) {
-	int red = squares[tri].leds[c].red();
- 	int green = squares[tri].leds[c].green();
-	int blue = squares[tri].leds[c].blue();
+	int red = squares[tri].leds[c].red;
+ 	int green = squares[tri].leds[c].green;
+	int blue = squares[tri].leds[c].blue;
 
 	red = red + r;
 	if (red < 0) red = 0;

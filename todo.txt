@@ -1,13 +1,18 @@
 Todo
 ----
 
+TEST
+  * Verify ledInDirection(), ledAwayFrom(), and squaresOrbits() working
+  * Verify that RS485 still works after changing ordering of null-constructor to prevent warning messages
+  *Verify things work after cleanup of RGB and PixelUtil
+
 In YVR:
   * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
-  
-* BUG: Get ledInDirection(), ledAwayFrom(), and squaresOrbits() working
-
+ 
+* Add Serial CLI
+ 
 * Add a method of enabling a function for a limited time
 
 * Allow chains of light modes
@@ -19,13 +24,9 @@ In YVR:
 
 * Clockwise and counterclockwise functions
 
-* RGB class should only store three bytes
-
 * Store Range finder in EEPROM
 
 * Try using the timer based NewPing methods
-
-* Add a "error only" option to Debug.h that only defines the error commands
 
 * Play with Pi, get Henry’s web app working, maybe control RGB light on test board
 

@@ -1,6 +1,12 @@
-/*
- * Write out a CubeLight configuration
- */
+/*******************************************************************************
+ * Write out a CubeLight configuration and provide a CLI for establishing the
+ * individual faces and LEDs of the Cube.
+ *
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
+ ******************************************************************************/
+
 #include "EEPROM.h"
 #include <RS485_non_blocking.h>
 #include <SoftwareSerial.h>

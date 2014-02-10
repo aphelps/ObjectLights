@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
+ ******************************************************************************/
+
 #ifndef CUBE_CONFIGURATION_H
 #define CUBE_CONFIGURATION_H
 

@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Author: Adam Phelps
  * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
  ******************************************************************************/
 
 #define DEBUG_LEVEL DEBUG_HIGH

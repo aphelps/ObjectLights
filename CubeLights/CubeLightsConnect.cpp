@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Author: Adam Phelps
  * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
  *
  * Code for communicating with remote modules
  ******************************************************************************/
