@@ -36,10 +36,7 @@ boolean wrote_config = false;
 #define PIN_DEBUG_LED 13
 
 int numLeds = 45 + FIRST_LED;
-PixelUtil pixels;
-
 int numSquares = 6;
-Square *squares;
 
 #define MAX_OUTPUTS 4
 config_hdr_t config;
@@ -155,13 +152,6 @@ void setup()
     DEBUG_VALUELN(DEBUG_LOW, "Read config.  offset=", configOffset);
     memcpy(&config, &readconfig, sizeof (config_hdr_t));
     for (int i = 0; i < config.num_outputs; i++) {
-
-//      uint8_t *buff = (uint8_t *)&readoutputs[i];
-//      DEBUG_VALUE(DEBUG_HIGH, " data=", (int)buff);
-//      for (uint8_t j = 0; j < sizeof(readoutputs[i]); j++) {
-//        DEBUG_HEXVAL(DEBUG_HIGH, " ", buff[j]);
-//      }
-
       if (i >= MAX_OUTPUTS) {
         DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
         return;
@@ -170,7 +160,7 @@ void setup()
     }
 
     // Read the Cube-specific configuration
-    readConfiguration(squares, numSquares, configOffset);
+    readCubeConfiguration(squares, numSquares, configOffset);
   }
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
@@ -216,6 +206,7 @@ byte current_led = -1;
  * n - Advance to the next pixel
  * p - Return to the previous pixel
  * f <face> - Light the indicated face
+ * t <sensor> <touch> <release> - Set cap sensor thresholds
  */
 void cliHandler(char **tokens, byte numtokens) {
 
@@ -288,9 +279,57 @@ void cliHandler(char **tokens, byte numtokens) {
       break;
     }
 
+  case 't': {
+    // Set a sensor's threshold value
+    if (numtokens < 4) return;
+    byte sensor = atoi(tokens[1]);
+    byte touch = atoi(tokens[2]);
+    byte release = atoi(tokens[3]);
+
+    if ((sensor != 0) && (sensor != 1)) {
+      DEBUG_ERR("Sensor must be 0 or 1");
+      return;
+    }
+    if ((touch < 1) || (touch > 15)) {
+      DEBUG_ERR("Touch value outside valid range");
+      return;
+    }
+    if ((release < 1) || (release > 15)) {
+      DEBUG_ERR("Release value outside valid range");
+      return;
+    }
+
+    // Locate the MPR121 sensor
+    config_mpr121_t *mpr121 = NULL;
+    for (int i = 0; i < config.num_outputs; i++) {
+      if (outputs[i]->type == HMTL_OUTPUT_MPR121) {
+	mpr121 = (config_mpr121_t *)outputs[i];
+      }
+    }
+    if (mpr121 == NULL) {
+      DEBUG_ERR("Failed to find the MPR121 config");
+      return;
+    }
+
+    if (sensor == 0) {
+        mpr121->thresholds[CAP_SENSOR_1] = (touch) | (release << 4);
+    } else if (sensor == 1) {
+        mpr121->thresholds[CAP_SENSOR_2] = (touch) | (release << 4);
+    }
+    DEBUG_VALUE(DEBUG_LOW, "Set sensor ", sensor);
+    DEBUG_VALUE(DEBUG_LOW, " touch=", touch);
+    DEBUG_VALUELN(DEBUG_LOW, " release=", release);
+
+    break;
+  }
+
   case 'w': {
     if (strcmp(tokens[0], "write") == 0) {
-      writeConfiguration(squares, numSquares, configOffset);
+      configOffset = hmtl_write_config(&config, outputs);
+      if (configOffset < 0) {
+	DEBUG_ERR("Failed to write config");
+      }
+      writeCubeConfiguration(squares, numSquares, configOffset);
     }
     break;
   }
