@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Author: Adam Phelps
  * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
  ******************************************************************************/
 
 #include <Arduino.h>
@@ -65,6 +66,9 @@ void readHMTLConfiguration() {
     hmtl_setup_output((output_hdr_t *)outputs[i], data);
   }
 
+  /* Store the configured address */
+  my_address = config.address;
+
   /* Construct the initial cube geometry */
   int numSquares;
   squares = buildCube(&numSquares, pixels.numPixels(), FIRST_LED);
@@ -72,8 +76,6 @@ void readHMTLConfiguration() {
   /* Read in the CubeLight specific configuration */
   offset = readCubeConfiguration(squares, NUM_SQUARES, offset);
 }
-
-#define CONFIG_BUFFER_SZ 32
 
 /*
  * Read in the config of the cube and each square
@@ -129,7 +131,7 @@ int writeCubeConfiguration(Square *squares, int numSquares, int offset) {
     DEBUG_VALUE(DEBUG_LOW, "Wrote face=", face);
     DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
   }
-  DEBUG_VALUELN(DEBUG_LOW, "Wrote config. end address=", offset);
+  DEBUG_VALUELN(DEBUG_LOW, "Wrote cube config. end address=", offset);
 
   return offset;
 }

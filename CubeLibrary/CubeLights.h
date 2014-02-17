@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Author: Adam Phelps
  * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
  ******************************************************************************/
 #ifndef CUBELIGHTS_H
 #define CUBELIGHTS_H
@@ -49,6 +50,7 @@ void sensor_cap(void);
 /***** Cube Light Connectivity ***********************************************/
 
 extern RS485Socket rs485;
+extern byte my_address;
 
 void initializeConnect();
 void sendInt(int value);

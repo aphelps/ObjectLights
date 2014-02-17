@@ -31,6 +31,7 @@
 
 
 RS485Socket rs485;
+byte my_address = 0;
 
 #define SEND_BUFFER_SIZE (sizeof (rs485_socket_msg_t) + sizeof (msg_hdr_t) + sizeof (msg_max_t) + 16) // XXX: Could this be smaller?
 
@@ -47,7 +48,8 @@ void initializeConnect() {
   rs485.setup();
   send_buffer = rs485.initBuffer(databuffer);
 
-  DEBUG_VALUE(DEBUG_LOW, "Initialized RS485. bufsize=", SEND_BUFFER_SIZE);
+  DEBUG_VALUE(DEBUG_LOW, "Initialized RS485. address=", my_address);
+  DEBUG_VALUELN(DEBUG_LOW, " bufsize=", SEND_BUFFER_SIZE);
 }
 
 
@@ -57,4 +59,14 @@ void sendInt(int value) {
   send_buffer[0] = (value & 0xFF00) >> 8;
   send_buffer[1] = (value & 0x00FF);
   rs485.sendMsgTo(DEST_ADDR, send_buffer, sizeof (int));
+}
+
+void recvData() {
+  unsigned int msglen;
+
+  //  const byte *data = rs485.getMsg(my_address, &msglen);
+  const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
+  if (data != NULL) {
+    DEBUG_VALUELN(DEBUG_HIGH, "recvData: len=", msglen);
+  }
 }
