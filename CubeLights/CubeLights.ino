@@ -31,8 +31,6 @@
 
 #define DEBUG_LED 13
 
-int numLeds = 45 + FIRST_LED;
-
 pattern_args_t modeConfig = {
   pixel_color(0, 0, 0), // bgColor
   pixel_color(0xFF, 0xFF, 0xFF), // fgColor
@@ -69,8 +67,10 @@ void setup()
   initializeConnect();
 #else
   /* Generate the geometry */
-  squares = buildCube(&NUM_SQUARES, numLeds, FIRST_LED);
-  DEBUG_VALUELN(DEBUG_LOW, "* Inited with NUM_SQUARES:", NUM_SQUARES);
+  int numLeds = 45 + FIRST_LED;
+  int numSquares = NUM_SQUARES;
+  squares = buildCube(&numSquares, numLeds, FIRST_LED);
+  DEBUG_VALUELN(DEBUG_LOW, "* Inited with NUM_SQUARES:", numSquares);
 
   pixels = PixelUtil(numLeds, 12, 8);
   sensor_cap_init(); /* Initialize the capacitive sensors */

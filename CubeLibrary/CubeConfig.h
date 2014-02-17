@@ -38,9 +38,9 @@
 #else
   #define CAP_SENSOR_1 0
   #define CAP_SENSOR_2 1
-  #define CAP_SENSOR_1_TOUCH 6
+  #define CAP_SENSOR_1_TOUCH 10
   #define CAP_SENSOR_1_RELEASE 2
-  #define CAP_SENSOR_2_TOUCH 6
+  #define CAP_SENSOR_2_TOUCH 10
   #define CAP_SENSOR_2_RELEASE 2
 #endif
 

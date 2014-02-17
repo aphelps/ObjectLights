@@ -28,7 +28,7 @@ uint8_t validModes[] = {
   , MODE_STATIC_NOISE
   , MODE_SWITCH_RANDOM
   //  , MODE_LIGHT_CENTER
-  //, MODE_BAR_CIRCLE
+  //  , MODE_BAR_CIRCLE
   , MODE_CRAWL
   //  , MODE_ORBITS
 };
@@ -150,7 +150,8 @@ void set_followup(uint8_t new_followup)
     restorableFollowup = true;
     previous_followup = current_followup;
     current_followup = new_followup % VALID_FOLLOWUPS;
-    DEBUG_VALUELN(DEBUG_HIGH, "Set followup=", current_followup);
+    DEBUG_VALUE(DEBUG_HIGH, "Set followup=", current_followup);
+    DEBUG_VALUELN(DEBUG_HIGH, " prev=", previous_followup);
   }
 }
 
