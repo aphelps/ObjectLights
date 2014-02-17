@@ -111,9 +111,12 @@ void sensor_cap(void)
 
 /* ***** Handle sensor input *************************************************/
 
+#define SENSOR_MODE 0
+
 void handle_sensors() {
   unsigned long now = millis();
 
+#if SENSOR_MODE == 0
 #if 0
   if (touch_sensor.touched(CAP_SENSOR_1) ||
       (touch_sensor.touched(CAP_SENSOR_2))) {
@@ -130,6 +133,7 @@ void handle_sensors() {
 	     touch_sensor.changed(CAP_SENSOR_2)) {
     sendInt(0);
   }
+#endif
 
   /* Sensor 1 controls the mode */
   if (touch_sensor.changed(CAP_SENSOR_1) &&
@@ -147,33 +151,36 @@ void handle_sensors() {
     //    DEBUG_VALUELN(DEBUG_HIGH, "Color=", color);
 
     if (touch_sensor.touched(CAP_SENSOR_1)) {
-      set_followup(1);
-      //modeConfig.fgColor = pixel_color(255, 255, 255);
+      modeConfig.fgColor = pixel_color(255, 255, 255);
     }
   }
 
   /* Not both sensors */
   if (!(touch_sensor.touched(CAP_SENSOR_1) &&
 	touch_sensor.touched(CAP_SENSOR_2))) {
-    switch (get_current_followup()) {
+    /*    switch (get_current_followup()) {
     case MODE_BLINK_FACE:
       set_followup((byte)-1);
       break;
-    }
+      }*/
   }
 
   if (range_cm < 50) {
-    set_followup(0);
+    if (get_current_followup() != MODE_LIGHT_CENTER) {
+      set_followup_mode(MODE_LIGHT_CENTER);
+    }
   } else {
-    if (get_current_followup() == MODE_LIGHT_CENTER) set_followup((byte)-1);
+    if (get_current_followup() == MODE_LIGHT_CENTER) restore_followup();
   }
-#else
+#endif
+#if SENSOR_MODE == 1
 #define NUM_UI_MODES 2
   static byte uiMode = 0;
 
   boolean cap1 = false, cap2 = false, capboth = false, capnone = false;
   boolean change1 = false, change2 = false, changeboth = false,
     changenone = true, changeany = false;
+  boolean doubleTap1 = false, doubleTap2 = false;
   boolean doubleTap = false, doubleDoubleTap = false;
   boolean longdouble = false;
   boolean shortrange = false;
@@ -203,6 +210,24 @@ void handle_sensors() {
 
   if (change1 || change2) changeany = true;
 
+  // Detect double tap on individual sensors
+  if (cap1 && change1) {
+    static unsigned long taptime1 = 0;
+    if (now - taptime1 < 750) {
+      doubleTap1 = true;
+      DEBUG_VALUELN(DEBUG_HIGH, "Double tap1 ms:", now - taptime1);
+    }
+    taptime1 = now;
+  }
+  if (cap2 && change2) {
+    static unsigned long taptime2 = 0;
+    if (now - taptime2 < 750) {
+      doubleTap2 = true;
+      DEBUG_VALUELN(DEBUG_HIGH, "Double tap1 ms:", now - taptime2);
+    }
+    taptime2 = now;
+  }
+
   static unsigned long doubleTime = 0;
 
   // Both became touched (could be one then the other)
@@ -215,7 +240,7 @@ void handle_sensors() {
 
     doubleTap = true;
     
-    if (now - taptime < 500) {
+    if (now - taptime < 750) {
       // Rapid double tap
       doubleDoubleTap = true;
       DEBUG_VALUELN(DEBUG_HIGH, "Double tap ms:", now - taptime);

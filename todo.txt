@@ -4,13 +4,16 @@ Todo
 TEST
   * Verify ledInDirection(), ledAwayFrom(), and squaresOrbits() working
   * Verify that RS485 still works after changing ordering of null-constructor to prevent warning messages
-  *Verify things work after cleanup of RGB and PixelUtil
+  * Verify things work after cleanup of RGB and PixelUtil
+  * Double tap of individual sensors
 
 In YVR:
   * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
  
+* Convert sensor code to use a bitmask for events
+
 * Add Serial CLI
  
 * Add a method of enabling a function for a limited time
@@ -19,8 +22,6 @@ In YVR:
   - Make arrays of modes, arguments, periods, and timers
 
 * Mode specific event handlers
-
-* Double tap of individual sensors
 
 * Clockwise and counterclockwise functions
 
