@@ -120,18 +120,13 @@ void sendInt(int value);
 /***** Cube light modes *******************************************************/
 
 /* Return the current mode value */
-int get_current_mode(void);
-int get_current_followup(void);
+int get_current_mode(uint8_t place);
 
 /* Set the mode */
-void set_mode(uint8_t new_mode);
-void increment_mode(void);
-void restore_mode(void);
-
-void set_followup(uint8_t new_followup);
-void set_followup_mode(uint8_t mode);
-void increment_followup(void);
-void restore_followup(void);
+void set_mode(uint8_t place, uint8_t new_mode);
+void set_mode_to(uint8_t place, uint8_t new_mode);
+void increment_mode(uint8_t place);
+void restore_mode(uint8_t place);
 
 typedef struct {
   uint32_t bgColor;
@@ -141,11 +136,11 @@ typedef struct {
   uint32_t data;
 } pattern_args_t;
 
-extern pattern_args_t modeConfig;
-extern pattern_args_t followupConfig;
+#define MAX_MODES 3
+#define FINAL_MODE (MAX_MODES - 1)
+extern pattern_args_t modeConfigs[MAX_MODES];
 
-typedef void (*square_mode_t)(Square *squares, int size,
-			      boolean init, pattern_args_t *arg);
+typedef void (*square_mode_t)(Square *squares, int size, pattern_args_t *arg);
 
 extern square_mode_t modeFunctions[];
 extern uint16_t modePeriods[];
@@ -153,6 +148,7 @@ extern square_mode_t followupFunctions[];
 extern uint16_t followupPeriods[];
 
 /* Index into the modeFunctions array */
+#define MODE_NONE            (byte)-1
 #define MODE_ALL_ON          0
 #define MODE_TEST_PATTERN    1
 #define MODE_SETUP_PATTERN   2
@@ -169,37 +165,22 @@ extern uint16_t followupPeriods[];
 #define MODE_BLINK_PATTERN  13
 #define MODE_ORBITS         14
 
-void squaresTestPattern(Square *squares, int size,
-			  boolean init, pattern_args_t *arg);
-void squaresSetupPattern(Square *squares, int size,
-			  boolean init, pattern_args_t *arg);
-void squaresRandomNeighbor(Square *squares, int size,
-			  boolean init, pattern_args_t *arg);
-void squaresCyclePattern(Square *squares, int size,
-			 boolean init, pattern_args_t *arg);
-void squaresCirclePattern(Square *squares, int size,
-			 boolean init, pattern_args_t *arg);
-void squaresFadeCycle(Square *squares, int size,
-		      boolean init, pattern_args_t *arg);
-void squaresAllOn(Square *squares, int size,
-		  boolean init, pattern_args_t *arg);
-void squaresCapResponse(Square *squares, int size,
-			  boolean init, pattern_args_t *arg);
-void squaresStaticNoise(Square *squares, int size,
-			boolean init, pattern_args_t *arg);
-void squaresSwitchRandom(Square *squares, int size,
-			boolean init, pattern_args_t *arg);
-void squaresBarCircle(Square *squares, int size,
-			boolean init, pattern_args_t *arg);
-void squaresCrawl(Square *squares, int size,
-			boolean init, pattern_args_t *arg);
-void squaresOrbits(Square *squares, int size,
-			boolean init, pattern_args_t *arg);
+void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
+void squaresSetupPattern(Square *squares, int size, pattern_args_t *arg);
+void squaresRandomNeighbor(Square *squares, int size, pattern_args_t *arg);
+void squaresCyclePattern(Square *squares, int size, pattern_args_t *arg);
+void squaresCirclePattern(Square *squares, int size, pattern_args_t *arg);
+void squaresFadeCycle(Square *squares, int size, pattern_args_t *arg);
+void squaresAllOn(Square *squares, int size, pattern_args_t *arg);
+void squaresCapResponse(Square *squares, int size, pattern_args_t *arg);
+void squaresStaticNoise(Square *squares, int size, pattern_args_t *arg);
+void squaresSwitchRandom(Square *squares, int size, pattern_args_t *arg);
+void squaresBarCircle(Square *squares, int size, pattern_args_t *arg);
+void squaresCrawl(Square *squares, int size, pattern_args_t *arg);
+void squaresOrbits(Square *squares, int size, pattern_args_t *arg);
 
 
-void squaresLightCenter(Square *squares, int size,
-			boolean init, pattern_args_t *arg);
-void squaresBlinkPattern(Square *squares, int size,
-			 boolean init, pattern_args_t *arg);
+void squaresLightCenter(Square *squares, int size, pattern_args_t *arg);
+void squaresBlinkPattern(Square *squares, int size, pattern_args_t *arg);
 
 #endif

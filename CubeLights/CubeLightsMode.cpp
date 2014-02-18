@@ -72,40 +72,60 @@ uint16_t modePeriods[] = {
   250   // MODE_ORBITS
 };
 
-uint8_t current_mode = VALID_MODES - 1; // XXX
-uint8_t previous_mode = 0;
-
+uint8_t current_modes[MAX_MODES] = {
+  VALID_MODES - 1,  // This is the starting mode
+  MODE_NONE,
+  MODE_NONE
+};
+uint8_t previous_modes[MAX_MODES] = {
+  MODE_NONE,
+  MODE_NONE,
+  MODE_NONE
+};
 
 /* Return the current mode value */
-int get_current_mode(void)
+int get_current_mode(uint8_t place)
 {
-  return validModes[current_mode % VALID_MODES];
+  return validModes[current_modes[place] % VALID_MODES];
 }
 
-boolean restorable = false;
-void set_mode(uint8_t new_mode)
-{
-  if (current_mode != new_mode) {
-    restorable = true;
-    previous_mode = current_mode;
-    current_mode = new_mode % VALID_MODES;
-    DEBUG_VALUELN(DEBUG_HIGH, "Set mode=", current_mode);
+void set_mode(uint8_t place, uint8_t new_mode) {
+  if (current_modes[place] != new_mode) {
+    previous_modes[place] = current_modes[place];
+    current_modes[place] = new_mode;
+
+    // Set next_time to zero to trigger initialization
+    modeConfigs[place].next_time = 0;
+
+    DEBUG_VALUE(DEBUG_MID, "Set mode ", place);
+    DEBUG_VALUELN(DEBUG_MID, "=", current_modes[place]);
   }
 }
 
-void increment_mode()
-{
-  set_mode((current_mode + 1) % VALID_MODES);
+void set_mode_to(uint8_t place, uint8_t mode) {
+  for (byte i = 0; i < VALID_MODES; i++) {
+    if (validModes[i] == mode) {
+      set_mode(place, i);
+      return;
+    }
+  }
+  DEBUG_ERR("Attempted to set invalid mode");
 }
 
-void restore_mode(void)
+void increment_mode(uint8_t place)
 {
-  if (restorable) {
-    restorable = false;
-    previous_mode = current_mode;
-    current_mode = previous_mode;
-    DEBUG_VALUELN(DEBUG_HIGH, "Restore mode=", current_mode);
-  }
+  set_mode(place, (current_modes[place] + 1) % VALID_MODES);
+}
+
+/*
+ * Restore the previous mode (if there is one) and clear the previous mode
+ */
+void restore_mode(uint8_t place)
+{
+  set_mode(place, previous_modes[place]);
+  previous_modes[place] = MODE_NONE;
+  DEBUG_VALUE(DEBUG_HIGH, "Restored mode ", place);
+  DEBUG_VALUELN(DEBUG_HIGH, "=", current_modes[place]);
 }
 
 /***** Followups *************************************************************/
@@ -130,53 +150,4 @@ uint8_t validFollowups[] = {
 };
 #define VALID_FOLLOWUPS (sizeof (validFollowups) / sizeof (uint8_t))
 
-uint8_t current_followup = (uint8_t)-1;
-uint8_t previous_followup = (uint8_t)-1;
-
-
-/* Return the current followup value */
-int get_current_followup(void)
-{
-  if (current_followup == (uint8_t)-1) {
-    return current_followup;
-  }
-  return validFollowups[current_followup % VALID_FOLLOWUPS];
-}
-
-boolean restorableFollowup = false;
-void set_followup(uint8_t new_followup)
-{
-  if (current_followup != new_followup) {
-    restorableFollowup = true;
-    previous_followup = current_followup;
-    current_followup = new_followup % VALID_FOLLOWUPS;
-    DEBUG_VALUE(DEBUG_HIGH, "Set followup=", current_followup);
-    DEBUG_VALUELN(DEBUG_HIGH, " prev=", previous_followup);
-  }
-}
-
-void set_followup_mode(uint8_t mode) {
-  for (byte i = 0; i < VALID_FOLLOWUPS; i++) {
-    if (validFollowups[i] == mode) {
-      set_followup(i);
-      return;
-    }
-  }
-}
-
-void increment_followup()
-{
-  set_followup(current_followup + 1 );
-}
-
-void restore_followup(void)
-{
-  if (restorableFollowup) {
-    uint8_t tmp;
-    restorableFollowup = false;
-    tmp = previous_followup;
-    previous_followup = current_followup;
-    current_followup = tmp;
-    DEBUG_VALUELN(DEBUG_HIGH, "Restore followup=", current_followup);
-  }
-}
+// XXX - Followups vs normal modes should be distiguished again, somehow???

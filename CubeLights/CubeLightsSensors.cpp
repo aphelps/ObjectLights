@@ -168,11 +168,13 @@ void handle_sensors() {
   }
 
   if (range_cm < 50) {
-    if (get_current_followup() != MODE_LIGHT_CENTER) {
-      set_followup_mode(MODE_LIGHT_CENTER);
+    if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
+      set_mode_to(FINAL_MODE, MODE_LIGHT_CENTER);
     }
   } else {
-    if (get_current_followup() == MODE_LIGHT_CENTER) restore_followup();
+    if (get_current_mode(FINAL_MODE) == MODE_LIGHT_CENTER) {
+      restore_mode(FINAL_MODE);
+    }
   }
 #endif
 #if SENSOR_MODE == 1
@@ -264,49 +266,53 @@ void handle_sensors() {
       // Set followup color
       static byte color = 0;
       color++;
-      followupConfig.fgColor = pixel_wheel(color);
+      modeConfigs[FINAL_MODE].fgColor = pixel_wheel(color);
     }
 
     // If just sensor 2 is being touched
     if (CHECK_TOUCH_2(state) && !CHECK_TOUCH_BOTH(state)) {
       static byte color = 0;
       color++;
-      modeConfig.fgColor = pixel_wheel(color);
+      modeConfigs[0].fgColor = pixel_wheel(color);
     }
 
     if (CHECK_TAP_BOTH(state)) {
-      modeConfig.fgColor = pixel_color(255, 255, 255);
+      modeConfigs[0].fgColor = pixel_color(255, 255, 255);
     }
 
     if (CHECK_DOUBLE_BOTH(state)) {
-      increment_mode();
+      increment_mode(0);
     }
 
     if (CHECK_RANGE_SHORT(state)) {
-      set_followup_mode(MODE_LIGHT_CENTER);
+      if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
+	set_mode_to(FINAL_MODE, MODE_LIGHT_CENTER);
+      }
     } else {
-      if (get_current_followup() == MODE_LIGHT_CENTER) restore_followup();
+      if (get_current_mode(FINAL_MODE) == MODE_LIGHT_CENTER) {
+	restore_mode(FINAL_MODE);
+      }
     }
     break;
   }
   case 1: {
     if (CHECK_LONG_BOTH(state)) {
       // Just entered mode changing state
-      modeConfig.fgColor = pixel_color(255, 255, 255);
-      followupConfig.fgColor = pixel_color(0, 0, 255);
-      followupConfig.data =
+      modeConfigs[0].fgColor = pixel_color(255, 255, 255);
+      modeConfigs[FINAL_MODE].fgColor = pixel_color(0, 0, 255);
+      modeConfigs[FINAL_MODE].data =
 	FACE_LED_MASK(0xFF, ((1 << 0) | (1 << 2) | (1 << 6) | (1 << 8)));
-      set_followup_mode(MODE_BLINK_PATTERN);
+      set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
       DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
     }
 
     if (CHECK_TAP_1(state) && !CHECK_TOUCH_BOTH(state)) {
-      increment_mode();
+      increment_mode(0);
     }
 
     if (CHECK_TAP_2(state) && !CHECK_TOUCH_BOTH(state)) {
-      followupConfig.fgColor = pixel_color(255, 0, 0);
-      increment_followup();
+      modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
+      increment_mode(FINAL_MODE);
     }
     
     break;

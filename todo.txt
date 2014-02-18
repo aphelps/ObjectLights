@@ -7,19 +7,20 @@ TEST
   * Verify things work after cleanup of RGB and PixelUtil
   * Double tap of individual sensors
   * Convert sensor code to use a bitmask for events
+  * Allow chains of light modes
+    - Make arrays of modes, arguments, periods, and timers 
 
 In YVR:
   * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
 
+* Do something to combine multiple modes
+
 * Mode specific event handlers
 
 * Add a method of enabling a function for a limited time
 
-* Allow chains of light modes
-  - Make arrays of modes, arguments, periods, and timers
- 
 * Get MPR121 w/interrupts working
 
 * Add Serial CLI

@@ -31,18 +31,28 @@
 
 #define DEBUG_LED 13
 
-pattern_args_t modeConfig = {
-  pixel_color(0, 0, 0), // bgColor
-  pixel_color(0xFF, 0xFF, 0xFF), // fgColor
-  0, // next_time
-  0 // data
-};
-
-pattern_args_t followupConfig = {
-  pixel_color(0, 0, 0), // bgColor
-  pixel_color(0xFF, 0x00, 0x00), // fgColor
-  0, // next_time
-  CUBE_TOP // data
+pattern_args_t modeConfigs[MAX_MODES] = {
+  {
+    pixel_color(0, 0, 0), // bgColor
+    pixel_color(0xFF, 0xFF, 0xFF), // fgColor
+    0, // next_time
+    0, // periodms
+    0 // data
+  },
+  {
+    pixel_color(0, 0, 0), // bgColor
+    pixel_color(0xFF, 0xFF, 0xFF), // fgColor
+    0, // next_time
+    0, // periodms
+    0 // data
+  },
+  {
+    pixel_color(0, 0, 0), // bgColor
+    pixel_color(0xFF, 0xFF, 0xFF), // fgColor
+    0, // next_time
+    0, // periodms
+    0 // data
+  }
 };
 
 /******************************************************************************
@@ -90,9 +100,6 @@ void setup()
  *****************************************************************************/
 void loop()
 {
-  static byte prev_mode = -1, prev_followup = -1;
-  byte mode = 0, followup = 0;
-
   /* Check the sensor values */
   //sensor_photo();
   sensor_cap();
@@ -100,25 +107,16 @@ void loop()
 
   handle_sensors();
 
-  /* Run the current mode and update the squares */
-  mode = get_current_mode();
-  modeConfig.periodms = modePeriods[mode];
-  modeFunctions[mode](squares, NUM_SQUARES,
-		      prev_mode != mode, &modeConfig);
-
-  /* Run any follup function */
-  followup = get_current_followup();
-  if (followup != (byte)-1) {
-    followupConfig.periodms = modePeriods[followup];
-    modeFunctions[followup](squares, NUM_SQUARES,
-			    prev_followup != followup, &followupConfig);
+  for (int i = 0; i < MAX_MODES; i++) {
+    byte mode = get_current_mode(i);
+    if (mode != MODE_NONE) {
+      modeConfigs[i].periodms = modePeriods[mode]; // XXX - Get this from elsewhere?
+      modeFunctions[mode](squares, NUM_SQUARES, &modeConfigs[i]);
+    }
   }
 
   /* Send any changes */
   updateSquarePixels(squares, NUM_SQUARES, &pixels);
-
-  prev_mode = mode;
-  prev_followup = followup;
 
   DEBUG_COMMAND(DEBUG_TRACE, // Flash the debug LED
 		static unsigned long next_millis = 0;
