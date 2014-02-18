@@ -111,7 +111,9 @@ void sensor_cap(void)
 
 /* ***** Handle sensor input *************************************************/
 
-#define SENSOR_MODE 0
+#define SENSOR_MODE 1
+
+uint32_t sensor_state = 0;
 
 void handle_sensors() {
   unsigned long now = millis();
@@ -177,72 +179,52 @@ void handle_sensors() {
 #define NUM_UI_MODES 2
   static byte uiMode = 0;
 
-  boolean cap1 = false, cap2 = false, capboth = false, capnone = false;
-  boolean change1 = false, change2 = false, changeboth = false,
-    changenone = true, changeany = false;
-  boolean doubleTap1 = false, doubleTap2 = false;
-  boolean doubleTap = false, doubleDoubleTap = false;
-  boolean longdouble = false;
-  boolean shortrange = false;
-
   /****************************************************************************
    * State determination
    */
+  uint32_t state = 0;
 
   // Short range detected
-  if (range_cm < 50) shortrange = true;
+  if (range_cm < PING_SHORT_CM) state |= SENSE_RANGE_SHORT;
+  else if (range_cm < PING_MID_CM) state |= SENSE_RANGE_MID;
+  else if (range_cm < PING_MAX_CM) state |= SENSE_RANGE_LONG;
 
-  // Sensor 1 pushed
-  if (touch_sensor.touched(CAP_SENSOR_1)) cap1 = true;
-  if (touch_sensor.changed(CAP_SENSOR_1)) change1 = true;
-
-  // Sensor 2 pushed
-  if (touch_sensor.touched(CAP_SENSOR_2)) cap2 = true;
-  if (touch_sensor.changed(CAP_SENSOR_2)) change2 = true;
-
-  // Both pushed
-  if (cap1 && cap2) capboth = true;
-  if (change1 && change2) changeboth = true;
-
-  // None pushed
-  if (!cap1 && !cap2) capnone = true;
-  if (!change1 && !change2) changenone = true;
-
-  if (change1 || change2) changeany = true;
-
-  // Detect double tap on individual sensors
-  if (cap1 && change1) {
+  // Sensor 1
+  if (touch_sensor.touched(CAP_SENSOR_1)) state |= SENSE_TOUCH_1;
+  if (touch_sensor.changed(CAP_SENSOR_1)) state |= SENSE_CHANGE_1;
+  if (CHECK_TAP_1(state)) {
+    // Detect double tap on individual sensors
     static unsigned long taptime1 = 0;
-    if (now - taptime1 < 750) {
-      doubleTap1 = true;
+    if (now - taptime1 < CAP_DOUBLE_MS) {
+      state |= SENSE_DOUBLE_1;
       DEBUG_VALUELN(DEBUG_HIGH, "Double tap1 ms:", now - taptime1);
     }
     taptime1 = now;
   }
-  if (cap2 && change2) {
+  // XXX - Detect long touch?
+
+  // Sensor 2
+  if (touch_sensor.touched(CAP_SENSOR_2)) state |= SENSE_TOUCH_2;
+  if (touch_sensor.changed(CAP_SENSOR_2)) state |= SENSE_CHANGE_2;
+  if (CHECK_TAP_2(state)) {
+    // Detect double tap on individual sensors
     static unsigned long taptime2 = 0;
-    if (now - taptime2 < 750) {
-      doubleTap2 = true;
-      DEBUG_VALUELN(DEBUG_HIGH, "Double tap1 ms:", now - taptime2);
+    if (now - taptime2 < CAP_DOUBLE_MS) {
+      state |= SENSE_DOUBLE_2;
+      DEBUG_VALUELN(DEBUG_HIGH, "Double tap2 ms:", now - taptime2);
     }
     taptime2 = now;
   }
+  // XXX - Detect long touch?
 
   static unsigned long doubleTime = 0;
 
   // Both became touched (could be one then the other)
-  // XXX: One-then-other required as the sense time is fine enough that
-  //      it often is triggered that way when trying to touch both.  This
-  //      could be improved by tracking the time for the individual sensors
-  //      and setting double-tap only if the delay is very short.
-  if (capboth && changeany) {
+  if (CHECK_TAP_BOTH(state)) {
     static unsigned long taptime = 0;
-
-    doubleTap = true;
-    
-    if (now - taptime < 750) {
+    if (now - taptime < CAP_DOUBLE_MS) {
       // Rapid double tap
-      doubleDoubleTap = true;
+      state |= SENSE_DOUBLE_BOTH;
       DEBUG_VALUELN(DEBUG_HIGH, "Double tap ms:", now - taptime);
     }
 
@@ -250,34 +232,35 @@ void handle_sensors() {
     taptime = now;
   }
 
-
-  if (capboth) {
+  // Detect a long touch on both
+  if (CHECK_TOUCH_BOTH(state)) {
     if ((doubleTime > 0) && ((now - doubleTime) > 750)) {
       // Long touch period
       DEBUG_PRINTLN(DEBUG_HIGH, "Long double touch");
-      longdouble = true;
+      state |= SENSE_LONG_BOTH;
       doubleTime = 0;
     }
   }
 
   // Neither sensor is touched
-  if (capnone) {
+  if (CHECK_TOUCH_NONE(state)) {
     doubleTime = 0;
   }
+
+  sensor_state = state;
 
   /****************************************************************************
    * Handling
    */
 
-  if (longdouble) {
+  if (CHECK_LONG_BOTH(state)) {
     uiMode = (uiMode + 1) % NUM_UI_MODES;
   }
-  
 
   switch (uiMode) {
   case 0: {
     // If just sensor 1 is being touched
-    if (cap1 && !capboth) {
+    if (CHECK_TOUCH_1(state) && !CHECK_TOUCH_BOTH(state)) {
       // Set followup color
       static byte color = 0;
       color++;
@@ -285,21 +268,21 @@ void handle_sensors() {
     }
 
     // If just sensor 2 is being touched
-    if (cap2 && !capboth) {
+    if (CHECK_TOUCH_2(state) && !CHECK_TOUCH_BOTH(state)) {
       static byte color = 0;
       color++;
       modeConfig.fgColor = pixel_wheel(color);
     }
 
-    if (doubleTap) {
+    if (CHECK_TAP_BOTH(state)) {
       modeConfig.fgColor = pixel_color(255, 255, 255);
     }
 
-    if (doubleDoubleTap) {
+    if (CHECK_DOUBLE_BOTH(state)) {
       increment_mode();
     }
 
-    if (shortrange) {
+    if (CHECK_RANGE_SHORT(state)) {
       set_followup_mode(MODE_LIGHT_CENTER);
     } else {
       if (get_current_followup() == MODE_LIGHT_CENTER) restore_followup();
@@ -307,7 +290,7 @@ void handle_sensors() {
     break;
   }
   case 1: {
-    if (longdouble) {
+    if (CHECK_LONG_BOTH(state)) {
       // Just entered mode changing state
       modeConfig.fgColor = pixel_color(255, 255, 255);
       followupConfig.fgColor = pixel_color(0, 0, 255);
@@ -317,11 +300,11 @@ void handle_sensors() {
       DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
     }
 
-    if (cap1 && change1 && !capboth) {
+    if (CHECK_TAP_1(state) && !CHECK_TOUCH_BOTH(state)) {
       increment_mode();
     }
 
-    if (cap2 && change2 && !capboth) {
+    if (CHECK_TAP_2(state) && !CHECK_TOUCH_BOTH(state)) {
       followupConfig.fgColor = pixel_color(255, 0, 0);
       increment_followup();
     }
@@ -330,15 +313,18 @@ void handle_sensors() {
   }
   }
 
-  if (cap1 || cap2) {
+  if (CHECK_TOUCH_ANY(state)) {
     /* A sensor is touched, send update to remotes */
     static unsigned long next_send = millis();
     if (now >= next_send) {
-      int command = (cap1 << CAP_SENSOR_1) | (cap2 << CAP_SENSOR_2);
+      int command = 0;
+      if (CHECK_TOUCH_1(state)) command |= (1 << CAP_SENSOR_1);
+      if (CHECK_TOUCH_2(state)) command |= (1 << CAP_SENSOR_2);
+
       sendInt(command);
       next_send = now + 100;
     }
-  } else if (change1 || change2) {
+  } else if (CHECK_CHANGE_ANY(state)) {
     /* Touch was removed */
     sendInt(0);
   }

@@ -19,12 +19,73 @@ extern Square *squares;
 
 /***** Sensor info ********************************************************** */
 
+/* All sensor info is recorded in a bit mask */
+extern uint32_t sensor_state;
+
+#define SENSE_TOUCH_1     0x00000001
+#define SENSE_CHANGE_1    0x00000002
+#define SENSE_DOUBLE_1    0x00000004
+#define SENSE_LONG_1      0x00000008 // XXX - Need to implement
+
+#define SENSE_TOUCH_2     0x00000010
+#define SENSE_CHANGE_2    0x00000020
+#define SENSE_DOUBLE_2    0x00000040
+#define SENSE_LONG_2      0x00000080 // XXX - Need to implement
+
+#define SENSE_DOUBLE_BOTH 0x01000000 // XXX - Can these be just combos?
+#define SENSE_LONG_BOTH   0x02000000 // XXX - Can these be just combos?
+
+#define SENSE_RANGE_SHORT 0x10000000
+#define SENSE_RANGE_MID   0x20000000
+#define SENSE_RANGE_LONG  0x40000000
+
+#define SENSE_TOUCH_ALL   0x00000011
+#define SENSE_CHANGE_ALL  0x00000022
+
+#define CHECK_TOUCH_1(x)     (x & SENSE_TOUCH_1)
+#define CHECK_CHANGE_1(x)    (x & SENSE_CHANGE_1)
+#define CHECK_DOUBLE_1(x)    (x & SENSE_DOUBLE_1)
+#define CHECK_LONG_1(x)      (x & SENSE_LONG_1)
+#define CHECK_TAP_1(x)       (CHECK_TOUCH_1(x) && CHECK_CHANGE_1(x))
+
+#define CHECK_TOUCH_2(x)     (x & SENSE_TOUCH_2)
+#define CHECK_CHANGE_2(x)    (x & SENSE_CHANGE_2)
+#define CHECK_DOUBLE_2(x)    (x & SENSE_DOUBLE_2)
+#define CHECK_LONG_2(x)      (x & SENSE_LONG_2)
+#define CHECK_TAP_2(x)       (CHECK_TOUCH_2(x) && CHECK_CHANGE_2(x))
+
+#define CHECK_DOUBLE_BOTH(x) (x & SENSE_DOUBLE_BOTH)
+#define CHECK_LONG_BOTH(x)   (x & SENSE_LONG_BOTH)
+
+#define CHECK_RANGE_SHORT(x) (x & SENSE_RANGE_SHORT)
+#define CHECK_RANGE_MID(x)   (x & SENSE_RANGE_MID)
+#define CHECK_RANGE_LONG(x)  (x & SENSE_RANGE_LONG)
+#define CHECK_RANGE_MAX(x)   (x & SENSE_RANGE_MAX)
+
+#define CHECK_TOUCH_BOTH(x)  ((x & SENSE_TOUCH_ALL) == SENSE_TOUCH_ALL)
+#define CHECK_CHANGE_BOTH(x) ((x & SENSE_CHANGE_ALL) == SENSE_CHANGE_ALL)
+
+#define CHECK_TOUCH_NONE(x)  ((x & SENSE_TOUCH_ALL) == 0)
+#define CHECK_CHANGE_NONE(x) ((x & SENSE_CHANGE_ALL) == 0)
+#define CHECK_TOUCH_ANY(x)   (x & SENSE_TOUCH_ALL)
+#define CHECK_CHANGE_ANY(x)  (x & SENSE_CHANGE_ALL)
+
+// XXX: One-then-other required as the sense time is fine enough that
+//      it often is triggered that way when trying to touch both.  This
+//      could be improved by tracking the time for the individual sensors
+//      and setting double-tap only if the delay is very short.
+#define CHECK_TAP_BOTH(x)    (CHECK_TOUCH_BOTH(x) && CHECK_CHANGE_ANY(x))
+
 void handle_sensors();
 
 /***** Range finder *****/
 #define PING_TRIG_PIN 9
 #define PING_ECHO_PIN 6
+
+#define PING_SHORT_CM 25
+#define PING_MID_CM   50
 #define PING_MAX_CM 100   /* Maximum distance in cm, limits the sensor delay */
+
 #define PING_DELAY_MS 250 /* Minimum time between readings */
 
 extern int range_cm; /* Last value of the range finger */
@@ -44,6 +105,7 @@ void sensor_photo(void);     /* Update the photo sensor values */
 extern MPR121 touch_sensor;
 
 #define CAP_DELAY_MS 250    /* Minimum time between readings */
+#define CAP_DOUBLE_MS 750   /* Max milliseconds for a double-tap */
 void sensor_cap_init(void);
 void sensor_cap(void);
 
