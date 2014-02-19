@@ -30,7 +30,7 @@ uint8_t validModes[] = {
   //  , MODE_LIGHT_CENTER
   //  , MODE_BAR_CIRCLE
   , MODE_CRAWL
-  //  , MODE_ORBITS
+  , MODE_ORBITS
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
@@ -84,8 +84,11 @@ uint8_t previous_modes[MAX_MODES] = {
 };
 
 /* Return the current mode value */
-int get_current_mode(uint8_t place)
+uint8_t get_current_mode(uint8_t place)
 {
+  if (current_modes[place] == MODE_NONE) {
+    return MODE_NONE;
+  }
   return validModes[current_modes[place] % VALID_MODES];
 }
 

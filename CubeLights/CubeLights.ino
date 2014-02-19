@@ -31,6 +31,9 @@
 
 #define DEBUG_LED 13
 
+/* Auto update build number */
+#define CUBE_LIGHT_BUILD 13 // %META INCR
+
 pattern_args_t modeConfigs[MAX_MODES] = {
   {
     pixel_color(0, 0, 0), // bgColor
@@ -89,7 +92,8 @@ void setup()
   /* Setup the sensors */
   initializePins();
 
-  DEBUG_VALUELN(DEBUG_LOW, "* Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
+  DEBUG_VALUE(DEBUG_LOW, "* Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
+  DEBUG_VALUELN(DEBUG_LOW, " Build=", CUBE_LIGHT_BUILD);
   DEBUG_MEMORY(DEBUG_HIGH);
 }
 

@@ -120,7 +120,7 @@ void sendInt(int value);
 /***** Cube light modes *******************************************************/
 
 /* Return the current mode value */
-int get_current_mode(uint8_t place);
+uint8_t get_current_mode(uint8_t place);
 
 /* Set the mode */
 void set_mode(uint8_t place, uint8_t new_mode);

@@ -541,14 +541,17 @@ void squaresOrbits(Square *squares, int size,
   static Square *face = NULL;
   static Square *prevface = NULL;
   static byte led = 0;
+  static byte count = 0;
   //  static byte color = 0;
+#define MAX_COUNT 36
 
-  if (arg->next_time == 0) {
-    face = &squares[0];
-    prevface = face->edges[Square::TOP];
-    led = 8;
+  if ((arg->next_time == 0) || ((count > 0) && (count % MAX_COUNT == 0))) {
+    face = &squares[random(0, size)];
+    prevface = face->edges[random(Square::NUM_EDGES)];
+    led = random(Square::NUM_LEDS);
     arg->next_time = millis();
     setAllSquares(squares, size, arg->bgColor);
+    count = 0;
   }
 
   if (millis() > arg->next_time) {
@@ -563,10 +566,15 @@ void squaresOrbits(Square *squares, int size,
       prevface = face;
       face = &squares[FACE_FROM_COMBO(next)];
     }
-    face->setColor(led, arg->fgColor);
+    if (count >= (MAX_COUNT - 3)) {
+      face->setColor(led, pixel_color(255, 0, 0));
+    } else {
+      face->setColor(led, arg->fgColor);
+    }
 
     DEBUG_VALUE(DEBUG_HIGH, "Orbit: ", face->id);
     DEBUG_VALUELN(DEBUG_HIGH, ":", led);
+    count++;
   }
 }
 

@@ -5,7 +5,6 @@ TEST
   * Verify ledInDirection(), ledAwayFrom(), and squaresOrbits() working
   * Verify that RS485 still works after changing ordering of null-constructor to prevent warning messages
   * Verify things work after cleanup of RGB and PixelUtil
-  * Double tap of individual sensors
   * Convert sensor code to use a bitmask for events
   * Allow chains of light modes
     - Make arrays of modes, arguments, periods, and timers 
@@ -32,6 +31,16 @@ In YVR:
 * Try using the timer based NewPing methods
 
 * Play with Pi, get Henry’s web app working, maybe control RGB light on test board
+
+Modes
+-----
+* Conway's Life
+  - Normal and multiple colors
+  - Make intensity a separate vector
+* Simple color spread/ripples
+  - Splash a color that spreads to neighbors smoothly and slowly decays
+* Algorithms that affect intensity
+* Algorithms that affect frequency (like blink rate)
 
 Hardware
 --------
