@@ -27,10 +27,10 @@ uint8_t validModes[] = {
   //  , MODE_CAP_RESPONSE
   , MODE_STATIC_NOISE
   , MODE_SWITCH_RANDOM
-  //  , MODE_LIGHT_CENTER
+  , MODE_LIGHT_CENTER
   //  , MODE_BAR_CIRCLE
   , MODE_CRAWL
-  , MODE_ORBITS
+  , MODE_ORBIT_TEST
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
@@ -49,7 +49,7 @@ square_mode_t modeFunctions[] = {
   NULL, //squaresBarCircle,
   squaresCrawl,
   squaresBlinkPattern,
-  squaresOrbits
+  squaresOrbitTest
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
 
@@ -112,7 +112,7 @@ void set_mode_to(uint8_t place, uint8_t mode) {
       return;
     }
   }
-  DEBUG_ERR("Attempted to set invalid mode");
+  DEBUG_VALUELN(DEBUG_ERROR, "Attempted to set invalid mode:", mode);
 }
 
 void increment_mode(uint8_t place)

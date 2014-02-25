@@ -163,7 +163,7 @@ extern uint16_t followupPeriods[];
 #define MODE_BAR_CIRCLE     11
 #define MODE_CRAWL          12
 #define MODE_BLINK_PATTERN  13
-#define MODE_ORBITS         14
+#define MODE_ORBIT_TEST     14
 
 void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
 void squaresSetupPattern(Square *squares, int size, pattern_args_t *arg);
@@ -177,7 +177,7 @@ void squaresStaticNoise(Square *squares, int size, pattern_args_t *arg);
 void squaresSwitchRandom(Square *squares, int size, pattern_args_t *arg);
 void squaresBarCircle(Square *squares, int size, pattern_args_t *arg);
 void squaresCrawl(Square *squares, int size, pattern_args_t *arg);
-void squaresOrbits(Square *squares, int size, pattern_args_t *arg);
+void squaresOrbitTest(Square *squares, int size, pattern_args_t *arg);
 
 
 void squaresLightCenter(Square *squares, int size, pattern_args_t *arg);

@@ -286,6 +286,7 @@ void handle_sensors() {
 
     if (CHECK_RANGE_SHORT(state)) {
       if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
+	modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
 	set_mode_to(FINAL_MODE, MODE_LIGHT_CENTER);
       }
     } else {

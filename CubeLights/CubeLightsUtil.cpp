@@ -536,22 +536,45 @@ void squaresCrawl(Square *squares, int size,
   }
 }
 
-void squaresOrbits(Square *squares, int size,
+void squaresOrbitTest(Square *squares, int size,
 		  pattern_args_t *arg) {
   static Square *face = NULL;
   static Square *prevface = NULL;
   static byte led = 0;
-  static byte count = 0;
-  //  static byte color = 0;
-#define MAX_COUNT 36
 
-  if ((arg->next_time == 0) || ((count > 0) && (count % MAX_COUNT == 0))) {
-    face = &squares[random(0, size)];
-    prevface = face->edges[random(Square::NUM_EDGES)];
-    led = random(Square::NUM_LEDS);
+  static Square *startface = NULL;
+  static byte startled = 0;
+  static byte direction = 0;
+
+  boolean setup = false;
+
+  if (arg->next_time == 0) {
+    startface = &squares[0];
+    startled = 7;
+    direction = Square::BOTTOM;
     arg->next_time = millis();
+    setup = true;
+  }
+
+  if (CHECK_TAP_BOTH(sensor_state)) {
+    direction = (direction + 1) % Square::NUM_EDGES;
+    setup = true;
+  } else {
+    if (CHECK_TAP_1(sensor_state)) {
+      startface = &squares[(startface->id + 1) % size];
+      setup = true;
+    }
+    if (CHECK_TAP_2(sensor_state)) {
+      startled = (startled + 1) % Square::NUM_LEDS;
+      setup = true;
+    }
+  }
+
+  if (setup) {
+    face = startface;
+    prevface = face->edges[direction];
+    led = startled;
     setAllSquares(squares, size, arg->bgColor);
-    count = 0;
   }
 
   if (millis() > arg->next_time) {
@@ -566,15 +589,10 @@ void squaresOrbits(Square *squares, int size,
       prevface = face;
       face = &squares[FACE_FROM_COMBO(next)];
     }
-    if (count >= (MAX_COUNT - 3)) {
-      face->setColor(led, pixel_color(255, 0, 0));
-    } else {
-      face->setColor(led, arg->fgColor);
-    }
-
-    DEBUG_VALUE(DEBUG_HIGH, "Orbit: ", face->id);
-    DEBUG_VALUELN(DEBUG_HIGH, ":", led);
-    count++;
+    face->setColor(led, arg->fgColor);
+    startface->setColor(startled, pixel_color(255, 0, 0));
+    DEBUG_VALUE(DEBUG_TRACE, "Orbit: ", face->id);
+    DEBUG_VALUELN(DEBUG_TRACE, ":", led);
   }
 }
 

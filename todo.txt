@@ -14,6 +14,8 @@ In YVR:
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
 
+* Need ability to set LED to its previous color
+
 * Do something to combine multiple modes
 
 * Mode specific event handlers

@@ -32,7 +32,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 13 // %META INCR
+#define CUBE_LIGHT_BUILD 14 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {
