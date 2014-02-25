@@ -85,6 +85,7 @@ class Square {
   byte ledInDirection(byte led, byte direction);
 
   uint16_t ledAwayFrom(Square *square, byte led);
+  uint16_t ledTowards(byte led, byte direction);
 
   /* Serialization functions */
   int toBytes(byte *bytes, int size);

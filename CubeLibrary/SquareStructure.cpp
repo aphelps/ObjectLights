@@ -354,7 +354,27 @@ byte Square::ledInDirection(byte led, byte direction) {
 }
 
 /*
- * Returns the square and led in a given direction from a led in this suqare
+ * Returns the square and led in a given direction from a led in this square
+ */
+uint16_t Square::ledTowards(byte led, byte direction) {
+  /*
+   * Get LED in the appropriate direction, which will also detect if the led
+   * is the last in that direction.
+   */
+  byte next_led = ledInDirection(led, direction);
+  if (next_led != NO_LED) return FACE_AND_LED(id, next_led);
+
+  /*
+   * Next LED is on the next face
+   */
+  Square *next_square = edges[direction];
+  next_led = next_square->matchLED(this, led);
+  return FACE_AND_LED(next_square->id, next_led);
+}
+
+/*
+ * Returns the square and led in away from a neighboring square from a led in
+ * this square.
  */
 uint16_t Square::ledAwayFrom(Square *square, byte led) {
   /*
@@ -367,15 +387,7 @@ uint16_t Square::ledAwayFrom(Square *square, byte led) {
     return (uint16_t)-1;
   }
   direction = (direction + 2) % Square::NUM_EDGES;
-  byte next_led = ledInDirection(led, direction);
-  if (next_led != NO_LED) return FACE_AND_LED(id, next_led);
-
-  /*
-   * Next LED is on the next face
-   */
-  Square *next_square = edges[direction];
-  next_led = next_square->matchLED(this, led);
-  return FACE_AND_LED(next_square->id, next_led);
+  return ledTowards(led, direction);
 }
 
 
