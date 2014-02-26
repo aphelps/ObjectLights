@@ -301,7 +301,7 @@ void handle_sensors() {
       // Just entered mode changing state
       modeConfigs[0].fgColor = pixel_color(255, 255, 255);
       modeConfigs[FINAL_MODE].fgColor = pixel_color(0, 0, 255);
-      modeConfigs[FINAL_MODE].data =
+      modeConfigs[FINAL_MODE].data.u32 =
 	FACE_LED_MASK(0xFF, ((1 << 0) | (1 << 2) | (1 << 6) | (1 << 8)));
       set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
       DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");

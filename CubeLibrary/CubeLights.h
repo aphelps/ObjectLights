@@ -128,12 +128,16 @@ void set_mode_to(uint8_t place, uint8_t new_mode);
 void increment_mode(uint8_t place);
 void restore_mode(uint8_t place);
 
+#define PATTERN_DATA_SZ 16
 typedef struct {
   uint32_t bgColor;
   uint32_t fgColor;
   uint32_t next_time;
   uint16_t periodms;
-  uint32_t data;
+  union {
+    uint8_t data[PATTERN_DATA_SZ];
+    uint32_t u32;
+  } data;
 } pattern_args_t;
 
 #define MAX_MODES 3

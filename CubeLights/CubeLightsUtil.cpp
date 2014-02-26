@@ -620,21 +620,27 @@ vector_t followVector(vector_t vector, Square *squares) {
   return vector;
 }
 
-#define NUM_VECTORS 3
+#define MAX_VECTORS (PATTERN_DATA_SZ / sizeof (vector_t))
+#define RESET_PERIOD 5*60*1000 // Every 5 minutes
 void squaresVectors(Square *squares, int size,
 		    pattern_args_t *arg) {
-  static vector_t vectors[NUM_VECTORS];
+  vector_t *vectors = (vector_t *)&arg->data.data;
   static byte color_index;
   static byte num_vectors;
+  static unsigned long prev_reset = 0;
 
   if (arg->next_time == 0) {
     color_index = 0;
   }
 
+  unsigned long now = millis();
+
   if ((arg->next_time == 0) || 
-      (CHECK_TOUCH_ANY(sensor_state)) ||
-      (color_index == (byte)-1)) {
-    num_vectors = 1 + random(NUM_VECTORS);
+      (CHECK_TAP_1(sensor_state)) ||
+      (CHECK_TAP_2(sensor_state)) ||
+      (now - prev_reset) > RESET_PERIOD) {
+
+    num_vectors = 1 + random(MAX_VECTORS);
     for (int v = 0; v < num_vectors; v++) {
       vectors[v].led_in_face = FACE_AND_LED(
 				      random(0, size),            // Face
@@ -645,6 +651,9 @@ void squaresVectors(Square *squares, int size,
     }
     setAllSquares(squares, size, arg->bgColor);
     arg->next_time == 0;
+    DEBUG_VALUE(DEBUG_HIGH, "Num=", num_vectors);
+    DEBUG_VALUELN(DEBUG_HIGH, " reset=", prev_reset);
+    prev_reset = now;
   }
 
   if (millis() > arg->next_time) {
@@ -727,11 +736,11 @@ void squaresBlinkPattern(Square *squares, int size,
   if (on) color = arg->fgColor;
   else color = arg->bgColor;
 
-  byte face_mask = FACES_FROM_MASK(arg->data);
+  byte face_mask = FACES_FROM_MASK(arg->data.u32);
   for (byte face = 0; face < size; face++) {
     if (face_mask & (1 << face)) {
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
-	if (arg->data & (1 << led)) {
+	if (arg->data.u32 & (1 << led)) {
 	  squares[face].setColor(led, color);
 	}
       }

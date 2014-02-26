@@ -30,7 +30,7 @@ uint8_t validModes[] = {
   , MODE_LIGHT_CENTER
   //  , MODE_BAR_CIRCLE
   , MODE_CRAWL
-  , MODE_ORBIT_TEST
+  // , MODE_ORBIT_TEST
   , MODE_VECTORS
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
@@ -50,7 +50,7 @@ square_mode_t modeFunctions[] = {
   NULL, //squaresBarCircle,
   squaresCrawl,
   squaresBlinkPattern,
-  squaresOrbitTest,
+  NULL, //squaresOrbitTest,
   squaresVectors
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
