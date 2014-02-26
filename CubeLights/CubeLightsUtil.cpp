@@ -596,6 +596,83 @@ void squaresOrbitTest(Square *squares, int size,
   }
 }
 
+/*
+ * Trace vectors around the cube
+ */
+typedef struct {
+  uint16_t led_in_face;
+  byte direction;
+  byte length;
+} vector_t;
+
+vector_t followVector(vector_t vector, Squares *squares) {
+  // Get the current face
+  Square *face = &squares[FACE_FROM_COMBO(vector.led_in_face)];
+
+  // Get the next face and led along the vector
+  uint16_t next = face->ledTowards(LED_FROM_COMBO(vector.led_in_face),
+				   vector.direction);
+  Square *next_face = &squares[FACE_FROM_COMBO(next)];
+  vector.led_in_face = next;
+  if (face != next_face) {
+    vector.direction = REV_DIRECTION(next_face->matchEdge(face));
+  }
+  return vector;
+}
+
+void squaresVectors(Square *squares, int size,
+		    pattern_args_t *arg) {
+  static vector_t vector;
+
+  if (arg->next_time == 0) {
+    vector.led_in_face = FACE_AND_LED(
+				      0, //random(0, size),            // Face
+				      7 //random(0, Square::NUM_LEDS) // LED
+				      );
+    vector.direction = Square::TOP;//random(0, Square::NUM_EDGES);
+    vectot.length = 3;
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
+
+    // Get the current face
+    Square *face = &squares[FACE_FROM_COMBO(vector.led_in_face)];
+
+    // Get the next face and led along the vector
+    uint16_t next = face->ledTowards(LED_FROM_COMBO(vector.led_in_face),
+				     vector.direction);
+    Square *next_face = &squares[FACE_FROM_COMBO(next)];
+
+    // Set the new led
+    next_face->setColor(LED_FROM_COMBO(next), arg->fgColor);
+    
+    // Clear the previous led
+    face->setColor(LED_FROM_COMBO(vector.led_in_face), arg->bgColor);
+
+#if 0
+    // Iterate backwards from the vector head to set colors
+    byte curr_direction = REV_DIRECTION(vector.direction);
+    Face *curr_face = face;
+    for (byte i = 0; i < vector.length, i++) {
+      uint16_t curr = curr_face->ledTowards(
+    }
+#endif
+
+    // Update the vector
+    vector.led_in_face = next;
+    if (face != next_face) {
+      vector.direction = REV_DIRECTION(next_face->matchEdge(face));
+    }
+
+    DEBUG_VALUE(DEBUG_HIGH, "Curr=", FACE_FROM_COMBO(vector.led_in_face));
+    DEBUG_VALUE(DEBUG_HIGH, ",", LED_FROM_COMBO(vector.led_in_face));
+    DEBUG_VALUELN(DEBUG_HIGH, "-", vector.direction);
+  }
+}
+
+
 /******************************************************************************
  * Followup functions
  */

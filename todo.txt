@@ -2,37 +2,24 @@ Todo
 ----
 
 TEST
-  * Verify ledInDirection(), ledAwayFrom(), and squaresOrbits() working
-  * Verify that RS485 still works after changing ordering of null-constructor to prevent warning messages
-  * Verify things work after cleanup of RGB and PixelUtil
-  * Convert sensor code to use a bitmask for events
-  * Allow chains of light modes
-    - Make arrays of modes, arguments, periods, and timers 
+
 
 In YVR:
   * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
 
+
 * Need ability to set LED to its previous color
-
-* Do something to combine multiple modes
-
 * Mode specific event handlers
-
 * Add a method of enabling a function for a limited time
-
 * Get MPR121 w/interrupts working
-
 * Add Serial CLI
- 
 * Clockwise and counterclockwise functions
-
 * Store Range finder in EEPROM
-
 * Try using the timer based NewPing methods
-
 * Play with Pi, get Henry’s web app working, maybe control RGB light on test board
+* Refactor HMTLTypes stuff to only need to include stuff that is used.
 
 Modes
 -----

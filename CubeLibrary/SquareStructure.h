@@ -126,5 +126,7 @@ Square* buildCube(int *numSquares, int numLeds, int firstLed);
 #define LEDS_FROM_MASK(mask) (mask & (0xFFFF << Square::NUM_LEDS))
 #define FACES_FROM_MASK(mask) (mask >> Square::NUM_LEDS)
 
+#define REV_DIRECTION(dir) ((dir + 2) % Square::NUM_EDGES)
+
 
 #endif
