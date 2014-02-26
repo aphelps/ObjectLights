@@ -72,7 +72,7 @@ uint16_t modePeriods[] = {
   100,  // MODE_CRAWL
   250,  // MODE_BLINK_PATTERN
   250,  // MODE_ORBITS
-  250   // MODE_VECTORS
+  100   // MODE_VECTORS
 };
 
 uint8_t current_modes[MAX_MODES] = {

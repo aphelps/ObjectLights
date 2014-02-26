@@ -605,7 +605,7 @@ typedef struct {
   byte length;
 } vector_t;
 
-vector_t followVector(vector_t vector, Squares *squares) {
+vector_t followVector(vector_t vector, Square *squares) {
   // Get the current face
   Square *face = &squares[FACE_FROM_COMBO(vector.led_in_face)];
 
@@ -620,55 +620,70 @@ vector_t followVector(vector_t vector, Squares *squares) {
   return vector;
 }
 
+#define NUM_VECTORS 3
 void squaresVectors(Square *squares, int size,
 		    pattern_args_t *arg) {
-  static vector_t vector;
+  static vector_t vectors[NUM_VECTORS];
+  static byte color_index;
+  static byte num_vectors;
 
   if (arg->next_time == 0) {
-    vector.led_in_face = FACE_AND_LED(
-				      0, //random(0, size),            // Face
-				      7 //random(0, Square::NUM_LEDS) // LED
+    color_index = 0;
+  }
+
+  if ((arg->next_time == 0) || 
+      (CHECK_TOUCH_ANY(sensor_state)) ||
+      (color_index == (byte)-1)) {
+    num_vectors = 1 + random(NUM_VECTORS);
+    for (int v = 0; v < num_vectors; v++) {
+      vectors[v].led_in_face = FACE_AND_LED(
+				      random(0, size),            // Face
+				      random(0, Square::NUM_LEDS) // LED
 				      );
-    vector.direction = Square::TOP;//random(0, Square::NUM_EDGES);
-    vectot.length = 3;
+      vectors[v].direction = random(0, Square::NUM_EDGES);
+      vectors[v].length = random(2, 6);
+    }
     setAllSquares(squares, size, arg->bgColor);
+    arg->next_time == 0;
   }
 
   if (millis() > arg->next_time) {
     arg->next_time += arg->periodms;
 
-    // Get the current face
-    Square *face = &squares[FACE_FROM_COMBO(vector.led_in_face)];
+    for (byte v = 0; v < num_vectors; v++) {
+      vector_t next_vector = followVector(vectors[v], squares);
 
-    // Get the next face and led along the vector
-    uint16_t next = face->ledTowards(LED_FROM_COMBO(vector.led_in_face),
-				     vector.direction);
-    Square *next_face = &squares[FACE_FROM_COMBO(next)];
+      Square *face = &squares[FACE_FROM_COMBO(vectors[v].led_in_face)];
+      Square *next_face = &squares[FACE_FROM_COMBO(next_vector.led_in_face)];
 
-    // Set the new led
-    next_face->setColor(LED_FROM_COMBO(next), arg->fgColor);
+      // Set the new led
+      next_face->setColor(LED_FROM_COMBO(next_vector.led_in_face), 
+			  pixel_wheel(color_index)); //arg->fgColor);
     
-    // Clear the previous led
-    face->setColor(LED_FROM_COMBO(vector.led_in_face), arg->bgColor);
+      // Iterate backwards from the vector head to set colors
+      vector_t reverse_vector = vectors[v];
+      reverse_vector.direction = REV_DIRECTION(vectors[v].direction);
+      Square *curr_face = face;
+      for (byte i = 1; i <reverse_vector.length; i++) {
+	curr_face->setColor(LED_FROM_COMBO(reverse_vector.led_in_face), 
+			    pixel_wheel(color_index - 10 * i)); //arg->fgColor);
+	reverse_vector = followVector(reverse_vector, squares);
+	curr_face = &squares[FACE_FROM_COMBO(reverse_vector.led_in_face)];
+      }
+      // Clear the tail
+      curr_face->setColor(LED_FROM_COMBO(reverse_vector.led_in_face), 
+			  arg->bgColor);
 
-#if 0
-    // Iterate backwards from the vector head to set colors
-    byte curr_direction = REV_DIRECTION(vector.direction);
-    Face *curr_face = face;
-    for (byte i = 0; i < vector.length, i++) {
-      uint16_t curr = curr_face->ledTowards(
+      // Update the vector
+      vectors[v] = next_vector;
+
+      DEBUG_VALUE(DEBUG_TRACE, "Curr=", FACE_FROM_COMBO(vectors[v].led_in_face));
+      DEBUG_VALUE(DEBUG_TRACE, ",", LED_FROM_COMBO(vectors[v].led_in_face));
+      DEBUG_VALUELN(DEBUG_TRACE, "-", vectors[v].direction);
     }
-#endif
 
-    // Update the vector
-    vector.led_in_face = next;
-    if (face != next_face) {
-      vector.direction = REV_DIRECTION(next_face->matchEdge(face));
-    }
-
-    DEBUG_VALUE(DEBUG_HIGH, "Curr=", FACE_FROM_COMBO(vector.led_in_face));
-    DEBUG_VALUE(DEBUG_HIGH, ",", LED_FROM_COMBO(vector.led_in_face));
-    DEBUG_VALUELN(DEBUG_HIGH, "-", vector.direction);
+    // Update the color
+    color_index++;
   }
 }
 

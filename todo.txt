@@ -9,7 +9,7 @@ In YVR:
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
 
-
+* Function to get neighboring LED along a diaganol
 * Need ability to set LED to its previous color
 * Mode specific event handlers
 * Add a method of enabling a function for a limited time

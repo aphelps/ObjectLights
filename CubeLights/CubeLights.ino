@@ -70,7 +70,7 @@ void setup()
   //Serial.begin(115200);
 
   /* Initialize random see by reading from an unconnected analog pin */
-  randomSeed(analogRead(3));
+  randomSeed(analogRead(0) + analogRead(2) + micros());
 
 #ifdef CONFIG_ENABLED
   Wire.begin();
