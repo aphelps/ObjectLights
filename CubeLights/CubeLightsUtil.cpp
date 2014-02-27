@@ -621,24 +621,20 @@ vector_t followVector(vector_t vector, Square *squares) {
 }
 
 #define MAX_VECTORS (PATTERN_DATA_SZ / sizeof (vector_t))
-#define RESET_PERIOD 5*60*1000 // Every 5 minutes
+#define RESET_PERIOD 1*60*1000
 void squaresVectors(Square *squares, int size,
 		    pattern_args_t *arg) {
-  vector_t *vectors = (vector_t *)&arg->data.data;
-  static byte color_index;
+  vector_t *vectors = (vector_t *)&arg->data.bytes;
+  static byte color_index = 0;
   static byte num_vectors;
   static unsigned long prev_reset = 0;
-
-  if (arg->next_time == 0) {
-    color_index = 0;
-  }
 
   unsigned long now = millis();
 
   if ((arg->next_time == 0) || 
       (CHECK_TAP_1(sensor_state)) ||
       (CHECK_TAP_2(sensor_state)) ||
-      (now - prev_reset) > RESET_PERIOD) {
+      (unsigned long)(now - prev_reset) >  (unsigned long)RESET_PERIOD) {
 
     num_vectors = 1 + random(MAX_VECTORS);
     for (int v = 0; v < num_vectors; v++) {
@@ -650,13 +646,14 @@ void squaresVectors(Square *squares, int size,
       vectors[v].length = random(2, 6);
     }
     setAllSquares(squares, size, arg->bgColor);
-    arg->next_time == 0;
+    arg->next_time = 0;
     DEBUG_VALUE(DEBUG_HIGH, "Num=", num_vectors);
     DEBUG_VALUELN(DEBUG_HIGH, " reset=", prev_reset);
     prev_reset = now;
+    arg->next_time = millis();
   }
 
-  if (millis() > arg->next_time) {
+  if (now > arg->next_time) {
     arg->next_time += arg->periodms;
 
     for (byte v = 0; v < num_vectors; v++) {
@@ -696,6 +693,88 @@ void squaresVectors(Square *squares, int size,
   }
 }
 
+/* 
+ * Set the center LED of each square to the indicated color
+ */
+#define SIMPLE_LIFE_RESET  0
+#define SIMPLE_LIFE_SPLASH 1
+void squaresSimpleLife(Square *squares, int size,
+		       pattern_args_t *arg) {
+  unsigned long now = millis();
+
+  if (arg->next_time == 0) {
+    arg->next_time = now;
+    arg->data.u32s[SIMPLE_LIFE_SPLASH] = now;
+
+    setAllSquares(squares, size, arg->bgColor);
+    binarySquares(squares, size, arg->fgColor, 10);
+  }
+
+  if (arg->data.u32s[SIMPLE_LIFE_RESET]) {
+    binarySquares(squares, size, arg->fgColor, random(0, 100));
+  }
+
+  if (now > arg->next_time) {
+    arg->next_time += arg->periodms;
+
+    // Build neighbor counts
+    byte neighbors[size][Square::NUM_LEDS];
+
+    for (byte face = 0; face < size; face++) {
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+	neighbors[face][led] = 0;
+	for (byte direction = 0; direction < Square::NUM_EDGES; direction++) {
+	  uint16_t l = squares[face].ledTowards(led, direction);
+	  if (squares[FACE_FROM_COMBO(l)].getColor(LED_FROM_COMBO(l)) 
+	      != arg->bgColor) {
+	    neighbors[face][led]++;
+	  }
+	}
+      }
+    }
+
+    byte count = 0;
+    for (byte face = 0; face < size; face++) {
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+	switch (neighbors[face][led]) {
+	case 1:
+	  squares[face].setColor(led, arg->fgColor);
+	  count++;
+	  break;
+	default:
+	  squares[face].setColor(led, arg->bgColor);
+	  break;
+	}
+      }
+    }
+
+    if (now - arg->data.u32s[SIMPLE_LIFE_SPLASH] > 15000) {
+      squares[random(size)].setColor(random(Square::NUM_LEDS),
+				     255, 0, 0);
+      arg->data.u32s[SIMPLE_LIFE_SPLASH] = now;
+    }
+
+    if (count == 0) {
+      arg->data.u32s[SIMPLE_LIFE_RESET] = 1;
+      arg->next_time += 2000;
+    } else {
+      arg->data.u32s[SIMPLE_LIFE_RESET] = 0;
+    }
+  } else {
+#if 0
+    int elapsed_percent = 100 * (arg->next_time - now) / arg->periodms;
+    for (byte face = 0; face < size; face++) {
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+	if (squares[face].getColor(led) != arg->bgColor) {
+	  squares[face].setColor(led, fadeTowards(arg->bgColor, 
+						  arg->fgColor,
+						  elapsed_percent));
+	}
+      }
+    }
+#endif
+  }
+}
 
 /******************************************************************************
  * Followup functions
@@ -736,11 +815,11 @@ void squaresBlinkPattern(Square *squares, int size,
   if (on) color = arg->fgColor;
   else color = arg->bgColor;
 
-  byte face_mask = FACES_FROM_MASK(arg->data.u32);
+  byte face_mask = FACES_FROM_MASK(arg->data.u32s[0]);
   for (byte face = 0; face < size; face++) {
     if (face_mask & (1 << face)) {
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
-	if (arg->data.u32 & (1 << led)) {
+	if (arg->data.u32s[0] & (1 << led)) {
 	  squares[face].setColor(led, color);
 	}
       }

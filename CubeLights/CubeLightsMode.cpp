@@ -32,6 +32,7 @@ uint8_t validModes[] = {
   , MODE_CRAWL
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
+  , MODE_SIMPLE_LIFE
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
@@ -51,7 +52,8 @@ square_mode_t modeFunctions[] = {
   squaresCrawl,
   squaresBlinkPattern,
   NULL, //squaresOrbitTest,
-  squaresVectors
+  squaresVectors,
+  squaresSimpleLife
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
 
@@ -72,7 +74,8 @@ uint16_t modePeriods[] = {
   100,  // MODE_CRAWL
   250,  // MODE_BLINK_PATTERN
   250,  // MODE_ORBITS
-  100   // MODE_VECTORS
+  100,  // MODE_VECTORS
+  500   // MODE_SIMPLE_LIFE
 };
 
 uint8_t current_modes[MAX_MODES] = {

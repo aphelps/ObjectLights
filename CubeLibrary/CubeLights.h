@@ -135,8 +135,9 @@ typedef struct {
   uint32_t next_time;
   uint16_t periodms;
   union {
-    uint8_t data[PATTERN_DATA_SZ];
-    uint32_t u32;
+    uint8_t bytes[PATTERN_DATA_SZ];
+    uint32_t u16s[PATTERN_DATA_SZ / sizeof (uint32_t)];
+    uint32_t u32s[PATTERN_DATA_SZ / sizeof (uint16_t)];
   } data;
 } pattern_args_t;
 
@@ -169,6 +170,7 @@ extern uint16_t followupPeriods[];
 #define MODE_BLINK_PATTERN  13
 #define MODE_ORBIT_TEST     14
 #define MODE_VECTORS        15
+#define MODE_SIMPLE_LIFE    16
 
 void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
 void squaresSetupPattern(Square *squares, int size, pattern_args_t *arg);
@@ -184,6 +186,7 @@ void squaresBarCircle(Square *squares, int size, pattern_args_t *arg);
 void squaresCrawl(Square *squares, int size, pattern_args_t *arg);
 void squaresOrbitTest(Square *squares, int size, pattern_args_t *arg);
 void squaresVectors(Square *squares, int size, pattern_args_t *arg);
+void squaresSimpleLife(Square *squares, int size, pattern_args_t *arg);
 
 
 void squaresLightCenter(Square *squares, int size, pattern_args_t *arg);
