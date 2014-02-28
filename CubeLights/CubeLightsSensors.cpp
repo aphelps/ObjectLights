@@ -285,12 +285,15 @@ void handle_sensors() {
     }
 
     if (CHECK_RANGE_SHORT(state)) {
-      if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
+      //if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
+      if (get_current_mode(FINAL_MODE) != MODE_STATIC_NOISE) {
 	modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
-	set_mode_to(FINAL_MODE, MODE_LIGHT_CENTER);
+	//set_mode_to(FINAL_MODE, MODE_LIGHT_CENTER);
+	set_mode_to(FINAL_MODE, MODE_STATIC_NOISE);
       }
     } else {
-      if (get_current_mode(FINAL_MODE) == MODE_LIGHT_CENTER) {
+      //if (get_current_mode(FINAL_MODE) == MODE_LIGHT_CENTER) {
+      if (get_current_mode(FINAL_MODE) == MODE_STATIC_NOISE) {
 	restore_mode(FINAL_MODE);
       }
     }

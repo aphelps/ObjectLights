@@ -21,15 +21,16 @@ uint8_t validModes[] = {
   //   , MODE_TEST_PATTERN
   //   , MODE_SETUP_PATTERN
   //   , MODE_RANDOM_NEIGHBOR
-  , MODE_CYCLE_PATTERN
+  //  , MODE_CYCLE_PATTERN
   //  , MODE_CIRCLE_PATTERN
   //  , MODE_FADE_CYCLE
   //  , MODE_CAP_RESPONSE
   , MODE_STATIC_NOISE
   , MODE_SWITCH_RANDOM
-  , MODE_LIGHT_CENTER
+  //  , MODE_LIGHT_CENTER
   //  , MODE_BAR_CIRCLE
   , MODE_CRAWL
+  // , MODE_BLINK_PATTERN
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
   , MODE_SIMPLE_LIFE
@@ -41,16 +42,16 @@ square_mode_t modeFunctions[] = {
   NULL, //squaresTestPattern,
   NULL, //squaresSetupPattern,
   NULL, //squaresRandomNeighbor,
-  squaresCyclePattern,
+  NULL, //squaresCyclePattern,
   NULL, //squaresCirclePattern,
   NULL, //squaresFadeCycle,
   NULL, //squaresCapResponse,
   squaresStaticNoise,
   squaresSwitchRandom,
-  squaresLightCenter,
+  NULL, //squaresLightCenter,
   NULL, //squaresBarCircle,
   squaresCrawl,
-  squaresBlinkPattern,
+  NULL, // squaresBlinkPattern,
   NULL, //squaresOrbitTest,
   squaresVectors,
   squaresSimpleLife

@@ -714,6 +714,20 @@ void squaresSimpleLife(Square *squares, int size,
     binarySquares(squares, size, arg->fgColor, random(0, 100));
   }
 
+  if (CHECK_TOUCH_BOTH(sensor_state)) {
+    for (byte face = 0; face < size; face++) {
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+	if (squares[face].getColor(led) != arg->bgColor) {
+	  squares[face].setColor(led, pixel_color(255, 255, 255));
+	}
+      }
+    }
+  } else {
+    if (CHECK_TAP_1(sensor_state)) {
+      arg->data.u32s[SIMPLE_LIFE_SPLASH] = 0;
+    }
+  }
+
   if (now > arg->next_time) {
     arg->next_time += arg->periodms;
 
@@ -725,9 +739,10 @@ void squaresSimpleLife(Square *squares, int size,
 	neighbors[face][led] = 0;
 	for (byte direction = 0; direction < Square::NUM_EDGES; direction++) {
 	  uint16_t l = squares[face].ledTowards(led, direction);
-	  if (squares[FACE_FROM_COMBO(l)].getColor(LED_FROM_COMBO(l)) 
-	      != arg->bgColor) {
+	  uint32_t c = squares[FACE_FROM_COMBO(l)].getColor(LED_FROM_COMBO(l));
+	  if (c != arg->bgColor) {
 	    neighbors[face][led]++;
+	    squares[face].setColor(led, c);
 	  }
 	}
       }
@@ -738,7 +753,6 @@ void squaresSimpleLife(Square *squares, int size,
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
 	switch (neighbors[face][led]) {
 	case 1:
-	  squares[face].setColor(led, arg->fgColor);
 	  count++;
 	  break;
 	default:
@@ -748,10 +762,17 @@ void squaresSimpleLife(Square *squares, int size,
       }
     }
 
-    if (now - arg->data.u32s[SIMPLE_LIFE_SPLASH] > 15000) {
-      squares[random(size)].setColor(random(Square::NUM_LEDS),
-				     255, 0, 0);
+    if (now - arg->data.u32s[SIMPLE_LIFE_SPLASH] > 10000) {
+      byte face = random(size - 1);
+      byte led = random(Square::NUM_LEDS);
+      byte c = random((byte)-1);
+      squares[face].setColor(led, pixel_wheel(c));
+
       arg->data.u32s[SIMPLE_LIFE_SPLASH] = now;
+
+      DEBUG_VALUE(DEBUG_HIGH, "Splash: ", face);
+      DEBUG_VALUE(DEBUG_HIGH, ", ", led);
+      DEBUG_VALUELN(DEBUG_HIGH, ", ", c);
     }
 
     if (count == 0) {
@@ -762,7 +783,8 @@ void squaresSimpleLife(Square *squares, int size,
     }
   } else {
 #if 0
-    int elapsed_percent = 100 * (arg->next_time - now) / arg->periodms;
+    // Fade up to maximum brightness
+    int elapsed_percent = ((arg->next_time - now) / arg->periodms) * 100;
     for (byte face = 0; face < size; face++) {
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
 	if (squares[face].getColor(led) != arg->bgColor) {
