@@ -832,12 +832,16 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 	uint16_t val = *valptr;
 	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
 
+	/* Shift the new value into each column */
+	uint32_t newcolor;
 	if (val) {
 	  byte heat = (val > 15 ? 255 : val * val);
-	  squares[face].setColorColumn(col, pixel_heat(heat));
+	  newcolor = pixel_heat(heat);
 	} else {
-	  squares[face].setColorColumn(col, pixel_color(0, 0, 0));
+	  newcolor = 0;
 	}
+	squares[face].shiftColumnDown(col, newcolor);
+
 	col++;
 	if (col >= 3) {
 	  face++;
