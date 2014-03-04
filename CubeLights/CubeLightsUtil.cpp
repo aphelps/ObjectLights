@@ -664,7 +664,7 @@ void squaresVectors(Square *squares, int size,
 
       // Set the new led
       next_face->setColor(LED_FROM_COMBO(next_vector.led_in_face), 
-			  pixel_wheel(color_index)); //arg->fgColor);
+			  pixel_wheel(color_index));
     
       // Iterate backwards from the vector head to set colors
       vector_t reverse_vector = vectors[v];
@@ -672,7 +672,7 @@ void squaresVectors(Square *squares, int size,
       Square *curr_face = face;
       for (byte i = 1; i <reverse_vector.length; i++) {
 	curr_face->setColor(LED_FROM_COMBO(reverse_vector.led_in_face), 
-			    pixel_wheel(color_index - 10 * i)); //arg->fgColor);
+			    pixel_wheel(color_index - 10 * i));
 	reverse_vector = followVector(reverse_vector, squares);
 	curr_face = &squares[FACE_FROM_COMBO(reverse_vector.led_in_face)];
       }
