@@ -106,6 +106,25 @@ void Square::setColorColumn(byte col, uint32_t c) {
   }
 }
 
+/* Set the bottom of the column's color and shift other rows up */
+void Square::shiftColumnUp(byte col, uint32_t c) {
+  for (byte row = 0; row < SQUARE_LED_ROWS - 1; row++) {
+    uint32_t current = getColor((row+1) * 3 + col);
+    setColorRC(col, row, current);
+  }
+  setColorRC(col, SQUARE_LED_ROWS - 1, c);
+}
+
+/* Set the top of the column's color and shift other rows down */
+void Square::shiftColumnDown(byte col, uint32_t c) {
+  for (byte row = 1; row < SQUARE_LED_ROWS; row++) {
+    uint32_t current = getColor((row-1) * 3 + col);
+    setColorRC(col, row, current);
+  }
+  setColorRC(col, 0, c);
+}
+
+
 /* Set the color of an entire row */
 void Square::setColorRow(byte row, uint32_t c) {
   for (byte col = 0; col < SQUARE_LED_COLS; col++) {

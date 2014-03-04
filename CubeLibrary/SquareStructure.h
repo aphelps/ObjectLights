@@ -67,6 +67,8 @@ class Square {
   void setColorColumn(byte col, uint32_t c);
   void setColorRow(byte row, uint32_t c);
   void setColorEdge(byte edge, uint32_t c);
+  void shiftColumnUp(byte col, uint32_t c);
+  void shiftColumnDown(byte col, uint32_t c);
 
   uint32_t getColor();
   uint32_t getColor(byte led);
