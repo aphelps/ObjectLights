@@ -21,6 +21,10 @@
 #define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
+#include <SoftwareSerial.h>
+#include <RS485_non_blocking.h>
+#include "RS485Utils.h"
+
 // Microphone connects to Analog Pin 0.  Corresponding ADC channel number
 // varies among boards...it's ADC0 on Uno and Mega, ADC7 on Leonardo.
 // Other boards may require different settings; refer to datasheet.
@@ -36,7 +40,6 @@ uint16_t      spectrum[FFT_N/2]; // Spectrum output buffer
 volatile byte samplePos = 0;     // Buffer position counter
  
 byte
-  peak[8],      // Peak level of each column; used for falling dots
   dotCount = 0, // Frame counter for delaying dot-falling speed
   colCount = 0; // Frame counter for storing past column data
 uint16_t
@@ -97,13 +100,34 @@ PROGMEM uint8_t
     col0data, col1data, col2data, col3data,
     col4data, col5data, col6data, col7data };
 
+
+
+byte rs485_buffer[128];
+byte *send_buffer; // Pointer to use for start of send data
+RS485Socket rs485(4, 7, 5, (DEBUG_LEVEL != 0));
+#define MY_ADDR 0x01
+#define DEST_ADDR 0x00
+
+#define RED_LED     10
+#define GREEN_LED   11
+#define BLUE_LED    13
+
+
+
 void setup() {
   uint8_t i, j, nBins, binNum, *data;
 
   Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_LOW, "SoundUnit starting");
 
-  memset(peak, 0, sizeof(peak));
+  /* Configure the RS484 interface */
+  rs485.setup();
+  send_buffer = rs485.initBuffer(rs485_buffer);
+
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+
   memset(col , 0, sizeof(col));
 
   for(i=0; i<8; i++) {
@@ -132,6 +156,13 @@ void setup() {
 
 
 void loop() {
+  static boolean sentResponse = false;
+  
+  if (handleMessages()) {
+    sentResponse = true;
+  }
+  //debugReceive();
+
   if (!(ADCSRA & _BV(ADIE))) { // Check if audio sampling has finished
     processSound();
     
@@ -139,7 +170,19 @@ void loop() {
     for(uint16_t x = 0; x < FFT_N / 2; x++) {
       DEBUG_VALUE(DEBUG_HIGH, " ", spectrum[x]);
     }
+
+    DEBUG_PRINT(DEBUG_HIGH, " col:");
+    for (byte c = 0; c < 8; c++) {
+      DEBUG_VALUE(DEBUG_HIGH, " ", col[c][colCount]);
+    }
+
+    if (sentResponse) {
+      DEBUG_PRINT(DEBUG_HIGH, " Sent");
+    }
+
     DEBUG_PRINT_END();
+
+    sentResponse = false;
   }
 }
 
@@ -174,6 +217,8 @@ void processSound() {
       (((spectrum[x] - L) * (256L - pgm_read_byte(&eq[x]))) >> 8);
   }
 
+  colCount = (colCount + 1) % 10;
+
   // Downsample spectrum output to 8 columns:
   for(x=0; x<8; x++) {
     data   = (uint8_t *)pgm_read_word(&colData[x]);
@@ -205,9 +250,73 @@ void processSound() {
     if(level < 0L)      c = 0;
     else if(level > 10) c = 10; // Allow dot to go a couple pixels off top
     else                c = (uint8_t)level;
+  }
+}
 
-    if(c > peak[x]) peak[x] = c; // Keep dot on top
+boolean handleMessages() {
+  uint16_t msglen;
+  const byte *data = rs485.getMsg(MY_ADDR, &msglen);
+  if (data != NULL) {
+    DEBUG_VALUE(DEBUG_TRACE, "Recv: command=", data[0]);
+    DEBUG_VALUE(DEBUG_TRACE, " len=", msglen);
+
+    switch (data[0]) {
+    case 'S':
+      // Return the entire spectrum array
+      break;
+    case 'C':
+      // Return the current column values
+      uint16_t *sendPtr = (uint16_t *)send_buffer;
+      for (byte c = 0; c < 8; c++) {
+	*sendPtr = col[c][colCount];
+	sendPtr++;
+      }
+
+      byte datalen = ((int)sendPtr - (int)send_buffer);
+      DEBUG_VALUE(DEBUG_TRACE, " retlen=", datalen);
+      rs485.sendMsgTo(DEST_ADDR, send_buffer, datalen);
+      break;
+    }
+
+    DEBUG_PRINT_END();
+    return true;
   }
 
-  if(++colCount >= 10) colCount = 0;
+  return false;
+}
+
+void debugReceive() {
+ unsigned int msglen;
+
+  const byte *data = rs485.getMsg(MY_ADDR, &msglen);
+  if (data != NULL) {
+    int value = (data[0] << 8) | data[1];
+    DEBUG_VALUELN(0, "value=", value);
+    if (value == 0) {
+      DEBUG_PRINTLN(0, "Recieved reset");
+      digitalWrite(RED_LED, LOW);
+      digitalWrite(GREEN_LED, LOW);
+      digitalWrite(BLUE_LED, LOW);
+    } else {
+      switch (value % 3) {
+      case 0:
+	digitalWrite(RED_LED, HIGH);
+	digitalWrite(GREEN_LED, LOW);
+	digitalWrite(BLUE_LED, LOW);
+	break;
+      case 1:
+	digitalWrite(RED_LED, LOW);
+	digitalWrite(GREEN_LED, HIGH);
+	digitalWrite(BLUE_LED, LOW);
+	break;
+      case 2:
+	digitalWrite(RED_LED, LOW);
+	digitalWrite(GREEN_LED, LOW);
+	digitalWrite(BLUE_LED, HIGH);
+	break;
+      }
+    }
+  } else {
+    //delay(20);
+  }
 }

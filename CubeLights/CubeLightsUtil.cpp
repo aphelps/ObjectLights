@@ -798,6 +798,50 @@ void squaresSimpleLife(Square *squares, int size,
   }
 }
 
+/*
+ * Example mode to fetch sound samples from a remote module
+ */
+void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
+  if (arg->next_time == 0) {
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if (millis() > arg->next_time) {
+    arg->next_time += arg->periodms;
+
+    // Send the data request
+    sendByte('C', 0x01);
+
+    DEBUG_PRINT(DEBUG_HIGH, "Sent request, waiting.");
+    
+    // Wait for the response
+    unsigned int msglen;
+    const byte *data = NULL;
+
+    unsigned long startWait = millis();
+    unsigned long elapsed;
+    while ((data == NULL) || (elapsed > (unsigned long)2000)) {
+      data = rs485.getMsg(RS485_ADDR_ANY, &msglen); 
+      elapsed = millis() - startWait;
+    }
+
+    if (data == NULL) {
+      DEBUG_VALUELN(DEBUG_HIGH, "No response after ", elapsed);
+      return;
+    }
+
+    // Data should be an array of 8 uint16_t
+    DEBUG_VALUE(DEBUG_HIGH, " Elapsed:", elapsed);
+    DEBUG_PRINT(DEBUG_HIGH, " value:");
+    uint16_t *valptr = (uint16_t *)data;
+    while ((unsigned int)valptr - (unsigned int)data < msglen) {
+      DEBUG_VALUE(DEBUG_HIGH, " ", *valptr);
+      valptr++;
+    }
+    DEBUG_PRINT_END();
+  }
+}
+
 /******************************************************************************
  * Followup functions
  */

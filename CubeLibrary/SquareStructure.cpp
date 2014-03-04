@@ -290,6 +290,7 @@ byte Square::ledInEdge(byte edge, byte index) {
     return 6 - 3*index; // 6 3 0
   }
   }
+  return NO_LED;
 }
 
 /*

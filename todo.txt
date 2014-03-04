@@ -2,7 +2,9 @@ Todo
 ----
 
 TEST
-
+  * What happens if data comes in while handling the message returned by
+  rs485Util.getMsg()?  It looks like that may read new data into the buffer
+  that was returned...
 
 In YVR:
   * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module

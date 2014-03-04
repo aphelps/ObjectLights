@@ -115,6 +115,8 @@ extern RS485Socket rs485;
 extern byte my_address;
 
 void initializeConnect();
+
+void sendByte(byte value, byte address);
 void sendInt(int value);
 
 /***** Cube light modes *******************************************************/
@@ -171,6 +173,7 @@ extern uint16_t followupPeriods[];
 #define MODE_ORBIT_TEST     14
 #define MODE_VECTORS        15
 #define MODE_SIMPLE_LIFE    16
+#define MODE_SOUND_TEST     17
 
 void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
 void squaresSetupPattern(Square *squares, int size, pattern_args_t *arg);
@@ -187,6 +190,7 @@ void squaresCrawl(Square *squares, int size, pattern_args_t *arg);
 void squaresOrbitTest(Square *squares, int size, pattern_args_t *arg);
 void squaresVectors(Square *squares, int size, pattern_args_t *arg);
 void squaresSimpleLife(Square *squares, int size, pattern_args_t *arg);
+void squaresSoundTest(Square *squares, int size, pattern_args_t *arg);
 
 
 void squaresLightCenter(Square *squares, int size, pattern_args_t *arg);

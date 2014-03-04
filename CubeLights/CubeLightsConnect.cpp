@@ -55,6 +55,11 @@ void initializeConnect() {
 
 #define DEST_ADDR 1 // XXX - Currently hard-coded
 
+void sendByte(byte value, byte address) {
+  send_buffer[0] = value;
+  rs485.sendMsgTo(address, send_buffer, sizeof (int));
+}
+
 void sendInt(int value) {
   send_buffer[0] = (value & 0xFF00) >> 8;
   send_buffer[1] = (value & 0x00FF);
