@@ -79,7 +79,7 @@ uint16_t modePeriods[] = {
   250,  // MODE_ORBITS
   100,  // MODE_VECTORS
   500,  // MODE_SIMPLE_LIFE
-  250   // MODE_SOUND_TEST
+  100   // MODE_SOUND_TEST
 };
 
 uint8_t current_modes[MAX_MODES] = {

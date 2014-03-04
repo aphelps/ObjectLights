@@ -18,7 +18,7 @@
 #include <math.h>
 #include <Wire.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
 #include <SoftwareSerial.h>
@@ -104,7 +104,7 @@ PROGMEM uint8_t
 
 byte rs485_buffer[128];
 byte *send_buffer; // Pointer to use for start of send data
-RS485Socket rs485(4, 7, 5, (DEBUG_LEVEL != 0));
+RS485Socket rs485(4, 7, 5, false);
 #define MY_ADDR 0x01
 #define DEST_ADDR 0x00
 
@@ -157,6 +157,7 @@ void setup() {
 
 void loop() {
   static boolean sentResponse = false;
+  static unsigned long lastData = 0;
   
   if (handleMessages()) {
     sentResponse = true;
@@ -179,10 +180,16 @@ void loop() {
     if (sentResponse) {
       DEBUG_PRINT(DEBUG_HIGH, " Sent");
     }
+    sentResponse = false;
 
     DEBUG_PRINT_END();
 
-    sentResponse = false;
+    digitalWrite(RED_LED, HIGH);
+    lastData = millis();
+  }
+
+  if (millis() - lastData > 5) {
+    digitalWrite(RED_LED, LOW);
   }
 }
 

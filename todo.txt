@@ -43,7 +43,8 @@ Hardware
 
 PCB
 ---
-* Need diode between VCC and voltage regulator
+* Make one designed for just a sound sensor
+  - ATMega328, 3.3V regulator, RS485
 
 Ideas
 -----

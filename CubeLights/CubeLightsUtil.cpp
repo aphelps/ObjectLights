@@ -801,44 +801,61 @@ void squaresSimpleLife(Square *squares, int size,
 /*
  * Example mode to fetch sound samples from a remote module
  */
+#define SOUND_TEST_TIMEOUT 2000 // Max milliseconds to wait on a response
 void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
+  static unsigned long lastSend = 0;
+
   if (arg->next_time == 0) {
     setAllSquares(squares, size, arg->bgColor);
   }
 
-  if (millis() > arg->next_time) {
+  if ((millis() > arg->next_time) && (lastSend == 0)) {
+    // Send the data request
     arg->next_time += arg->periodms;
 
-    // Send the data request
     sendByte('C', 0x01);
+    lastSend = millis();
 
-    DEBUG_PRINT(DEBUG_HIGH, "Sent request, waiting.");
-    
-    // Wait for the response
+    DEBUG_PRINT(DEBUG_HIGH, "SoundTest: Sent request...");
+  } else if (lastSend != 0) {
+    // Check for a response
+    unsigned long elapsed = millis() - lastSend;
     unsigned int msglen;
-    const byte *data = NULL;
+    const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
+    if (data != NULL) {
+      // Data should be an array of 8 uint16_t
+      DEBUG_PRINT(DEBUG_HIGH, " value:");
+      uint16_t *valptr = (uint16_t *)data;
+      byte face = 0;
+      byte col = 0;
+      while ((unsigned int)valptr - (unsigned int)data < msglen) {
+	uint16_t val = *valptr;
+	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
 
-    unsigned long startWait = millis();
-    unsigned long elapsed;
-    while ((data == NULL) || (elapsed > (unsigned long)2000)) {
-      data = rs485.getMsg(RS485_ADDR_ANY, &msglen); 
-      elapsed = millis() - startWait;
-    }
+	if (val) {
+	  byte heat = (val > 15 ? 255 : val * val);
+	  squares[face].setColorColumn(col, pixel_heat(heat));
+	} else {
+	  squares[face].setColorColumn(col, pixel_color(0, 0, 0));
+	}
+	col++;
+	if (col >= 3) {
+	  face++;
+	  col = 0;
+	}
 
-    if (data == NULL) {
-      DEBUG_VALUELN(DEBUG_HIGH, "No response after ", elapsed);
-      return;
-    }
+	valptr++;
+      }
+      DEBUG_VALUE(DEBUG_HIGH, " Elapsed:", elapsed);
+      DEBUG_PRINT_END();
 
-    // Data should be an array of 8 uint16_t
-    DEBUG_VALUE(DEBUG_HIGH, " Elapsed:", elapsed);
-    DEBUG_PRINT(DEBUG_HIGH, " value:");
-    uint16_t *valptr = (uint16_t *)data;
-    while ((unsigned int)valptr - (unsigned int)data < msglen) {
-      DEBUG_VALUE(DEBUG_HIGH, " ", *valptr);
-      valptr++;
+      lastSend = 0; // Reset the lastSend time so another request can be sent
+    } else {
+      if (elapsed > (unsigned long)2000) {
+	DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
+	lastSend = 0; // Reset the lastSend time so another request can be sent
+      }
     }
-    DEBUG_PRINT_END();
   }
 }
 
