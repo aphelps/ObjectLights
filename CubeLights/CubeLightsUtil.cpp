@@ -828,6 +828,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
       uint16_t *valptr = (uint16_t *)data;
       byte face = 0;
       byte col = 0;
+      uint32_t total = 0;
       while ((unsigned int)valptr - (unsigned int)data < msglen) {
 	uint16_t val = *valptr;
 	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
@@ -840,17 +841,23 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 	} else {
 	  newcolor = 0;
 	}
-	squares[face].shiftColumnDown(col, newcolor);
+	squares[face].shiftColumnDown(col % SQUARE_LED_COLS, newcolor);
 
 	col++;
-	if (col >= 3) {
+	if (col % SQUARE_LED_COLS == 0) {
 	  face++;
-	  col = 0;
 	}
+
+	total += val;
 
 	valptr++;
       }
       DEBUG_VALUE(DEBUG_HIGH, " Elapsed:", elapsed);
+
+      /* Set the top to the average */
+      total = total / col;
+      squares[CUBE_TOP].setColor(pixel_heat(total > 15 ? 255 : total * total));
+      DEBUG_VALUE(DEBUG_HIGH, " avg:", total);
       DEBUG_PRINT_END();
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
