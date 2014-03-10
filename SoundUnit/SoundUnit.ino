@@ -38,15 +38,18 @@ int16_t       capture[FFT_N];    // Audio capture buffer
 complex_t     bfly_buff[FFT_N];  // FFT "butterfly" buffer
 uint16_t      spectrum[FFT_N/2]; // Spectrum output buffer
 volatile byte samplePos = 0;     // Buffer position counter
+
+#define NUM_COLUMNS 8
  
 byte
   dotCount = 0, // Frame counter for delaying dot-falling speed
   colCount = 0; // Frame counter for storing past column data
 uint16_t
-  col[8][10],   // Column levels for the prior 10 frames
-  minLvlAvg[8], // For dynamic adjustment of low & high ends of graph,
-  maxLvlAvg[8], // pseudo rolling averages for the prior few frames.
-  colDiv[8];    // Used when filtering FFT output to 8 columns
+  col[NUM_COLUMNS][10],   // Column levels for the prior 10 frames
+  minLvlAvg[NUM_COLUMNS], // For dynamic adjustment of low & high ends of graph,
+  maxLvlAvg[NUM_COLUMNS], // pseudo rolling averages for the prior few frames.
+  colDiv[NUM_COLUMNS];    // Used when filtering FFT output to 8 columns
+uint8_t colLeveled[NUM_COLUMNS]; // Column values adjusted for levels
 
 /*
 These tables were arrived at through testing, modeling and trial and error,
@@ -69,6 +72,7 @@ PROGMEM uint8_t
       0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
       0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+
   // When filtering down to 8 columns, these tables contain indexes
   // and weightings of the FFT spectrum output values to use.  Not all
   // buckets are used -- the bottom-most and several at the top are
@@ -101,8 +105,12 @@ PROGMEM uint8_t
     col4data, col5data, col6data, col7data };
 
 
-
-byte rs485_buffer[128];
+/*
+ * For sending sound data back over RS485.  Set the buffer size large enough
+ * to allow for all spectrum data
+ */
+#define SEND_BUFFER_SIZE RS485_BUFFER_TOTAL(sizeof (spectrum)) 
+byte rs485_buffer[SEND_BUFFER_SIZE];
 byte *send_buffer; // Pointer to use for start of send data
 RS485Socket rs485(4, 7, 5, false);
 #define MY_ADDR 0x01
@@ -115,7 +123,7 @@ RS485Socket rs485(4, 7, 5, false);
 
 
 void setup() {
-  uint8_t i, j, nBins, binNum, *data;
+  uint8_t i, j, nBins, *data;
 
   Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_LOW, "SoundUnit starting");
@@ -130,39 +138,28 @@ void setup() {
 
   memset(col , 0, sizeof(col));
 
-  for(i=0; i<8; i++) {
+  for (i = 0; i< NUM_COLUMNS; i++) {
     minLvlAvg[i] = 0;
     maxLvlAvg[i] = 512;
+
     data         = (uint8_t *)pgm_read_word(&colData[i]);
-    nBins        = pgm_read_byte(&data[0]) + 2;
-    binNum       = pgm_read_byte(&data[1]);
-    for(colDiv[i]=0, j=2; j<nBins; j++)
-      colDiv[i] += pgm_read_byte(&data[j]);
+    nBins        = pgm_read_byte(&data[0]);
+    for(colDiv[i]=0, j=0; j<nBins; j++)
+      colDiv[i] += pgm_read_byte(&data[j + 2]);
   }
 
-  // Init ADC free-run mode; f = ( 16MHz/prescaler ) / 13 cycles/conversion 
-  ADMUX  = ADC_CHANNEL; // Channel sel, right-adj, use AREF pin
-  ADCSRA = _BV(ADEN)  | // ADC enable
-           _BV(ADSC)  | // ADC start
-           _BV(ADATE) | // Auto trigger
-           _BV(ADIE)  | // Interrupt enable
-           _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0); // 128:1 / 13 = 9615 Hz
-  ADCSRB = 0;                // Free run mode, no high MUX bit
-  DIDR0  = 1 << ADC_CHANNEL; // Turn off digital input for ADC pin
-  TIMSK0 = 0;                // Timer0 off
-
-  sei(); // Enable interrupts
+  setupFreeRun();
 }
 
 
 void loop() {
   static boolean sentResponse = false;
   static unsigned long lastData = 0;
-  
+
+  /* Check for and handle messages over the RS485 interface */
   if (handleMessages()) {
     sentResponse = true;
   }
-  //debugReceive();
 
   if (!(ADCSRA & _BV(ADIE))) { // Check if audio sampling has finished
     processSound();
@@ -173,7 +170,7 @@ void loop() {
     }
 
     DEBUG_PRINT(DEBUG_HIGH, " col:");
-    for (byte c = 0; c < 8; c++) {
+    for (byte c = 0; c < NUM_COLUMNS; c++) {
       DEBUG_VALUE(DEBUG_HIGH, " ", col[c][colCount]);
     }
 
@@ -193,21 +190,44 @@ void loop() {
   }
 }
 
-ISR(ADC_vect) { // Audio-sampling interrupt
+/*
+ * Setup ADC free-run mode
+ */
+void setupFreeRun() {
+  // Init ADC free-run mode; f = ( 16MHz/prescaler ) / 13 cycles/conversion
+  ADMUX  = ADC_CHANNEL; // Channel sel, right-adj, use AREF pin
+  ADCSRA = _BV(ADEN)  | // ADC enable
+           _BV(ADSC)  | // ADC start
+           _BV(ADATE) | // Auto trigger
+           _BV(ADIE)  | // Interrupt enable
+           _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0); // 128:1 / 13 = 9615 Hz
+  ADCSRB = 0;                // Free run mode, no high MUX bit
+  DIDR0  = 1 << ADC_CHANNEL; // Turn off digital input for ADC pin
+  TIMSK0 = 0;                // Timer0 off
+
+  sei(); // Enable interrupts
+}
+
+/*
+ * Audio-sampling interrupt
+ */
+ISR(ADC_vect) {
   static const int16_t noiseThreshold = 4;
   int16_t              sample         = ADC; // 0-1023
 
+ // XXX: Why ignore values between 508-516?
   capture[samplePos] =
-    ((sample > (512-noiseThreshold)) &&
-     (sample < (512+noiseThreshold))) ? 0 :
+    ((sample > (512 - noiseThreshold)) &&
+     (sample < (512 + noiseThreshold))) ? 0 :
     sample - 512; // Sign-convert for FFT; -512 to +511
 
   if(++samplePos >= FFT_N) ADCSRA &= ~_BV(ADIE); // Buffer full, interrupt off
 }
 
+
 void processSound() {
 
-  uint8_t  i, x, L, *data, nBins, binNum, c;
+  uint8_t  i, x, L, *data, nBins, binNum;
   uint16_t minLvl, maxLvl;
   int      level, sum;
 
@@ -218,7 +238,7 @@ void processSound() {
   fft_output(bfly_buff, spectrum); // Complex -> spectrum
 
   // Remove noise and apply EQ levels
-  for(x=0; x<FFT_N/2; x++) {
+  for (x=0; x < FFT_N / 2; x++) {
     L = pgm_read_byte(&noise[x]);
     spectrum[x] = (spectrum[x] <= L) ? 0 :
       (((spectrum[x] - L) * (256L - pgm_read_byte(&eq[x]))) >> 8);
@@ -227,15 +247,15 @@ void processSound() {
   colCount = (colCount + 1) % 10;
 
   // Downsample spectrum output to 8 columns:
-  for(x=0; x<8; x++) {
+  for(x = 0; x < NUM_COLUMNS; x++) {
     data   = (uint8_t *)pgm_read_word(&colData[x]);
-    nBins  = pgm_read_byte(&data[0]) + 2;
+    nBins  = pgm_read_byte(&data[0]);
     binNum = pgm_read_byte(&data[1]);
-    for(sum=0, i=2; i<nBins; i++)
-      sum += spectrum[binNum++] * pgm_read_byte(&data[i]); // Weighted
+    for(sum = 0, i = 0; i < nBins; i++)
+      sum += spectrum[binNum++] * pgm_read_byte(&data[i + 2]); // Weighted
     col[x][colCount] = sum / colDiv[x];                    // Average
     minLvl = maxLvl = col[x][0];
-    for(i=1; i<10; i++) { // Get range of prior 10 frames
+    for(i = 1; i < 10; i++) { // Get range of prior 10 frames
       if(col[x][i] < minLvl)      minLvl = col[x][i];
       else if(col[x][i] > maxLvl) maxLvl = col[x][i];
     }
@@ -254,9 +274,11 @@ void processSound() {
       (long)(maxLvlAvg[x] - minLvlAvg[x]);
 
     // Clip output and convert to byte:
-    if(level < 0L)      c = 0;
-    else if(level > 10) c = 10; // Allow dot to go a couple pixels off top
-    else                c = (uint8_t)level;
+    if(level < 0L)      colLeveled[x] = 0;
+    else if(level > 10) colLeveled[x] = 10; // Allow dot to go a couple pixels off top
+    else                colLeveled[x] = (uint8_t)level;
+
+    // XXX - The leveled columns could probably be improved
   }
 }
 
@@ -264,25 +286,46 @@ boolean handleMessages() {
   uint16_t msglen;
   const byte *data = rs485.getMsg(MY_ADDR, &msglen);
   if (data != NULL) {
+    uint16_t response_len = 0;
+
     DEBUG_VALUE(DEBUG_TRACE, "Recv: command=", data[0]);
     DEBUG_VALUE(DEBUG_TRACE, " len=", msglen);
 
     switch (data[0]) {
-    case 'S':
+    case 'S': {
       // Return the entire spectrum array
-      break;
-    case 'C':
-      // Return the current column values
       uint16_t *sendPtr = (uint16_t *)send_buffer;
-      for (byte c = 0; c < 8; c++) {
+      for (byte x = 0; x < FFT_N/2; x++) {
+	*sendPtr = spectrum[x];
+      }
+      response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
+      break;
+    }
+    case 'C': {
+      // Return the current raw column values
+      uint16_t *sendPtr = (uint16_t *)send_buffer;
+      for (byte c = 0; c < NUM_COLUMNS; c++) {
 	*sendPtr = col[c][colCount];
 	sendPtr++;
       }
-
-      byte datalen = ((int)sendPtr - (int)send_buffer);
-      DEBUG_VALUE(DEBUG_TRACE, " retlen=", datalen);
-      rs485.sendMsgTo(DEST_ADDR, send_buffer, datalen);
+      response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
       break;
+    }
+    case 'L': {
+      // Return the current leveled column values
+      uint8_t *sendPtr = (uint8_t *)send_buffer;
+      for (byte c = 0; c < NUM_COLUMNS; c++) {
+	*sendPtr = colLeveled[c];
+	sendPtr++;
+      }
+      response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
+      break;
+    }
+    }
+
+    if (response_len > 0) {
+      DEBUG_VALUE(DEBUG_TRACE, " retlen=", response_len);
+      rs485.sendMsgTo(DEST_ADDR, send_buffer, response_len);
     }
 
     DEBUG_PRINT_END();
@@ -290,40 +333,4 @@ boolean handleMessages() {
   }
 
   return false;
-}
-
-void debugReceive() {
- unsigned int msglen;
-
-  const byte *data = rs485.getMsg(MY_ADDR, &msglen);
-  if (data != NULL) {
-    int value = (data[0] << 8) | data[1];
-    DEBUG_VALUELN(0, "value=", value);
-    if (value == 0) {
-      DEBUG_PRINTLN(0, "Recieved reset");
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(BLUE_LED, LOW);
-    } else {
-      switch (value % 3) {
-      case 0:
-	digitalWrite(RED_LED, HIGH);
-	digitalWrite(GREEN_LED, LOW);
-	digitalWrite(BLUE_LED, LOW);
-	break;
-      case 1:
-	digitalWrite(RED_LED, LOW);
-	digitalWrite(GREEN_LED, HIGH);
-	digitalWrite(BLUE_LED, LOW);
-	break;
-      case 2:
-	digitalWrite(RED_LED, LOW);
-	digitalWrite(GREEN_LED, LOW);
-	digitalWrite(BLUE_LED, HIGH);
-	break;
-      }
-    }
-  } else {
-    //delay(20);
-  }
 }
