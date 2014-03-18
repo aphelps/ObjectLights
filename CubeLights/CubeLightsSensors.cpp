@@ -128,12 +128,12 @@ void handle_sensors() {
       int command =
 	(touch_sensor.touched(CAP_SENSOR_1) << CAP_SENSOR_1) |
 	(touch_sensor.touched(CAP_SENSOR_2) << CAP_SENSOR_2);
-      sendInt(command);
+      sendInt(command, ADDRESS_RECV_TEST);
       next_send = now + 100;
     }
   } else if (touch_sensor.changed(CAP_SENSOR_1) ||
 	     touch_sensor.changed(CAP_SENSOR_2)) {
-    sendInt(0);
+    sendInt(0, ADDRESS_RECV_TEST);
   }
 #endif
 
@@ -289,7 +289,7 @@ void handle_sensors() {
       if (get_current_mode(FINAL_MODE) != MODE_STATIC_NOISE) {
 	modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
 	//set_mode_to(FINAL_MODE, MODE_LIGHT_CENTER);
-	set_mode_to(FINAL_MODE, MODE_STATIC_NOISE);
+	//  XXX set_mode_to(FINAL_MODE, MODE_STATIC_NOISE);
       }
     } else {
       //if (get_current_mode(FINAL_MODE) == MODE_LIGHT_CENTER) {
@@ -323,6 +323,7 @@ void handle_sensors() {
   }
   }
 
+#ifdef ADDRESS_RECV_TEST
   if (CHECK_TOUCH_ANY(state)) {
     /* A sensor is touched, send update to remotes */
     static unsigned long next_send = millis();
@@ -331,13 +332,23 @@ void handle_sensors() {
       if (CHECK_TOUCH_1(state)) command |= (1 << CAP_SENSOR_1);
       if (CHECK_TOUCH_2(state)) command |= (1 << CAP_SENSOR_2);
 
-      sendInt(command);
+      sendInt(command, ADDRESS_RECV_TEST);
       next_send = now + 100;
     }
   } else if (CHECK_CHANGE_ANY(state)) {
     /* Touch was removed */
-    sendInt(0);
+    sendInt(0, ADDRESS_RECV_TEST);
   }
+#endif // ADDRESS_RECV_TEST
+
+#ifdef ADDRESS_TRIANGLES
+  // Send the current color
+  static unsigned long next_send = millis();
+  if (now >= next_send) {
+    sendLong(modeConfigs[0].fgColor, ADDRESS_TRIANGLES);
+    next_send = now + 100;
+  }
+#endif // ADDRESS_TRIANGLES
 
 #endif
 }

@@ -60,12 +60,22 @@ void sendByte(byte value, byte address) {
   rs485.sendMsgTo(address, send_buffer, sizeof (int));
 }
 
-void sendInt(int value) {
+void sendInt(int value, byte address) {
   send_buffer[0] = (value & 0xFF00) >> 8;
   send_buffer[1] = (value & 0x00FF);
-  rs485.sendMsgTo(DEST_ADDR, send_buffer, sizeof (int));
-  DEBUG_HEXVAL(DEBUG_HIGH, "sendInt: to=0x", DEST_ADDR);
-  DEBUG_HEXVALLN(DEBUG_HIGH, " vak=", value);
+  rs485.sendMsgTo(address, send_buffer, sizeof (int));
+  DEBUG_HEXVAL(DEBUG_HIGH, "sendInt: to=0x", address);
+  DEBUG_HEXVALLN(DEBUG_HIGH, " val=", value);
+}
+
+void sendLong(long value, byte address) {
+  send_buffer[0] = (value & 0xFF000000) >> 24;
+  send_buffer[1] = (value & 0x00FF0000) >> 16;
+  send_buffer[2] = (value & 0x0000FF00) >> 8;
+  send_buffer[3] = (value & 0x000000FF);
+  rs485.sendMsgTo(address, send_buffer, sizeof (long));
+  DEBUG_HEXVAL(DEBUG_HIGH, "sendLong: to=0x", address);
+  DEBUG_HEXVALLN(DEBUG_HIGH, " val=", value);
 }
 
 void recvData() {
