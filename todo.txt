@@ -11,6 +11,18 @@ In YVR:
     - Make light weight on Arduino side so that it can be included in HMTL library
   * Get Python based webserver working
 
+* HMTL_Bringup should also set board versions
+  - HMTL config should have board and software version
+
+* Have a during-runtime code upload ability so that a computer can send new
+  modes to it directly.
+  - bootloader's utilities should be accessible from the code
+  - have pointers into blocks of space allocated for the modes where the
+    function will be uploaded.
+
+* Make # of columns in SoundUnit variable
+* Better volume range for SoundUnit
+
 * Add a method of enabling a function for a limited time
 * Followup functions should not be in rotation
 
@@ -43,6 +55,12 @@ Hardware
 
 PCB
 ---
+* Redesign so all PWM pins are available!  For some reason pin 5 goes to RS485 in v2+
+  - Put 6PWM output all on one side of board
+
+* Design light board
+  - TLC5940 driving MOSFET switches
+
 * Make one designed for just a sound sensor
   - ATMega328, 3.3V regulator, RS485
 

@@ -64,6 +64,8 @@ void sendInt(int value) {
   send_buffer[0] = (value & 0xFF00) >> 8;
   send_buffer[1] = (value & 0x00FF);
   rs485.sendMsgTo(DEST_ADDR, send_buffer, sizeof (int));
+  DEBUG_HEXVAL(DEBUG_HIGH, "sendInt: to=0x", DEST_ADDR);
+  DEBUG_HEXVALLN(DEBUG_HIGH, " vak=", value);
 }
 
 void recvData() {

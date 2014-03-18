@@ -32,7 +32,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 14 // %META INCR
+#define CUBE_LIGHT_BUILD 15 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {
@@ -40,21 +40,21 @@ pattern_args_t modeConfigs[MAX_MODES] = {
     pixel_color(0xFF, 0xFF, 0xFF), // fgColor
     0, // next_time
     0, // periodms
-    0 // data
+    {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}} // data
   },
   {
     pixel_color(0, 0, 0), // bgColor
     pixel_color(0xFF, 0xFF, 0xFF), // fgColor
     0, // next_time
     0, // periodms
-    0 // data
+    {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}} // data
   },
   {
     pixel_color(0, 0, 0), // bgColor
     pixel_color(0xFF, 0xFF, 0xFF), // fgColor
     0, // next_time
     0, // periodms
-    0 // data
+    {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}} // data
   }
 };
 
