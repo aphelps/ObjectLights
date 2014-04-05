@@ -18,7 +18,7 @@
 #include <math.h>
 #include <Wire.h>
 
-//#define DEBUG_LEVEL DEBUG_HIGH
+#define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
 #include <SoftwareSerial.h>
@@ -164,19 +164,35 @@ void loop() {
   if (!(ADCSRA & _BV(ADIE))) { // Check if audio sampling has finished
     processSound();
     
+#ifdef DEBUG_LEVEL
+    uint16_t total = 0;
     DEBUG_PRINT(DEBUG_HIGH, "Post eq:");
     for(uint16_t x = 0; x < FFT_N / 2; x++) {
       DEBUG_VALUE(DEBUG_HIGH, " ", spectrum[x]);
+      total += spectrum[x];
     }
+    DEBUG_VALUE(DEBUG_HIGH, " +", total);
 
+    total = 0;
     DEBUG_PRINT(DEBUG_HIGH, " col:");
     for (byte c = 0; c < NUM_COLUMNS; c++) {
       DEBUG_VALUE(DEBUG_HIGH, " ", col[c][colCount]);
+      total += col[c][colCount];
     }
+    DEBUG_VALUE(DEBUG_HIGH, " +", total);
+
+    total = 0;
+    DEBUG_PRINT(DEBUG_HIGH, " lvl:");
+    for (byte c = 0; c < NUM_COLUMNS; c++) {
+      DEBUG_VALUE(DEBUG_HIGH, " ", colLeveled[c]);
+      total += colLeveled[c];
+    }
+    DEBUG_VALUE(DEBUG_HIGH, " +", total);
 
     if (sentResponse) {
       DEBUG_PRINT(DEBUG_HIGH, " Sent");
     }
+#endif
     sentResponse = false;
 
     DEBUG_PRINT_END();

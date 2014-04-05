@@ -83,7 +83,7 @@ uint16_t modePeriods[] = {
 };
 
 uint8_t current_modes[MAX_MODES] = {
-  VALID_MODES - 1,  // This is the starting mode
+  VALID_MODES - 3,  // This is the starting mode
   MODE_NONE,
   MODE_NONE
 };

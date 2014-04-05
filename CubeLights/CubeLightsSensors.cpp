@@ -346,7 +346,7 @@ void handle_sensors() {
   static unsigned long next_send = millis();
   if (now >= next_send) {
     sendLong(modeConfigs[0].fgColor, ADDRESS_TRIANGLES);
-    next_send = now + 100;
+    next_send = now + 50;
   }
 #endif // ADDRESS_TRIANGLES
 

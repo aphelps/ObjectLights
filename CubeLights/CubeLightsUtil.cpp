@@ -801,6 +801,7 @@ void squaresSimpleLife(Square *squares, int size,
 /*
  * Example mode to fetch sound samples from a remote module
  */
+//#define SOUND_LEVELED
 #define SOUND_TEST_TIMEOUT 2000 // Max milliseconds to wait on a response
 void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
   static unsigned long lastSend = 0;
@@ -813,7 +814,11 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
     // Send the data request
     arg->next_time += arg->periodms;
 
-    sendByte('C', 0x01);
+#ifdef SOUND_LEVELED
+    sendByte('L', ADDRESS_SOUND_UNIT);
+#else
+    sendByte('C', ADDRESS_SOUND_UNIT);
+#endif
     lastSend = millis();
 
     DEBUG_PRINT(DEBUG_HIGH, "SoundTest: Sent request...");
@@ -825,12 +830,20 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
     if (data != NULL) {
       // Data should be an array of 8 uint16_t
       DEBUG_PRINT(DEBUG_HIGH, " value:");
+#ifdef SOUND_LEVELED
+      uint8_t *valptr = (uint8_t *)data;
+#else
       uint16_t *valptr = (uint16_t *)data;
+#endif
       byte face = 0;
       byte col = 0;
       uint32_t total = 0;
       while ((unsigned int)valptr - (unsigned int)data < msglen) {
+#ifdef SOUND_LEVELED
+	uint8_t val = *valptr;
+#else
 	uint16_t val = *valptr;
+#endif
 	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
 
 	/* Shift the new value into each column */

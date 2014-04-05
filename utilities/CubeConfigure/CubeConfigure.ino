@@ -3,7 +3,7 @@
  * individual faces and LEDs of the Cube.
  *
  * Author: Adam Phelps
- * License: Create Commons Attribution-Non-Commercial
+ * License: Creative Commons Attribution-Non-Commercial
  * Copyright: 2014
  ******************************************************************************/
 
@@ -136,7 +136,7 @@ void setup()
 				  readoutputs, 
 				  MAX_OUTPUTS);
   if ((configOffset < 0) ||
-      (readconfig.address != config.address) ||
+      (readconfig.address != ADDRESS) ||
       force_write) {
     // Setup and write the configuration
     config_init();
@@ -146,6 +146,7 @@ void setup()
       DEBUG_ERR("Failed to write config");
     } else {
       wrote_config = true;
+      DEBUG_PRINTLN(DEBUG_HIGH, "Wrote configuration to EEPROM");
     }
 
   } else {
@@ -207,18 +208,9 @@ byte current_led = -1;
  * p - Return to the previous pixel
  * f <face> - Light the indicated face
  * t <sensor> <touch> <release> - Set cap sensor thresholds
+ * write - Write out the configuration
  */
 void cliHandler(char **tokens, byte numtokens) {
-
-#if 0
-  Serial.print(numtokens);
-  Serial.print(" tokens: ");
-  for (int token = 0; token < numtokens; token++) {
-    if (token != 0) Serial.print(", ");
-    Serial.print(tokens[token]);
-  }
-  Serial.println();
-#endif
 
   switch (tokens[0][0]) {
     case 'l': {
