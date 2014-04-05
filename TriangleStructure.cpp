@@ -5,20 +5,22 @@
 
 #include "PixelUtil.h"
 #include "TriangleStructure.h"
+#include "TriangleLights.h"
 
 Triangle::Triangle(unsigned int _id) {
-  hasLeds = false;
   updated = false;
   mark = 0;
   id = _id;
 
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
-    edges[e] = NULL;
+    edges[e] = NO_ID;
   }
 
   for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
+    leds[v].pixel = NO_LED;
+
     for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
-      vertices[v][o] = NULL;
+      vertices[v][o] = NO_ID;
     }
   }
 
@@ -26,19 +28,19 @@ Triangle::Triangle(unsigned int _id) {
 }
 
 Triangle *Triangle::getEdge(byte edge) {
-  return edges[edge];
+  return &triangles[edges[edge]];
 }
 
 void Triangle::setEdge(byte edge, Triangle *tri) {
-  edges[edge] = tri;
+  edges[edge] = tri->id;
 }
 
 Triangle *Triangle::getVertex(byte vertex, byte index) {
-  return vertices[vertex][index];
+  return &triangles[vertices[vertex][index]];
 }
 
 void Triangle::setVertex(byte vertex, byte index, Triangle *tri) {
-  vertices[vertex][index] = tri;
+  vertices[vertex][index] = tri->id;
 }
 
 RGB *Triangle::getLED(byte vertex) {
@@ -46,14 +48,13 @@ RGB *Triangle::getLED(byte vertex) {
 }
 
 void Triangle::setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2) {
-  hasLeds = true;
   leds[0].pixel = p0;
   leds[1].pixel = p1;
   leds[2].pixel = p2;
 }
 
 void Triangle::setColor(byte r, byte g, byte b) {
-  if (hasLeds) {
+  if (hasLeds()) {
     for (int i = 0; i < 3; i++) {
       leds[i].setColor(r, g, b);
     }
@@ -62,14 +63,14 @@ void Triangle::setColor(byte r, byte g, byte b) {
 }
 
 void Triangle::setColor(byte led, byte r, byte g, byte b) {
-  if (hasLeds) {
+  if (hasLeds()) {
     leds[led].setColor(r, g, b);
     updated = true;
   }
 }
 
 void Triangle::setColor(uint32_t c) {
-  if (hasLeds) {
+  if (hasLeds()) {
     for (int i = 0; i < 3; i++) {
       leds[i].setColor(c);
     }
@@ -78,7 +79,7 @@ void Triangle::setColor(uint32_t c) {
 }
 
 void Triangle::setColor(byte led, uint32_t c) {
-  if (hasLeds) {
+  if (hasLeds()) {
     leds[led].setColor(c);
     updated = true;
   }
@@ -87,7 +88,7 @@ void Triangle::setColor(byte led, uint32_t c) {
 extern PixelUtil pixels;
 
 uint32_t Triangle::getColor() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixels.getColor(leds[0].pixel);
   } else {
     return 0;
@@ -95,7 +96,7 @@ uint32_t Triangle::getColor() {
 }
 
 uint32_t Triangle::getColor(byte led) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixels.getColor(leds[led].pixel);
   } else {
     return 0;
@@ -103,7 +104,7 @@ uint32_t Triangle::getColor(byte led) {
 }
 
 byte Triangle::getRed() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_red(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
@@ -111,7 +112,7 @@ byte Triangle::getRed() {
 }
 
 byte Triangle::getRed(byte vertex) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_red(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
@@ -120,7 +121,7 @@ byte Triangle::getRed(byte vertex) {
 
 
 byte Triangle::getGreen() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_green(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
@@ -128,7 +129,7 @@ byte Triangle::getGreen() {
 }
 
 byte Triangle::getGreen(byte vertex) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_green(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
@@ -137,7 +138,7 @@ byte Triangle::getGreen(byte vertex) {
 
 
 byte Triangle::getBlue() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_blue(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
@@ -145,7 +146,7 @@ byte Triangle::getBlue() {
 }
 
 byte Triangle::getBlue(byte vertex) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_blue(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
@@ -170,7 +171,7 @@ byte Triangle::getBlue(byte vertex) {
 byte Triangle::matchVertex(Triangle *neighbor) {
   for (byte v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
     for (byte i = 0; i < TRIANGLE_VERTEX_ORDER; i++) {
-      if (vertices[v][i] == neighbor) {
+      if (getVertex(v, i) == neighbor) {
 	return v;
       }
     }
@@ -189,7 +190,7 @@ byte Triangle::matchVertex(Triangle *neighbor) {
 byte Triangle::matchVertexRight(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
   for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
-    if (edges[edge] == neighbor) {
+    if (getEdge(edge) == neighbor) {
       // XXX - This doesn't consider the vertex at all!!!
       return edge;
     }
@@ -208,7 +209,7 @@ byte Triangle::matchVertexRight(Triangle *neighbor, byte vertex) {
 byte Triangle::matchVertexLeft(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
   for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
-    if (edges[edge] == neighbor) {
+    if (getEdge(edge) == neighbor) {
       // XXX - This doesn't consider the vertex at all!!!
       return (edge + 1) % TRIANGLE_NUM_EDGES;
     }
@@ -226,11 +227,12 @@ byte Triangle::matchVertexLeft(Triangle *neighbor, byte vertex) {
  */
 Triangle *Triangle::leftOfVertex(byte vertex) {
   switch (vertex) {
-  case 0: return edges[2]; break;
-  case 1: return edges[0]; break;
-  case 2: return edges[1]; break;
+  case 0: return getEdge(2); break;
+  case 1: return getEdge(0); break;
+  case 2: return getEdge(1); break;
   default:
-    DEBUG_ERR("leftOfVertex: invalid vertex");
+    DEBUG_VALUE(DEBUG_ERROR, "leftOfVertex: invalid vertex:", vertex);
+    DEBUG_VALUELN(DEBUG_ERROR, " id:", id);
     return NULL;
     break;
   }
@@ -245,19 +247,24 @@ Triangle *Triangle::leftOfVertex(byte vertex) {
  * /_______\
  */
 Triangle *Triangle::rightOfVertex(byte vertex) {
-  return edges[vertex];
+  if (vertex >= TRIANGLE_NUM_VERTICES) {
+    DEBUG_VALUE(DEBUG_ERROR, "rightOfVertex: invalid vertex:", vertex);
+    DEBUG_VALUELN(DEBUG_ERROR, " id:", id);
+    return NULL;
+  }
+  return getEdge(vertex);
 }
 
 void Triangle::print(byte level) {
   DEBUG_VALUE(level, "Tri: ", id);
   for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
-    if (edges[e] != NULL) DEBUG_VALUE(level, " e:", edges[e]->id);
+    if (getEdge(e) != NULL) DEBUG_VALUE(level, " e:", getEdge(e)->id);
   }
 
   for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
     DEBUG_VALUE(level, " v:", v);
     for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
-      if (vertices[v][o] != NULL) DEBUG_VALUE(level, " ", vertices[v][o]->id);
+      if (getVertex(v, o) != NULL) DEBUG_VALUE(level, " ", getVertex(v, o)->id);
     }
   }
 
@@ -286,6 +293,96 @@ void setLeds(Triangle *triangles, int tri, int led1, int led2, int led3) {
   triangles[tri].setLedPixels(led1, led2, led3);
 }
 
+/* Initialize the triangle array */
+#define TRI_ARRAY_SIZE 30
+Triangle triangleArray[TRI_ARRAY_SIZE];
+Triangle* initTriangles(int triangleCount) {
+  if (triangleCount > TRI_ARRAY_SIZE) {
+    DEBUG_ERR("initTriangles: To many triangles specified");
+    DEBUG_ERR_STATE(13);
+  }
+
+  Triangle *triangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
+  DEBUG_COMMAND(DEBUG_ERROR,
+		if (triangles == NULL) {
+		  DEBUG_ERR("Failed to malloc triangles");
+		  debug_err_state(DEBUG_ERR_MALLOC);
+		}
+		);
+
+  for (byte i = 0; i < triangleCount; i++) {
+    triangles[i] = Triangle(i);
+  }
+
+  return triangles;
+}
+
+/******************************************************************************
+ * Construct a cylinder
+ *
+ *
+ *    ____  ____  ____  ____  _____
+ *   \    /\    /\    /\    /\    /\
+ *    \0 /1 \2 /3 \4 /5 \6 /7 \8 /9 \
+ *     \/____\/____\/____\/____\/____\
+ *      \    /\    /\    /\    /\    /\
+ *       \10/11\12/13\14/15\16/17\18/19\
+ *        \/____\/____\/____\/____\/____\
+ *         \    /\    /\    /\    /\    /\
+ *          \20/21\22/23\24/25\26/27\28/29\
+ *           \/____\/____\/____\/____\/____\
+ */
+Triangle* buildCylinder(int *numTriangles, int numLeds) {
+  int triangleCount = 30;
+
+  Triangle *triangles = initTriangles(triangleCount);
+
+  int tri;
+  for (tri = 0; tri < triangleCount; tri++) {
+    if (tri * 3 + 2 < numLeds)
+      setLeds(triangles, tri, tri * 3, tri * 3 + 1, tri * 3 + 2);
+
+    if (tri % 2 == 0) {
+      if (tri >= 9) makeEdge  (triangles,  tri,  0,  tri - 9);
+      makeEdge  (triangles,  tri,  1,  
+		 (tri - (tri % 10)) + ((tri + 1) % 10));
+      makeEdge  (triangles,  tri,  2,  
+		 (tri - (tri % 10)) + ((tri + -1 + 10) % 10));
+
+      makeVertex(triangles,  tri,  0,  0,  
+		 (tri - (tri % 10)) + ((tri -2 + 10 ) % 10));
+      if (tri >= 10) makeVertex(triangles,  tri,  0,  1,  tri - 10);
+
+      if (tri >= 8) makeVertex(triangles,  tri,  1,  0,  tri - 8 );
+      makeVertex(triangles,  tri,  1,  1, 
+		 (tri - (tri % 10)) + ((tri + 2) % 10));
+
+      if (tri + 10 < triangleCount) 
+	makeVertex(triangles,  tri,  2,  0, tri + 10);
+      if (tri + 8 < triangleCount) 
+	makeVertex(triangles,  tri,  2,  1,  tri + 8);
+    } else {
+      makeEdge  (triangles,  tri,  0, (tri - (tri % 10)) + (tri + 1 % 10));
+      if (tri + 9 < triangleCount)  makeEdge  (triangles,  tri,  1, tri + 9);
+      makeEdge  (triangles,  tri,  2,  (tri - (tri % 10)) + ((tri + -1 + 10) % 10));
+
+      if (tri >= 10) makeVertex(triangles,  tri,  0,  0,  tri - 10);
+      if (tri >= 8)  makeVertex(triangles,  tri,  0,  1,  tri - 8);
+
+      makeVertex(triangles,  tri,  1,  0, (tri - (tri % 10)) + ((tri + 2) % 10));
+      if (tri + 10 < triangleCount) makeVertex(triangles,  tri,  1,  1, tri + 10);
+
+      if (tri + 8 < triangleCount) makeVertex(triangles,  tri,  2,  0, tri + 8);
+      makeVertex(triangles,  tri,  2,  1, (tri - (tri % 10)) + ((tri + -2 + 10) % 10));
+    }
+  }
+  *numTriangles = tri;
+
+  DEBUG_VALUELN(DEBUG_MID, "Cylinder numTriangles:", *numTriangles);
+
+  return triangles;
+}
+
 /******************************************************************************
  * Construct an icosohedron
  *
@@ -304,21 +401,10 @@ void setLeds(Triangle *triangles, int tri, int led1, int led2, int led3) {
  *       /3 \8 /  \13/  \7 /2 \
  *      /____\/    \/    \/____\
  */
-Triangle triangleArray[20];
 Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   int triangleCount = 20;
 
-  Triangle *triangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
-  DEBUG_COMMAND(DEBUG_ERROR,
-		if (triangles == NULL) {
-		  DEBUG_ERR("Failed to malloc triangles");
-		  debug_err_state(DEBUG_ERR_MALLOC);
-		}
-		);
-
-  for (byte i = 0; i < triangleCount; i++) {
-    triangles[i] = Triangle(i);
-  }
+  Triangle *triangles = initTriangles(triangleCount);
 
   int led = numLeds - 1;
 #if 0 // This is the HTML prototype module config

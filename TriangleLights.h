@@ -3,6 +3,8 @@
 
 #include "TriangleStructure.h"
 
+extern Triangle *triangles;
+
 #define PUSH_BUTTON_PIN 2
 void buttonInterrupt(void);
 int getButtonValue();

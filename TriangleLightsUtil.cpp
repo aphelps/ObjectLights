@@ -21,7 +21,7 @@ void buttonInterrupt(void)
   static unsigned long prevTime = 0;
   static int prevValue = LOW;
   long now = millis();
-  int value = digitalRead(PUSH_BUTTON_PIN);
+  int value = prevValue; //digitalRead(PUSH_BUTTON_PIN);
 
   /* Provide a debounce to only change on the first interrupt */
   if ((value == HIGH) && (prevValue == LOW) && (now - prevTime > 500)) {
@@ -345,16 +345,16 @@ void trianglesTestPattern(Triangle *triangles, int size, int periodms,
     /* Clear the color of the previous triangle and its edges*/
     triangles[current % size].setColor(0, 0, 0);
     for (byte edge = 0; edge < 3; edge++) {
-      triangles[current % size].edges[edge]->setColor(0, 0, 0);
+      triangles[current % size].getEdge(edge)->setColor(0, 0, 0);
     }
 
     current = (current + 1) % size;
 
     /* Set the color on the new triangle and its edges */
     triangles[current % size].setColor(255, 0, 0);
-    triangles[current % size].edges[0]->setColor(8, 00, 00);
-    triangles[current % size].edges[1]->setColor(8, 00, 00);
-    triangles[current % size].edges[2]->setColor(8, 00, 00);
+    triangles[current % size].getEdge(0)->setColor(8, 00, 00);
+    triangles[current % size].getEdge(1)->setColor(8, 00, 00);
+    triangles[current % size].getEdge(2)->setColor(8, 00, 00);
   }
 }
 
@@ -378,20 +378,20 @@ void trianglesRandomNeighbor(Triangle *triangles, int size, int periodms,
     /* Clear the color of the previous triangle */
     current->setColor(0, 0, 0);
     for (byte edge = 0; edge < 3; edge++) {
-      current->edges[edge]->setColor(0, 0, 0);
+      current->getEdge(edge)->setColor(0, 0, 0);
     }
 
     /* Choose the next triangle */
     byte edge;
     do {
       edge = random(0, 2);
-    } while (!current->edges[edge]->hasLeds);
-    current = current->edges[edge];
+    } while (!current->getEdge(edge)->hasLeds());
+    current = current->getEdge(edge);
 
     /* Set the color on the new triangle */
     current->setColor(0, 0, 255);
     for (byte edge = 0; edge < 3; edge++) {
-      current->edges[edge]->setColor(0, 0, 8);
+      current->getEdge(edge)->setColor(0, 0, 8);
     }
   }
 }
@@ -415,20 +415,20 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
 
     do {
       current = random(0, size);
-    } while (!triangles[current].hasLeds);
+    } while (!triangles[current].hasLeds());
     
     int edge;
     do {
       edge = random(0, 3);
-    } while (!triangles[current].edges[edge]->hasLeds);
+    } while (!triangles[current].getEdge(edge)->hasLeds());
  
     uint32_t currentColor = triangles[current].getColor();
-    uint32_t edgeColor = triangles[current].edges[edge]->getColor();
+    uint32_t edgeColor = triangles[current].getEdge(edge)->getColor();
     DEBUG_VALUE(DEBUG_TRACE, "curr color:", currentColor);
     DEBUG_VALUELN(DEBUG_TRACE, "edge color:", edgeColor);
 
     triangles[current].setColor(edgeColor);
-    triangles[current].edges[edge]->setColor(currentColor);
+    triangles[current].getEdge(edge)->setColor(currentColor);
  }
 }
 
@@ -450,7 +450,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
       set[tri] = 0;
       if (triangles[tri].getColor() != 0) set[tri]++;
       for (byte edge = 0; edge < 3; edge++) {
-	if (triangles[tri].edges[edge]->getColor() != 0) set[tri]++;
+	if (triangles[tri].getEdge(edge)->getColor() != 0) set[tri]++;
       }
     }
 
@@ -491,9 +491,9 @@ void trianglesLifePattern2(Triangle *triangles, int size, int periodms,
       if (triangles[tri].getGreen() != 0) set[tri][1] = 1; else set[tri][1] = 0;
       if (triangles[tri].getBlue() != 0) set[tri][2] = 1; else set[tri][2] = 0;
       for (byte edge = 0; edge < 3; edge++) {
-	if (triangles[tri].edges[edge]->getRed() != 0) set[tri][0]++;
-	if (triangles[tri].edges[edge]->getGreen() != 0) set[tri][1]++;
-	if (triangles[tri].edges[edge]->getBlue() != 0) set[tri][2]++;
+	if (triangles[tri].getEdge(edge)->getRed() != 0) set[tri][0]++;
+	if (triangles[tri].getEdge(edge)->getGreen() != 0) set[tri][1]++;
+	if (triangles[tri].getEdge(edge)->getBlue() != 0) set[tri][2]++;
       }
     }
 
@@ -539,8 +539,8 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
     current->setColor(vertex, storedRed, storedRed, storedRed);
 
     if (random(0, 100) < 95) {
-      next = current->vertices[vertex][0];
-      if (next->hasLeds) {
+      next = current->getVertex(vertex, 0);
+      if (next->hasLeds()) {
 	vertex = next->matchVertex(current);
 	next->setColor(vertex, 0, next->getRed(vertex), 0);
       } else {
@@ -587,7 +587,7 @@ void trianglesCircleCorner2(Triangle *triangles, int size, int periodms,
     if (random(0, 100) < 95){
       // Shift to the left triangle
       next = current->leftOfVertex(vertex);
-      if (next->hasLeds) {
+      if (next->hasLeds()) {
 	// Find the local vertex adjacent to the one on the previous triangle
 	vertex = next->matchVertexRight(current, vertex);
       } else {
@@ -751,8 +751,8 @@ void trianglesBuildup(Triangle *triangles, int size, int periodms,
       byte edge;
       do {
 	edge = random(0, 3);
-      } while (!current->edges[edge]->hasLeds);
-      next = current->edges[edge];
+      } while (!current->getEdge(edge)->hasLeds());
+      next = current->getEdge(edge);
 
       /* Set the current triangle's color to its mark value */
       current->setColor(current->mark, current->mark, current->mark);
@@ -823,7 +823,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     byte tri;
     do {
       tri = random(0, size);
-    } while (!triangles[tri].hasLeds);
+    } while (!triangles[tri].hasLeds());
     currentIndex = 0;
     snakeTriangles[currentIndex] = tri;
     snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
@@ -913,7 +913,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       }
 
       if ((triangles[tri].leds[vert].color() == config->bgColor) &&
-	  (triangles[tri].hasLeds)) {
+	  (triangles[tri].hasLeds())) {
 	// Verify that the choosen vertex is dark
 	found = true;
 	break;
@@ -974,15 +974,15 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     next_time = millis();
     setAllTriangles(triangles, size, config->bgColor);
     for (int i = 0; i < SNAKE_LENGTH; i++) {
-      snakeTriangles[i] = (byte)-1;
-      snakeVertices[i] = (byte)-1;
+      snakeTriangles[i] = Triangle::NO_ID;
+      snakeVertices[i] = Triangle::NO_VERTEX;
     }
 
     /* Start from a random triangle */
     byte tri;
     do {
       tri = random(0, size);
-    } while (!triangles[tri].hasLeds);
+    } while (!triangles[tri].hasLeds());
     currentIndex = 0;
     snakeTriangles[currentIndex] = tri;
     snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
@@ -1039,27 +1039,41 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
 
     /* Choose the next location */
     for (byte i = 0; i < SNAKE_LENGTH; i++) {
-      byte activeIndex = currentIndex - i;
+      byte activeIndex = (currentIndex + SNAKE_LENGTH - i) % SNAKE_LENGTH;
+      if (snakeTriangles[activeIndex] ==  Triangle::NO_ID) continue;
       Triangle *current = &triangles[snakeTriangles[activeIndex]];
       byte currentVertex = snakeVertices[activeIndex];
-      tri = (byte)-1;
+      if (currentVertex == Triangle::NO_VERTEX) continue;
+      tri = Triangle::NO_ID;
 
       byte startDirection = random(0, 4);
       for (byte direction = 0; direction < 4; direction++) {
 	switch ((startDirection + direction) % 4) {
 	case 0:
-	default:
+	default: {
 	  // Triangle to the left
-	  tri = current->leftOfVertex(currentVertex)->id;
+	  Triangle *t = current->leftOfVertex(currentVertex);
+	  if (t == NULL) {
+	    DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
+	    DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
+	  }
+	  tri = t->id;
 	  vert = triangles[tri].matchVertexRight(current, 
 						 currentVertex);	
 	  break;
-	case 1:
+	}
+	case 1: {
 	  // Triangle to the right
-	  tri = current->rightOfVertex(currentVertex)->id;
+	  Triangle *t = current->rightOfVertex(currentVertex);
+	  if (t == NULL) {
+	    DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
+	    DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
+	  }
+	  tri = t->id;
 	  vert = triangles[tri].matchVertexLeft(current, 
 						currentVertex);
 	  break;
+	}
 	case 2:
 	  // Same triangle, vertex to the left
 	  vert = (currentVertex + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
@@ -1073,8 +1087,8 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
 	}
 	}
 
-	if ((triangles[tri].leds[vert].color() == config->bgColor) &&
-	    (triangles[tri].hasLeds)) {
+	if ((triangles[tri].hasLeds()) &&
+	    (triangles[tri].leds[vert].color() == config->bgColor)) {
 	  // Verify that the choosen vertex is dark
 	  found = true;
 	  goto FOUND;
