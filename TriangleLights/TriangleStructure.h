@@ -10,9 +10,9 @@
  *          0
  *          ^
  *         / \
- *        / * \
+ *        / 0 \
  *     2 /     \ 0
- *      / *   * \
+ *      / 2   1 \
  *     /_________\
  *    2     1     1
  *
@@ -28,6 +28,10 @@
 class Triangle {
  public:
 
+  static const byte NO_LED = (byte)-1;
+  static const byte NO_VERTEX = (byte)-1;
+  static const byte NO_ID = (byte)-1;
+
   Triangle() {};
   Triangle(unsigned int id);
 
@@ -41,8 +45,8 @@ class Triangle {
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2);
 
   void setColor(byte r, byte g, byte b);
-  void setColor(byte led, byte r, byte g, byte b);
   void setColor(uint32_t c);
+  void setColor(byte led, byte r, byte g, byte b);
   void setColor(byte led, uint32_t c);
 
   uint32_t getColor();
@@ -62,15 +66,20 @@ class Triangle {
 
   void print(byte level);
 
+  boolean hasLeds() { return (leds[0].pixel != NO_LED); }
+
   // Variables - be careful of object size
-  boolean hasLeds;
-  boolean updated;
+  boolean updated; // XXX - Can this be determined as well?
   byte id;
-  RGB leds[3];
-  Triangle *edges[TRIANGLE_NUM_EDGES];
-  Triangle *vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
+  RGB leds[3]; // XXX - Change pixel addresses to bytes
   byte mark;
+
+ private:
+  byte edges[TRIANGLE_NUM_EDGES];
+  byte vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
 };
+
+// Can save 1 + 3 + 3 + 6 bytes each
 
 /* Send updated values to a Pixel chain */
 void updateTrianglePixels(Triangle *triangles, int numTriangles,
@@ -79,6 +88,8 @@ void updateTrianglePixels(Triangle *triangles, int numTriangles,
 /* Allocate and return a fully connected icosohedron */
 Triangle* buildIcosohedron(int *numTriangles, int numLeds);
 
+/* Allocate and return a fully connected cylinder */
+Triangle* buildCylinder(int *numTriangles, int numLeds);
 
 /* Macros for rotating around the vertices of a triangle */
 #define VERTEX_CW(v) ((v + 1) % TRIANGLE_NUM_VERTICES)

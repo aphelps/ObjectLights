@@ -10,7 +10,7 @@
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 
-int numLeds = 50;
+int numLeds = 105;
 PixelUtil pixels;
 
 int numTriangles = 0;
@@ -22,10 +22,13 @@ Triangle *triangles;
 
 #define MODE_PERIOD 50
 triangle_mode_t modeFunctions[] = {
+  trianglesVertexMergeFade,
+  trianglesVertexMerge,
+  trianglesVertexShift,
+  trianglesSnake2,
   trianglesLooping,
   //  trianglesSetAll,
   trianglesCircle,
-  trianglesSnake,
   trianglesCircleCorner2,
   trianglesRandomNeighbor,
   trianglesLifePattern,
@@ -40,8 +43,11 @@ triangle_mode_t modeFunctions[] = {
 
 uint16_t modePeriods[] = {
   MODE_PERIOD,
-  //  1000,
   MODE_PERIOD,
+  MODE_PERIOD * 2,
+  MODE_PERIOD,
+  MODE_PERIOD,
+  //  1000,
   MODE_PERIOD,
   MODE_PERIOD,
   MODE_PERIOD,
@@ -69,14 +75,15 @@ void setup()
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3));
 
-  pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
-  //pixels = PixelUtil(numLeds, 12, 8); // HMTL=8,12  Hand=12, 11);
+  //pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
+  pixels = PixelUtil(numLeds, 12, 8); // HMTL=8,12  Hand=12, 11);
 
   /* Setup the sensors */
   initializePins();
 
   /* Generate the geometry */
-  triangles = buildIcosohedron(&numTriangles, numLeds);
+  //triangles = buildIcosohedron(&numTriangles, numLeds);
+  triangles = buildCylinder(&numTriangles, numLeds);
   DEBUG_VALUELN(DEBUG_HIGH, "Inited with numTriangles:", numTriangles);
 
 #if SETUP_STATE == 2
@@ -128,7 +135,7 @@ void serialEvent() {
 
 
 
-#if 0
+#if SETUP_STATE == 1
 /*
  * Once the topology of the triangles has been set this can be used
  * to set the individual LEDs within the triangles.
