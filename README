@@ -1,8 +1,0 @@
-This code powers the first generation of Adam Phelps's cube lights
-
-It is coded for the Arduino IDE and relies on the TLC5940 library:
-* http://www.arduino.cc/playground/Learning/TLC5940
-* http://code.google.com/p/tlc5940arduino/
-
-This code is released under the Creative Common's Non-Commercial license:
-  http://creativecommons.org/licenses/by-nc/3.0/
