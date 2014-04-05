@@ -1,4 +1,5 @@
-
+Triangle Lights
+===============
 
 General todo
 ------------
@@ -28,3 +29,79 @@ Light pattern ideas
     * Repeat
 
 (Will likely average out globally over time, add an additional cyclic or random color cycle to keep it going)
+
+CubeLights
+==========
+
+Todo
+----
+
+TEST
+  * What happens if data comes in while handling the message returned by
+  rs485Util.getMsg()?  It looks like that may read new data into the buffer
+  that was returned...
+
+In YVR:
+  * Write a configuration tool that runs on attached machine that takes a JSON configuration file and sends it to the HMTL module
+    - Make light weight on Arduino side so that it can be included in HMTL library
+  * Get Python based webserver working
+
+* HMTL_Bringup should also set board versions
+  - HMTL config should have board and software version
+
+* Have a during-runtime code upload ability so that a computer can send new
+  modes to it directly.
+  - bootloader's utilities should be accessible from the code
+  - have pointers into blocks of space allocated for the modes where the
+    function will be uploaded.
+
+* Make # of columns in SoundUnit variable
+* Better volume range for SoundUnit
+
+* Add a method of enabling a function for a limited time
+* Followup functions should not be in rotation
+
+* Add another byte to RGB to encorporate fades?
+
+* Function to get neighboring LED along a diaganol
+* Need ability to set LED to its previous color
+* Mode specific event handlers
+* Get MPR121 w/interrupts working
+* Add Serial CLI
+* Clockwise and counterclockwise functions
+* Store Range finder in EEPROM
+* Try using the timer based NewPing methods
+* Play with Pi, get Henry’s web app working, maybe control RGB light on test board
+* Refactor HMTLTypes stuff to only need to include stuff that is used.
+
+Modes
+-----
+* Conway's Life
+  - Normal and multiple colors
+  - Make intensity a separate vector
+* Simple color spread/ripples
+  - Splash a color that spreads to neighbors smoothly and slowly decays
+* Algorithms that affect intensity
+* Algorithms that affect frequency (like blink rate)
+
+Hardware
+--------
+* Tab on the insert for the cap sensors should have a less tall bump
+
+PCB
+---
+* Redesign so all PWM pins are available!  For some reason pin 5 goes to RS485 in v2+
+  - Put 6PWM output all on one side of board
+
+* Design light board
+  - TLC5940 driving MOSFET switches
+
+* Make one designed for just a sound sensor
+  - ATMega328, 3.3V regulator, RS485
+
+Ideas
+-----
+* Transmit executable code
+  - Send code via RS485, read directly into PROGMEM
+  - Set function pointers to appropriate place in PROGMEM
+  - Magic?
