@@ -48,69 +48,7 @@ config_pixels_t pixel_output;
 config_mpr121_t mpr121_output;
 config_rs485_t rs485_output;
 
-#define MASTER_ADDRESS 0
-#define ADDRESS 0
-
-boolean force_write = false; // XXX - Should not be enabled except for debugging
-
 SerialCLI serialcli(128, cliHandler);
-
-void config_init() 
-{
-  int out = 0;
-
-  rgb_output.hdr.type = HMTL_OUTPUT_RGB;
-  rgb_output.hdr.output = out;
-  rgb_output.pins[0] = 10; // R
-  rgb_output.pins[1] = 11; // G
-  rgb_output.pins[2] = 13; // B
-  rgb_output.values[0] = 0;
-  rgb_output.values[1] = 0;
-  rgb_output.values[2] = 0;
-  outputs[out] = &rgb_output.hdr;   out++;
-
-  pixel_output.hdr.type = HMTL_OUTPUT_PIXELS;
-  pixel_output.hdr.output = out;
-  pixel_output.dataPin = 12;
-  pixel_output.clockPin = 8;
-  pixel_output.numPixels = 45 + FIRST_LED; // XXX - FIRST_LED is still in .h
-  pixel_output.type = WS2801_RGB;
-  outputs[out] = &pixel_output.hdr; out++;
-
-  mpr121_output.hdr.type = HMTL_OUTPUT_MPR121;
-  mpr121_output.hdr.output = out;
-  mpr121_output.irqPin = 2;
-  mpr121_output.useInterrupt = false;
-  for (int i = 0; i < MAX_MPR121_PINS; i++) {
-    mpr121_output.thresholds[i] = 0;
-  }
-  mpr121_output.thresholds[CAP_SENSOR_1] = 
-    (CAP_SENSOR_1_TOUCH) | (CAP_SENSOR_1_RELEASE << 4);
-  mpr121_output.thresholds[CAP_SENSOR_2] = 
-    (CAP_SENSOR_2_TOUCH) | (CAP_SENSOR_2_RELEASE << 4);
-  outputs[out] = &mpr121_output.hdr; out++;
-
-  rs485_output.hdr.type = HMTL_OUTPUT_RS485;
-  rs485_output.hdr.output = out;
-  rs485_output.recvPin = 4; // 2 on board v1, 4 on board v2
-  rs485_output.xmitPin = 7;
-  rs485_output.enablePin = 5; // 4 on board v1, 5 on board v2
-  outputs[out] = &rs485_output.hdr; out++;
-
-  hmtl_default_config(&config);
-  config.address = ADDRESS;
-  config.num_outputs = out;
-  config.flags = 0;
-
-  if (ADDRESS == MASTER_ADDRESS) {
-    config.flags |= HMTL_FLAG_MASTER | HMTL_FLAG_SERIAL;
-  }
-
-  if (out > MAX_OUTPUTS) {
-    DEBUG_ERR("Exceeded maximum outputs");
-    DEBUG_ERR_STATE(DEBUG_ERR_INVALID);
-  }
-}
 
 config_hdr_t readconfig;
 config_max_t readoutputs[MAX_OUTPUTS];
@@ -120,10 +58,6 @@ int configOffset = -1;
 void setup() 
 {
   Serial.begin(9600);
-
-  if (force_write) {
-    DEBUG_PRINTLN(0, "XXX WARNING: FORCE_WRITE IS ENABLED!!! XXX");
-  }
 
   DEBUG_PRINTLN(DEBUG_LOW, "*** CubeConfigure started ***");
 
@@ -135,21 +69,13 @@ void setup()
   configOffset = hmtl_read_config(&readconfig, 
 				  readoutputs, 
 				  MAX_OUTPUTS);
-  if ((configOffset < 0) ||
-      (readconfig.address != ADDRESS) ||
-      force_write) {
-    // Setup and write the configuration
-    config_init();
-
-    configOffset = hmtl_write_config(&config, outputs);
-    if (configOffset < 0) {
-      DEBUG_ERR("Failed to write config");
-    } else {
-      wrote_config = true;
-      DEBUG_PRINTLN(DEBUG_HIGH, "Wrote configuration to EEPROM");
-    }
-
+  if (configOffset < 0) {
+    DEBUG_ERR("Failed to read configuration");
+    DEBUG_ERR_STATE(1);
   } else {
+
+    // XXX - This should verify that configs exist for all expected components
+
     DEBUG_VALUELN(DEBUG_LOW, "Read config.  offset=", configOffset);
     memcpy(&config, &readconfig, sizeof (config_hdr_t));
     for (int i = 0; i < config.num_outputs; i++) {
@@ -245,7 +171,7 @@ void cliHandler(char **tokens, byte numtokens) {
       break;
     }
 
-  case 'c': {
+    case 'c': {
       clearPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
