@@ -34,7 +34,7 @@ uint8_t validModes[] = {
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
   , MODE_SIMPLE_LIFE
-  , MODE_SOUND_TEST
+  //, MODE_SOUND_TEST
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
@@ -83,7 +83,7 @@ uint16_t modePeriods[] = {
 };
 
 uint8_t current_modes[MAX_MODES] = {
-  VALID_MODES - 3,  // This is the starting mode
+  VALID_MODES - 2,  // This is the starting mode
   MODE_NONE,
   MODE_NONE
 };
