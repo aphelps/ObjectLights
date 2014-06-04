@@ -875,7 +875,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {
-      if (elapsed > (unsigned long)2000) {
+      if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
 	DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
 	lastSend = 0; // Reset the lastSend time so another request can be sent
       }
