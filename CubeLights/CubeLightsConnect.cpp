@@ -15,7 +15,7 @@
 #include "Adafruit_WS2801.h"
 
 
-#define DEBUG_LEVEL DEBUG_HIGH
+#define DEBUG_LEVEL DEBUG_TRACE
 #include "Debug.h"
 
 #include "GeneralUtils.h"
@@ -86,4 +86,24 @@ void recvData() {
   if (data != NULL) {
     DEBUG_VALUELN(DEBUG_HIGH, "recvData: len=", msglen);
   }
+}
+
+void sendHMTLValue(uint16_t address, uint8_t output, int value) {
+  msg_hdr_t *msg_hdr = (msg_hdr_t *)send_buffer;
+  msg_value_t *msg_value = (msg_value_t *)(msg_hdr + 1);
+
+  msg_value->hdr.type = HMTL_OUTPUT_VALUE;
+  msg_value->hdr.output = output;
+  msg_value->value = value;
+
+  // XXX: Move this into HMTLTypes?
+  msg_hdr->startcode = HMTL_MSG_START;
+  msg_hdr->crc = 0; // XXX
+  msg_hdr->version = HMTL_MSG_VERSION;
+  msg_hdr->length = sizeof(*msg_hdr) + sizeof(*msg_value);
+  msg_hdr->address = address;
+
+  rs485.sendMsgTo(address, send_buffer, msg_hdr->length);
+
+  DEBUG_VALUELN(DEBUG_HIGH, "sendHMTLValue: to ", address);
 }

@@ -114,15 +114,17 @@ void sensor_cap(void);
 extern RS485Socket rs485;
 extern byte my_address;
 
-#define ADDRESS_RECV_TEST  RS485_ADDR_ANY
+//#define ADDRESS_RECV_TEST  RS485_ADDR_ANY
 #define ADDRESS_SOUND_UNIT 0x01
-#define ADDRESS_TRIANGLES  0x10
+//#define ADDRESS_TRIANGLES  0x10
+#define ADDRESS_TRIGGER_UNIT 0x01
 
 void initializeConnect();
 
 void sendByte(byte value, byte address);
 void sendInt(int value, byte address);
 void sendLong(long value, byte address);
+void sendHMTLValue(uint16_t address, uint8_t offset, int value);
 
 /***** Cube light modes *******************************************************/
 
