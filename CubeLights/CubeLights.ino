@@ -22,6 +22,7 @@
 #include "MPR121.h"
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
+#include "HMTLMessaging.h"
 
 #include "CubeConfig.h"
 #include "CubeConfiguration.h"
@@ -32,7 +33,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 17 // %META INCR
+#define CUBE_LIGHT_BUILD 18 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {

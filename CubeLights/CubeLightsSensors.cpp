@@ -355,7 +355,7 @@ void handle_sensors() {
   if ((now >= next_send) && (CHECK_TOUCH_ANY(state))) {
     int value = 0;
     if (CHECK_TOUCH_1(state)) value = 255;
-    sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, value)
+    sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, value);
     next_send = now + 50;
   }
 #endif

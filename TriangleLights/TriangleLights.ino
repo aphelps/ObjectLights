@@ -8,7 +8,7 @@
 
 #include <Arduino.h>
 #include "SPI.h"
-//#include "Wire.h"
+#include "Wire.h" // XXX: This also needs to go
 #include "Adafruit_WS2801.h"
 #include "EEPROM.h"
 #include <RS485_non_blocking.h>
@@ -22,7 +22,7 @@
 #include "HMTLTypes.h"
 #include "PixelUtil.h"
 #include "RS485Utils.h"
-//#include "MPR121.h"
+#include "MPR121.h" // XXX This needs to go
 #include "ObjectConfiguration.h"
 
 #include "TriangleStructure.h"

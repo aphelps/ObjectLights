@@ -21,6 +21,8 @@
 #include "GeneralUtils.h"
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
+#include "HMTLMessaging.h"
+
 #include "PixelUtil.h"
 #include "RS485Utils.h"
 #include "MPR121.h"
@@ -89,21 +91,11 @@ void recvData() {
 }
 
 void sendHMTLValue(uint16_t address, uint8_t output, int value) {
-  msg_hdr_t *msg_hdr = (msg_hdr_t *)send_buffer;
-  msg_value_t *msg_value = (msg_value_t *)(msg_hdr + 1);
+  DEBUG_VALUE(DEBUG_HIGH, "sendHMTLValue: addr:", address);
+  DEBUG_VALUE(DEBUG_HIGH, " out:", output);
+  DEBUG_VALUELN(DEBUG_HIGH, " value:", value);
 
-  msg_value->hdr.type = HMTL_OUTPUT_VALUE;
-  msg_value->hdr.output = output;
-  msg_value->value = value;
-
-  // XXX: Move this into HMTLTypes?
-  msg_hdr->startcode = HMTL_MSG_START;
-  msg_hdr->crc = 0; // XXX
-  msg_hdr->version = HMTL_MSG_VERSION;
-  msg_hdr->length = sizeof(*msg_hdr) + sizeof(*msg_value);
-  msg_hdr->address = address;
-
-  rs485.sendMsgTo(address, send_buffer, msg_hdr->length);
-
-  DEBUG_VALUELN(DEBUG_HIGH, "sendHMTLValue: to ", address);
+  uint16_t len = hmtl_value_fmt(send_buffer, SEND_BUFFER_SIZE,
+				address, output, value);
+  rs485.sendMsgTo(address, send_buffer, len);
 }
