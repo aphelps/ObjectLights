@@ -73,7 +73,7 @@ void setup()
   pinMode(DEBUG_LED, OUTPUT);
 
   /* Initialize random see by reading from an unconnected analog pin */
-  randomSeed(analogRead(3));
+  randomSeed(analogRead(3) + analogRead(4) + micros());
 
   //pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
   pixels = PixelUtil(numLeds, 12, 8); // HMTL=8,12  Hand=12, 11);
