@@ -130,6 +130,7 @@ byte current_led = -1;
  * l <face> <led> - Toggle the state of an LED on the indicated face
  * s <face> <led> - Set the geometry of the current pixel
  * c - Display current pixel
+ * C <led> - Set current pixel
  * n - Advance to the next pixel
  * p - Return to the previous pixel
  * f <face> - Light the indicated face
@@ -176,6 +177,19 @@ void cliHandler(char **tokens, byte numtokens) {
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
       DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
+      break;
+    }
+
+  case 'C': {
+      if (numtokens < 2) return;
+      byte led = atoi(tokens[1]);
+
+
+      currentPixel = led;
+      clearPixels();
+      pixels.setPixelRGB(currentPixel, 0, 255, 0);
+      pixels.update();
+      DEBUG_VALUELN(DEBUG_LOW, "set current:", currentPixel);
       break;
     }
 
@@ -237,6 +251,28 @@ void cliHandler(char **tokens, byte numtokens) {
     DEBUG_VALUE(DEBUG_LOW, "Set sensor ", sensor);
     DEBUG_VALUE(DEBUG_LOW, " touch=", touch);
     DEBUG_VALUELN(DEBUG_LOW, " release=", release);
+
+    break;
+  }
+
+  case 'N': {
+    if (numtokens < 2) return;
+    byte numleds = atoi(tokens[1]);
+
+    // Locate the pixels
+    config_pixels_t *pixels = NULL;
+    for (int i = 0; i < config.num_outputs; i++) {
+      if (outputs[i]->type == HMTL_OUTPUT_PIXELS) {
+	pixels = (config_pixels_t *)outputs[i];
+      }
+    }
+    if (pixels == NULL) {
+      DEBUG_ERR("Failed to find the pixels config");
+      return;
+    }
+    pixels->numPixels = numleds;
+
+    DEBUG_VALUELN(DEBUG_LOW, "Set numpixels to ", numleds);
 
     break;
   }

@@ -1,17 +1,37 @@
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
+ *
+ * Code for communicating with remote modules
+ ******************************************************************************/
+
+#include <Arduino.h>
 #include "SPI.h"
+//#include "Wire.h"
 #include "Adafruit_WS2801.h"
+#include "EEPROM.h"
+#include <RS485_non_blocking.h>
+#include <SoftwareSerial.h>
 
 #define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
 #include "GeneralUtils.h"
+#include "EEPromUtils.h"
+#include "HMTLTypes.h"
 #include "PixelUtil.h"
+#include "RS485Utils.h"
+//#include "MPR121.h"
+#include "ObjectConfiguration.h"
 
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 
 int numLeds = 105;
 PixelUtil pixels;
+
+RS485Socket rs485;
 
 int numTriangles = 0;
 Triangle *triangles;
@@ -68,15 +88,20 @@ pattern_args_t patternConfig = {
 void setup()
 {
   Serial.begin(9600);
-  DEBUG_PRINTLN(DEBUG_HIGH, "Initializing");
+  DEBUG_PRINTLN(DEBUG_HIGH, "*** TriangleLights Initializing ***");
 
   pinMode(DEBUG_LED, OUTPUT);
 
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3) + analogRead(4) + micros());
 
-  //pixels = PixelUtil(numLeds, 12, 11); // HMTL=8,12  Hand=12, 11);
-  pixels = PixelUtil(numLeds, 12, 8); // HMTL=8,12  Hand=12, 11);
+#define CONFIG_ENABLED
+#ifdef CONFIG_ENABLED
+  //Wire.begin(); // Needed for MPR121
+  readHMTLConfiguration(&pixels, &rs485, NULL);
+#else
+
+#endif
 
   /* Setup the sensors */
   initializePins();
@@ -84,16 +109,17 @@ void setup()
   /* Generate the geometry */
   //triangles = buildIcosohedron(&numTriangles, numLeds);
   triangles = buildCylinder(&numTriangles, numLeds);
-  DEBUG_VALUELN(DEBUG_HIGH, "Inited with numTriangles:", numTriangles);
 
-#if SETUP_STATE == 2
-  setupVertexes();
-#endif
+  DEBUG_VALUELN(DEBUG_HIGH, "Inited with numTriangles:", numTriangles);
 }
 
 void loop() {
-#if SETUP_STATE == 1
-  setupMode(); 
+
+#if 0
+  for (int i = 0; i < numLeds; i++) {
+    pixels.setPixelRGB(i, 255, 255, 255);
+  }
+  pixels.update();
   return;
 #endif
 
@@ -128,96 +154,6 @@ void loop() {
 		);
 }
 
-
 void serialEvent() {
   cliRead();
 }
-
-
-
-#if SETUP_STATE == 1
-/*
- * Once the topology of the triangles has been set this can be used
- * to set the individual LEDs within the triangles.
- */
-void setupMode() {
-  static int prev_value = -1;
-  int value;
-  static int triangle = 0;
-
-  if (prev_value == -1) {
-    triangle = 0;
-    prev_value = 0;
-  } else {
-    value = getButtonValue() % numTriangles;
-    if (value != prev_value) {
-      triangles[triangle].vertices[0][0]->setColor(0);
-      triangles[triangle].vertices[0][1]->setColor(0);
-      triangles[triangle].vertices[1][0]->setColor(0);
-      triangles[triangle].vertices[1][1]->setColor(0);
-      triangles[triangle].vertices[2][0]->setColor(0);
-      triangles[triangle].vertices[2][1]->setColor(0);
-      triangles[triangle].setColor(0);
-
-      triangle = (triangle + 1) % numTriangles;
-      prev_value = value;
-      DEBUG_VALUELN(DEBUG_LOW, "tri=", triangle);
-    }
-  }
-
-  /*
-   * Set the current triangles vertex[0] to white
-   *
-   */
-  triangles[triangle].vertices[0][0]->setColor(32, 0, 0);
-  triangles[triangle].vertices[0][1]->setColor(32, 0, 0);
-  triangles[triangle].setColor(0, 255, 0, 0); // R
-
-  triangles[triangle].vertices[1][0]->setColor(0, 32, 0);
-  triangles[triangle].vertices[1][1]->setColor(0, 32, 0);
-  triangles[triangle].setColor(1, 0, 255, 0); // G
-
-  triangles[triangle].vertices[2][0]->setColor(0, 0, 32);
-  triangles[triangle].vertices[2][1]->setColor(0, 0, 32);
-  triangles[triangle].setColor(2, 0, 0, 255); // B
-  updateTrianglePixels(triangles, numTriangles, &pixels);
-  delay(10);
-}
-
-void setupVertexes() {
-  /* Set the pixel values for the triangles */
-  int led = numLeds - 1;
-  for (int i = 0; i < numTriangles; i++) {
-    // XXX - There is no intelligence here.  This is done from highest down
-    // so that when wiring the end led should be placed first.
-    if (led >= 2) {
-      DEBUG_VALUE(DEBUG_HIGH, "Setting leds for tri:", i);
-      DEBUG_VALUE(DEBUG_HIGH, " ", led);
-      DEBUG_VALUE(DEBUG_HIGH, " ", led - 1);
-      DEBUG_VALUELN(DEBUG_HIGH, " ", led - 2);
-
-      triangles[i].setLedPixels(led, led - 1, led - 2);
-      led -= 3;
-    } else {
-      DEBUG_VALUELN(DEBUG_HIGH, "No leds for tri:", i);
-    }
-  }
-
-  // XXX - Color assignements test
-  int p = 47; uint32_t color = pixels.pixelColor(64, 0, 0);
-  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
-  p = p - 3;  color = pixels.pixelColor(0, 64, 0);
-  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
-  p = p - 3;  color = pixels.pixelColor(0, 0, 64);
-  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
-  p = p - 3;  color = pixels.pixelColor(64, 64, 0); // yellow
-  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
-  p = p - 3;  color = pixels.pixelColor(64, 0, 64); // purple
-  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
-  p = p - 3;  color = pixels.pixelColor(0, 64, 64); // teal
-  for (int i = 0; i < 3; i++) pixels.setPixelRGB(p+i,color);
-
-  pixels.update();
-  while (true);
-}
-#endif

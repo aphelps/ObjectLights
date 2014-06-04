@@ -79,8 +79,6 @@ class Triangle {
   byte vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
 };
 
-// Can save 1 + 3 + 3 + 6 bytes each
-
 /* Send updated values to a Pixel chain */
 void updateTrianglePixels(Triangle *triangles, int numTriangles,
 			  PixelUtil *pixels);

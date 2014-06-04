@@ -2,6 +2,8 @@
 #define TRIANGLE_LIGHTS
 
 #include "TriangleStructure.h"
+#include "RS485Utils.h"
+
 
 extern Triangle *triangles;
 
@@ -24,6 +26,12 @@ void sensor_photo(void);     /* Update the photo sensor values */
 int getLightValue();
 
 void initializePins();
+
+/***** Triangle Light Connectivity ********************************************/
+
+extern RS485Socket rs485;
+extern byte my_address;
+
 
 /*
  * Triangle light modes
