@@ -42,33 +42,33 @@ extern uint32_t sensor_state;
 #define SENSE_TOUCH_ALL   0x00000011
 #define SENSE_CHANGE_ALL  0x00000022
 
-#define CHECK_TOUCH_1(x)     (x & SENSE_TOUCH_1)
-#define CHECK_CHANGE_1(x)    (x & SENSE_CHANGE_1)
-#define CHECK_DOUBLE_1(x)    (x & SENSE_DOUBLE_1)
-#define CHECK_LONG_1(x)      (x & SENSE_LONG_1)
-#define CHECK_TAP_1(x)       (CHECK_TOUCH_1(x) && CHECK_CHANGE_1(x))
+#define CHECK_TOUCH_1()     (sensor_state & SENSE_TOUCH_1)
+#define CHECK_CHANGE_1()    (sensor_state & SENSE_CHANGE_1)
+#define CHECK_DOUBLE_1()    (sensor_state & SENSE_DOUBLE_1)
+#define CHECK_LONG_1()      (sensor_state & SENSE_LONG_1)
+#define CHECK_TAP_1()       (CHECK_TOUCH_1() && CHECK_CHANGE_1())
 
-#define CHECK_TOUCH_2(x)     (x & SENSE_TOUCH_2)
-#define CHECK_CHANGE_2(x)    (x & SENSE_CHANGE_2)
-#define CHECK_DOUBLE_2(x)    (x & SENSE_DOUBLE_2)
-#define CHECK_LONG_2(x)      (x & SENSE_LONG_2)
-#define CHECK_TAP_2(x)       (CHECK_TOUCH_2(x) && CHECK_CHANGE_2(x))
+#define CHECK_TOUCH_2()     (sensor_state & SENSE_TOUCH_2)
+#define CHECK_CHANGE_2()    (sensor_state & SENSE_CHANGE_2)
+#define CHECK_DOUBLE_2()    (sensor_state & SENSE_DOUBLE_2)
+#define CHECK_LONG_2()      (sensor_state & SENSE_LONG_2)
+#define CHECK_TAP_2()       (CHECK_TOUCH_2() && CHECK_CHANGE_2())
 
-#define CHECK_DOUBLE_BOTH(x) (x & SENSE_DOUBLE_BOTH)
-#define CHECK_LONG_BOTH(x)   (x & SENSE_LONG_BOTH)
+#define CHECK_DOUBLE_BOTH() (sensor_state & SENSE_DOUBLE_BOTH)
+#define CHECK_LONG_BOTH()   (sensor_state & SENSE_LONG_BOTH)
 
-#define CHECK_RANGE_SHORT(x) (x & SENSE_RANGE_SHORT)
-#define CHECK_RANGE_MID(x)   (x & SENSE_RANGE_MID)
-#define CHECK_RANGE_LONG(x)  (x & SENSE_RANGE_LONG)
-#define CHECK_RANGE_MAX(x)   (x & SENSE_RANGE_MAX)
+#define CHECK_RANGE_SHORT() (sensor_state & SENSE_RANGE_SHORT)
+#define CHECK_RANGE_MID()   (sensor_state & SENSE_RANGE_MID)
+#define CHECK_RANGE_LONG()  (sensor_state & SENSE_RANGE_LONG)
+#define CHECK_RANGE_MAX()   (sensor_state & SENSE_RANGE_MASENSOR_STATE)
 
-#define CHECK_TOUCH_BOTH(x)  ((x & SENSE_TOUCH_ALL) == SENSE_TOUCH_ALL)
-#define CHECK_CHANGE_BOTH(x) ((x & SENSE_CHANGE_ALL) == SENSE_CHANGE_ALL)
+#define CHECK_TOUCH_BOTH()  ((sensor_state & SENSE_TOUCH_ALL) == SENSE_TOUCH_ALL)
+#define CHECK_CHANGE_BOTH() ((sensor_state & SENSE_CHANGE_ALL) == SENSE_CHANGE_ALL)
 
-#define CHECK_TOUCH_NONE(x)  ((x & SENSE_TOUCH_ALL) == 0)
-#define CHECK_CHANGE_NONE(x) ((x & SENSE_CHANGE_ALL) == 0)
-#define CHECK_TOUCH_ANY(x)   (x & SENSE_TOUCH_ALL)
-#define CHECK_CHANGE_ANY(x)  (x & SENSE_CHANGE_ALL)
+#define CHECK_TOUCH_NONE()  ((sensor_state & SENSE_TOUCH_ALL) == 0)
+#define CHECK_CHANGE_NONE() ((sensor_state & SENSE_CHANGE_ALL) == 0)
+#define CHECK_TOUCH_ANY()   (sensor_state & SENSE_TOUCH_ALL)
+#define CHECK_CHANGE_ANY()  (sensor_state & SENSE_CHANGE_ALL)
 
 // XXX: One-then-other required as the sense time is fine enough that
 //      it often is triggered that way when trying to touch both.  This

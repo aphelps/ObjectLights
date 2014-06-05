@@ -184,21 +184,22 @@ void handle_sensors() {
   /****************************************************************************
    * State determination
    */
-  uint32_t state = 0;
+  uint32_t prev_state = sensor_state;
+  sensor_state = 0;
 
   // Short range detected
-  if (range_cm < PING_SHORT_CM) state |= SENSE_RANGE_SHORT;
-  else if (range_cm < PING_MID_CM) state |= SENSE_RANGE_MID;
-  else if (range_cm < PING_MAX_CM) state |= SENSE_RANGE_LONG;
+  if (range_cm < PING_SHORT_CM) sensor_state |= SENSE_RANGE_SHORT;
+  else if (range_cm < PING_MID_CM) sensor_state |= SENSE_RANGE_MID;
+  else if (range_cm < PING_MAX_CM) sensor_state |= SENSE_RANGE_LONG;
 
   // Sensor 1
-  if (touch_sensor.touched(CAP_SENSOR_1)) state |= SENSE_TOUCH_1;
-  if (touch_sensor.changed(CAP_SENSOR_1)) state |= SENSE_CHANGE_1;
-  if (CHECK_TAP_1(state)) {
+  if (touch_sensor.touched(CAP_SENSOR_1)) sensor_state |= SENSE_TOUCH_1;
+  if (touch_sensor.changed(CAP_SENSOR_1)) sensor_state |= SENSE_CHANGE_1;
+  if (CHECK_TAP_1()) {
     // Detect double tap on individual sensors
     static unsigned long taptime1 = 0;
     if (now - taptime1 < CAP_DOUBLE_MS) {
-      state |= SENSE_DOUBLE_1;
+      sensor_state |= SENSE_DOUBLE_1;
       DEBUG_VALUELN(DEBUG_HIGH, "Double tap1 ms:", now - taptime1);
     }
     taptime1 = now;
@@ -206,13 +207,13 @@ void handle_sensors() {
   // XXX - Detect long touch?
 
   // Sensor 2
-  if (touch_sensor.touched(CAP_SENSOR_2)) state |= SENSE_TOUCH_2;
-  if (touch_sensor.changed(CAP_SENSOR_2)) state |= SENSE_CHANGE_2;
-  if (CHECK_TAP_2(state)) {
+  if (touch_sensor.touched(CAP_SENSOR_2)) sensor_state |= SENSE_TOUCH_2;
+  if (touch_sensor.changed(CAP_SENSOR_2)) sensor_state |= SENSE_CHANGE_2;
+  if (CHECK_TAP_2()) {
     // Detect double tap on individual sensors
     static unsigned long taptime2 = 0;
     if (now - taptime2 < CAP_DOUBLE_MS) {
-      state |= SENSE_DOUBLE_2;
+      sensor_state |= SENSE_DOUBLE_2;
       DEBUG_VALUELN(DEBUG_HIGH, "Double tap2 ms:", now - taptime2);
     }
     taptime2 = now;
@@ -222,11 +223,11 @@ void handle_sensors() {
   static unsigned long doubleTime = 0;
 
   // Both became touched (could be one then the other)
-  if (CHECK_TAP_BOTH(state)) {
+  if (CHECK_TAP_BOTH()) {
     static unsigned long taptime = 0;
     if (now - taptime < CAP_DOUBLE_MS) {
       // Rapid double tap
-      state |= SENSE_DOUBLE_BOTH;
+      sensor_state |= SENSE_DOUBLE_BOTH;
       DEBUG_VALUELN(DEBUG_HIGH, "Double tap ms:", now - taptime);
     }
 
@@ -235,34 +236,32 @@ void handle_sensors() {
   }
 
   // Detect a long touch on both
-  if (CHECK_TOUCH_BOTH(state)) {
+  if (CHECK_TOUCH_BOTH()) {
     if ((doubleTime > 0) && ((now - doubleTime) > 750)) {
       // Long touch period
       DEBUG_PRINTLN(DEBUG_HIGH, "Long double touch");
-      state |= SENSE_LONG_BOTH;
+      sensor_state |= SENSE_LONG_BOTH;
       doubleTime = 0;
     }
   }
 
   // Neither sensor is touched
-  if (CHECK_TOUCH_NONE(state)) {
+  if (CHECK_TOUCH_NONE()) {
     doubleTime = 0;
   }
-
-  sensor_state = state;
 
   /****************************************************************************
    * Handling
    */
 
-  if (CHECK_LONG_BOTH(state)) {
+  if (CHECK_LONG_BOTH()) {
     uiMode = (uiMode + 1) % NUM_UI_MODES;
   }
 
   switch (uiMode) {
   case 0: {
     // If just sensor 1 is being touched
-    if (CHECK_TOUCH_1(state) && !CHECK_TOUCH_BOTH(state)) {
+    if (CHECK_TOUCH_1() && !CHECK_TOUCH_BOTH()) {
       // Set followup color
       static byte color = 0;
       color++;
@@ -270,21 +269,21 @@ void handle_sensors() {
     }
 
     // If just sensor 2 is being touched
-    if (CHECK_TOUCH_2(state) && !CHECK_TOUCH_BOTH(state)) {
+    if (CHECK_TOUCH_2() && !CHECK_TOUCH_BOTH()) {
       static byte color = 0;
       color++;
       modeConfigs[0].fgColor = pixel_wheel(color);
     }
 
-    if (CHECK_TAP_BOTH(state)) {
+    if (CHECK_TAP_BOTH()) {
       modeConfigs[0].fgColor = pixel_color(255, 255, 255);
     }
 
-    if (CHECK_DOUBLE_BOTH(state)) {
+    if (CHECK_DOUBLE_BOTH()) {
       increment_mode(0);
     }
 
-    if (CHECK_RANGE_SHORT(state)) {
+    if (CHECK_RANGE_SHORT()) {
       //if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
       if (get_current_mode(FINAL_MODE) != MODE_STATIC_NOISE) {
 	modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
@@ -300,7 +299,7 @@ void handle_sensors() {
     break;
   }
   case 1: {
-    if (CHECK_LONG_BOTH(state)) {
+    if (CHECK_LONG_BOTH()) {
       // Just entered mode changing state
       modeConfigs[0].fgColor = pixel_color(255, 255, 255);
       modeConfigs[FINAL_MODE].fgColor = pixel_color(0, 0, 255);
@@ -310,11 +309,11 @@ void handle_sensors() {
       DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
     }
 
-    if (CHECK_TAP_1(state) && !CHECK_TOUCH_BOTH(state)) {
+    if (CHECK_TAP_1() && !CHECK_TOUCH_BOTH()) {
       increment_mode(0);
     }
 
-    if (CHECK_TAP_2(state) && !CHECK_TOUCH_BOTH(state)) {
+    if (CHECK_TAP_2() && !CHECK_TOUCH_BOTH()) {
       modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
       increment_mode(FINAL_MODE);
     }
@@ -324,18 +323,18 @@ void handle_sensors() {
   }
 
 #ifdef ADDRESS_RECV_TEST
-  if (CHECK_TOUCH_ANY(state)) {
+  if (CHECK_TOUCH_ANY()) {
     /* A sensor is touched, send update to remotes */
     static unsigned long next_send = millis();
     if (now >= next_send) {
       int command = 0;
-      if (CHECK_TOUCH_1(state)) command |= (1 << CAP_SENSOR_1);
-      if (CHECK_TOUCH_2(state)) command |= (1 << CAP_SENSOR_2);
+      if (CHECK_TOUCH_1()) command |= (1 << CAP_SENSOR_1);
+      if (CHECK_TOUCH_2()) command |= (1 << CAP_SENSOR_2);
 
       sendInt(command, ADDRESS_RECV_TEST);
       next_send = now + 100;
     }
-  } else if (CHECK_CHANGE_ANY(state)) {
+  } else if (CHECK_CHANGE_ANY()) {
     /* Touch was removed */
     sendInt(0, ADDRESS_RECV_TEST);
   }

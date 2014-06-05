@@ -497,9 +497,9 @@ void squaresCrawl(Square *squares, int size,
 
   if (millis() > arg->next_time) {
     int timeincrement = arg->periodms;
-    if (touch_sensor.touched(CAP_SENSOR_1))
+    if (CHECK_TOUCH_1())
       timeincrement = timeincrement / 2;
-    if (touch_sensor.touched(CAP_SENSOR_2))
+    if (CHECK_TOUCH_2())
       timeincrement = timeincrement / 4;
     arg->next_time += timeincrement;
 
@@ -556,15 +556,15 @@ void squaresOrbitTest(Square *squares, int size,
     setup = true;
   }
 
-  if (CHECK_TAP_BOTH(sensor_state)) {
+  if (CHECK_TAP_BOTH()) {
     direction = (direction + 1) % Square::NUM_EDGES;
     setup = true;
   } else {
-    if (CHECK_TAP_1(sensor_state)) {
+    if (CHECK_TAP_1()) {
       startface = &squares[(startface->id + 1) % size];
       setup = true;
     }
-    if (CHECK_TAP_2(sensor_state)) {
+    if (CHECK_TAP_2()) {
       startled = (startled + 1) % Square::NUM_LEDS;
       setup = true;
     }
@@ -632,8 +632,8 @@ void squaresVectors(Square *squares, int size,
   unsigned long now = millis();
 
   if ((arg->next_time == 0) || 
-      (CHECK_TAP_1(sensor_state)) ||
-      (CHECK_TAP_2(sensor_state)) ||
+      (CHECK_TAP_1()) ||
+      (CHECK_TAP_2()) ||
       (unsigned long)(now - prev_reset) >  (unsigned long)RESET_PERIOD) {
 
     num_vectors = 1 + random(MAX_VECTORS);
@@ -714,7 +714,7 @@ void squaresSimpleLife(Square *squares, int size,
     binarySquares(squares, size, arg->fgColor, random(0, 100));
   }
 
-  if (CHECK_TOUCH_BOTH(sensor_state)) {
+  if (CHECK_TOUCH_BOTH()) {
     for (byte face = 0; face < size; face++) {
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
 	if (squares[face].getColor(led) != arg->bgColor) {
@@ -723,7 +723,7 @@ void squaresSimpleLife(Square *squares, int size,
       }
     }
   } else {
-    if (CHECK_TAP_1(sensor_state)) {
+    if (CHECK_TAP_1()) {
       arg->data.u32s[SIMPLE_LIFE_SPLASH] = 0;
     }
   }
@@ -983,13 +983,13 @@ void squaresStrobe(Square *squares, int size,
   if (millis() > strobe->next_sense) {
     strobe->next_sense += 10;
 
-    if (CHECK_TOUCH_1(sensor_state)) {
+    if (CHECK_TOUCH_1()) {
       if (strobe->on_period > 0) {
 	strobe->on_period--;
 	strobe->off_period--;
       }
     }
-    if (CHECK_TOUCH_2(sensor_state)) {
+    if (CHECK_TOUCH_2()) {
       if (strobe->on_period < 2000) {
 	strobe->on_period++;
 	strobe->off_period++;
