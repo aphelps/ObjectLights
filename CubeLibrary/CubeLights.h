@@ -181,6 +181,7 @@ extern uint16_t followupPeriods[];
 #define MODE_VECTORS        15
 #define MODE_SIMPLE_LIFE    16
 #define MODE_SOUND_TEST     17
+#define MODE_STROBE         18
 
 void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
 void squaresSetupPattern(Square *squares, int size, pattern_args_t *arg);
@@ -198,6 +199,7 @@ void squaresOrbitTest(Square *squares, int size, pattern_args_t *arg);
 void squaresVectors(Square *squares, int size, pattern_args_t *arg);
 void squaresSimpleLife(Square *squares, int size, pattern_args_t *arg);
 void squaresSoundTest(Square *squares, int size, pattern_args_t *arg);
+void squaresStrobe(Square *squares, int size, pattern_args_t *arg);
 
 
 void squaresLightCenter(Square *squares, int size, pattern_args_t *arg);

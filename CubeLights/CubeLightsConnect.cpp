@@ -15,7 +15,7 @@
 #include "Adafruit_WS2801.h"
 
 
-#define DEBUG_LEVEL DEBUG_TRACE
+#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
 #include "GeneralUtils.h"
@@ -91,9 +91,9 @@ void recvData() {
 }
 
 void sendHMTLValue(uint16_t address, uint8_t output, int value) {
-  DEBUG_VALUE(DEBUG_HIGH, "sendHMTLValue: addr:", address);
-  DEBUG_VALUE(DEBUG_HIGH, " out:", output);
-  DEBUG_VALUELN(DEBUG_HIGH, " value:", value);
+  DEBUG_VALUE(DEBUG_TRACE, "sendHMTLValue: addr:", address);
+  DEBUG_VALUE(DEBUG_TRACE, " out:", output);
+  DEBUG_VALUELN(DEBUG_TRACE, " value:", value);
 
   uint16_t len = hmtl_value_fmt(send_buffer, SEND_BUFFER_SIZE,
 				address, output, value);

@@ -905,21 +905,21 @@ void squaresLightCenter(Square *squares, int size,
 }
 
 void squaresBlinkPattern(Square *squares, int size,
-			   pattern_args_t *arg) {
-  static boolean on = false;
+			 pattern_args_t *arg) {
+  static boolean *on = (boolean *)&arg->data.bytes;
 
   if (arg->next_time == 0) {
     arg->next_time = millis();
-    on = false;
+    *on = false;
   }
 
   if (millis() > arg->next_time) {
     arg->next_time += arg->periodms;
-    on = !on;
+    *on = !(*on);
   }
 
   uint32_t color;
-  if (on) color = arg->fgColor;
+  if (*on) color = arg->fgColor;
   else color = arg->bgColor;
 
   byte face_mask = FACES_FROM_MASK(arg->data.u32s[0]);
@@ -929,6 +929,70 @@ void squaresBlinkPattern(Square *squares, int size,
 	if (arg->data.u32s[0] & (1 << led)) {
 	  squares[face].setColor(led, color);
 	}
+      }
+    }
+  }
+}
+
+/*
+ * This implements a typical strobe effect
+ */
+struct strobe_args {
+  boolean on;
+  uint32_t next_sense;
+  uint16_t default_period;
+  uint16_t on_period;
+  uint16_t off_period;
+};
+void squaresStrobe(Square *squares, int size,
+		   pattern_args_t *arg) {
+  struct strobe_args *strobe = (struct strobe_args *)&arg->data.bytes;
+
+  if (arg->next_time == 0) {
+    arg->next_time = millis();
+    strobe->next_sense = millis();
+    strobe->on = false;
+    strobe->default_period = 250;
+    strobe->on_period = strobe->default_period;
+    strobe->off_period = strobe->default_period;
+  }
+
+  if (millis() > arg->next_time) {
+    if (strobe->on) {
+      arg->next_time += strobe->off_period;
+    } else {
+      arg->next_time += strobe->on_period;
+    }
+    strobe->on = !(strobe->on);
+
+    if (strobe->on) {
+      setAllSquares(squares, size, arg->fgColor);
+#ifdef ADDRESS_TRIGGER_UNIT
+      sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 255);
+#endif
+    } else {
+      setAllSquares(squares, size, arg->bgColor);
+#ifdef ADDRESS_TRIGGER_UNIT
+      sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 0);
+#endif
+
+    }
+  }
+
+  /* Handle the sensors with an independent timer */
+  if (millis() > strobe->next_sense) {
+    strobe->next_sense += 10;
+
+    if (CHECK_TOUCH_1(sensor_state)) {
+      if (strobe->on_period > 0) {
+	strobe->on_period--;
+	strobe->off_period--;
+      }
+    }
+    if (CHECK_TOUCH_2(sensor_state)) {
+      if (strobe->on_period < 2000) {
+	strobe->on_period++;
+	strobe->off_period++;
       }
     }
   }
