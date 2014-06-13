@@ -125,6 +125,9 @@ void sendByte(byte value, byte address);
 void sendInt(int value, byte address);
 void sendLong(long value, byte address);
 void sendHMTLValue(uint16_t address, uint8_t offset, int value);
+void sendHMTLBlink(uint16_t address, uint8_t output,
+		   uint16_t on_period, uint32_t on_color,
+		   uint16_t off_period, uint32_t off_color);
 
 /***** Cube light modes *******************************************************/
 

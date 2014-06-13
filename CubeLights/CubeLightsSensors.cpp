@@ -71,21 +71,6 @@ void sensor_photo(void)
 
 MPR121 touch_sensor; // MPR121 must be initialized after Wire.begin();
 
-#if 0
-void sensor_cap_init() 
-{
-  Wire.begin();
-
-  touch_sensor = MPR121(CAP_TOUCH_IRQ, false, false); // XXX - Problem with interrupt?
- 
-  touch_sensor.setThreshold(CAP_SENSOR_1,
-			    CAP_SENSOR_1_TOUCH, CAP_SENSOR_1_RELEASE);
-  touch_sensor.setThreshold(CAP_SENSOR_2,
-			    CAP_SENSOR_2_TOUCH, CAP_SENSOR_2_RELEASE);
-  DEBUG_PRINTLN(DEBUG_MID, "Cap touch initialized");
-}
-#endif
-
 void sensor_cap(void) 
 {
 #if 0

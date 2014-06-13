@@ -944,6 +944,7 @@ struct strobe_args {
   uint16_t on_period;
   uint16_t off_period;
 };
+//#define STROBE_PROGRAM
 void squaresStrobe(Square *squares, int size,
 		   pattern_args_t *arg) {
   struct strobe_args *strobe = (struct strobe_args *)&arg->data.bytes;
@@ -968,12 +969,16 @@ void squaresStrobe(Square *squares, int size,
     if (strobe->on) {
       setAllSquares(squares, size, arg->fgColor);
 #ifdef ADDRESS_TRIGGER_UNIT
-      sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 255);
+#ifndef STROBE_PROGRAM
+      sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 255);		    
+#endif
 #endif
     } else {
       setAllSquares(squares, size, arg->bgColor);
 #ifdef ADDRESS_TRIGGER_UNIT
+#ifndef STROBE_PROGRAM
       sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 0);
+#endif
 #endif
 
     }
@@ -981,19 +986,30 @@ void squaresStrobe(Square *squares, int size,
 
   /* Handle the sensors with an independent timer */
   if (millis() > strobe->next_sense) {
+    boolean update = false;
     strobe->next_sense += 10;
 
     if (CHECK_TOUCH_1()) {
       if (strobe->on_period > 0) {
 	strobe->on_period--;
 	strobe->off_period--;
+	update = true;
       }
     }
     if (CHECK_TOUCH_2()) {
       if (strobe->on_period < 2000) {
 	strobe->on_period++;
 	strobe->off_period++;
+	update = true;
       }
     }
+
+#ifdef STROBE_PROGRAM
+    if (update) {
+      sendHMTLBlink(ADDRESS_TRIGGER_UNIT, 0, 
+		    strobe->on_period, arg->fgColor,
+		    strobe->off_period, arg->bgColor);
+    }
+#endif    
   }
 }

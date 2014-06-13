@@ -13,9 +13,9 @@
 #include "SPI.h"
 #include "Wire.h"
 #include "Adafruit_WS2801.h"
+s
 
-
-#define DEBUG_LEVEL DEBUG_HIGH
+#define DEBUG_LEVEL DEBUG_MID
 #include "Debug.h"
 
 #include "GeneralUtils.h"
@@ -97,5 +97,21 @@ void sendHMTLValue(uint16_t address, uint8_t output, int value) {
 
   uint16_t len = hmtl_value_fmt(send_buffer, SEND_BUFFER_SIZE,
 				address, output, value);
+  rs485.sendMsgTo(address, send_buffer, len);
+}
+
+void sendHMTLBlink(uint16_t address, uint8_t output,
+		   uint16_t on_period, uint32_t on_color,
+		   uint16_t off_period, uint32_t off_color) {
+
+  DEBUG_VALUE(DEBUG_TRACE, "sendHMTLBlink: addr:", address);
+  DEBUG_VALUELN(DEBUG_TRACE, " out:", output);
+
+  uint16_t len = hmtl_program_blink_fmt(send_buffer, SEND_BUFFER_SIZE,
+					address, output,
+					on_period, 
+					on_color,
+					off_period, 
+					off_color);
   rs485.sendMsgTo(address, send_buffer, len);
 }
