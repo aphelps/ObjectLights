@@ -24,7 +24,7 @@ Triangle::Triangle(unsigned int _id) {
     }
   }
 
-  DEBUG_VALUELN(DEBUG_MID, "Created Triangle ", id);
+  DEBUG_VALUELN(DEBUG_MID, "Created Triangle id:", id);
 }
 
 Triangle *Triangle::getEdge(byte edge) {
@@ -61,6 +61,8 @@ void Triangle::setColor(byte r, byte g, byte b) {
     updated = true;
   }
 }
+
+
 
 void Triangle::setColor(byte led, byte r, byte g, byte b) {
   if (hasLeds()) {
@@ -263,6 +265,7 @@ void Triangle::print(byte level) {
 
   for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
     DEBUG_VALUE(level, " v:", v);
+    DEBUG_VALUE(level, "-", getLED(v)->pixel); 
     for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
       if (getVertex(v, o) != NULL) DEBUG_VALUE(level, " ", getVertex(v, o)->id);
     }
@@ -294,7 +297,7 @@ void setLeds(Triangle *triangles, int tri, int led1, int led2, int led3) {
 }
 
 /* Initialize the triangle array */
-#define TRI_ARRAY_SIZE 30
+#define TRI_ARRAY_SIZE 20
 Triangle triangleArray[TRI_ARRAY_SIZE];
 Triangle* initTriangles(int triangleCount) {
   if (triangleCount > TRI_ARRAY_SIZE) {
@@ -302,19 +305,19 @@ Triangle* initTriangles(int triangleCount) {
     DEBUG_ERR_STATE(13);
   }
 
-  Triangle *triangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
+  Triangle *newtriangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
   DEBUG_COMMAND(DEBUG_ERROR,
-		if (triangles == NULL) {
+		if (newtriangles == NULL) {
 		  DEBUG_ERR("Failed to malloc triangles");
 		  debug_err_state(DEBUG_ERR_MALLOC);
 		}
 		);
 
   for (byte i = 0; i < triangleCount; i++) {
-    triangles[i] = Triangle(i);
+    newtriangles[i] = Triangle(i);
   }
 
-  return triangles;
+  return newtriangles;
 }
 
 /******************************************************************************
@@ -335,7 +338,7 @@ Triangle* initTriangles(int triangleCount) {
 Triangle* buildCylinder(int *numTriangles, int numLeds) {
   int triangleCount = 30;
 
-  Triangle *triangles = initTriangles(triangleCount);
+  triangles = initTriangles(triangleCount);
 
   int tri;
   for (tri = 0; tri < triangleCount; tri++) {
@@ -404,7 +407,7 @@ Triangle* buildCylinder(int *numTriangles, int numLeds) {
 Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   int triangleCount = 20;
 
-  Triangle *triangles = initTriangles(triangleCount);
+  triangles = initTriangles(triangleCount);
 
   int led = numLeds - 1;
 #if 0 // This is the HTML prototype module config

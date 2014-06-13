@@ -9,7 +9,7 @@ void initializePins() {
   /* Configure the mode toggle switch */
   pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
 
-  attachInterrupt(0, buttonInterrupt, CHANGE);
+  attachInterrupt(PUSH_BUTTON_INTERRUPT, buttonInterrupt, CHANGE);
 
   /* Turn on input pullup on analog light sensor pin */
   digitalWrite(PHOTO_PIN, HIGH);
@@ -21,7 +21,7 @@ void buttonInterrupt(void)
   static unsigned long prevTime = 0;
   static int prevValue = LOW;
   long now = millis();
-  int value = prevValue; //digitalRead(PUSH_BUTTON_PIN);
+  int value = digitalRead(PUSH_BUTTON_PIN);
 
   /* Provide a debounce to only change on the first interrupt */
   if ((value == HIGH) && (prevValue == LOW) && (now - prevTime > 500)) {
@@ -51,12 +51,13 @@ void sensor_photo(void)
     next_photo_sense = now + PHOTO_DELAY_MS;
 
     photo_value = analogRead(PHOTO_PIN);
-    if (photo_value > PHOTO_THRESHOLD_HIGH) {
-      photo_dark = false;
-    } else if (photo_value < PHOTO_THRESHOLD_LOW) {
+    if ((photo_value > PHOTO_THRESHOLD_HIGH) && (!photo_dark)) {
+      DEBUG_VALUELN(DEBUG_HIGH, " Photo dark:", photo_value);
       photo_dark = true;
+    } else if ((photo_value < PHOTO_THRESHOLD_LOW) && (photo_dark)) {
+      photo_dark = false;
+      DEBUG_VALUELN(DEBUG_HIGH, " Photo light:", photo_value);
     }
-    //    DEBUG_VALUELN(DEBUG_HIGH, " Photo:", photo_value);
   }
 }
 

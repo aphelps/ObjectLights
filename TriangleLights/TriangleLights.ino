@@ -28,7 +28,7 @@
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 
-int numLeds = 105;
+int numLeds = 50;
 PixelUtil pixels;
 
 RS485Socket rs485;
@@ -49,13 +49,13 @@ triangle_mode_t modeFunctions[] = {
   trianglesLooping,
   //  trianglesSetAll,
   trianglesCircle,
-  trianglesCircleCorner2,
-  trianglesRandomNeighbor,
-  trianglesLifePattern,
-  trianglesLifePattern2,
-  trianglesBuildup,
+  //  trianglesCircleCorner2,
+  //  trianglesRandomNeighbor,
+  //trianglesLifePattern,
+  //  trianglesLifePattern2,
+  //  trianglesBuildup,
   trianglesStaticNoise,
-  trianglesSwapPattern
+//  trianglesSwapPattern
 //  trianglesTestPattern,
 //  trianglesCircleCorner,
 };
@@ -69,16 +69,18 @@ uint16_t modePeriods[] = {
   MODE_PERIOD,
   //  1000,
   MODE_PERIOD,
+  //  MODE_PERIOD,
+  //  MODE_PERIOD,
+  // 500,
+  //  500,
+  //  MODE_PERIOD,
   MODE_PERIOD,
-  MODE_PERIOD,
-  500,
-  500,
-  MODE_PERIOD,
-  MODE_PERIOD,
-  10
+//  10
 //  500,
 //  MODE_PERIOD,
 };
+#define NUM_PERIODS (sizeof (modePeriods) / sizeof (uint16_t))
+
 
 pattern_args_t patternConfig = {
   pixel_color(0, 0, 0), // bgColor
@@ -87,6 +89,11 @@ pattern_args_t patternConfig = {
 
 void setup()
 {
+  if (NUM_PERIODS != NUM_MODES) {
+    DEBUG_ERR("NUM_MODES != NUM_PERIODS");
+    DEBUG_ERR_STATE(1);
+  }
+
   Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_HIGH, "*** TriangleLights Initializing ***");
 
@@ -107,10 +114,10 @@ void setup()
   initializePins();
 
   /* Generate the geometry */
-  //triangles = buildIcosohedron(&numTriangles, numLeds);
-  triangles = buildCylinder(&numTriangles, numLeds);
+  triangles = buildIcosohedron(&numTriangles, numLeds);
+  //triangles = buildCylinder(&numTriangles, numLeds);
 
-  DEBUG_VALUELN(DEBUG_HIGH, "Inited with numTriangles:", numTriangles);
+  DEBUG_VALUELN(DEBUG_LOW, "Inited with numTriangles:", numTriangles);
 }
 
 void loop() {
@@ -128,7 +135,7 @@ void loop() {
 
   mode = getButtonValue() % NUM_MODES;
   if (mode != prev_mode) {
-    DEBUG_VALUE(DEBUG_HIGH, "mode=", mode);
+    DEBUG_VALUELN(DEBUG_HIGH, "mode=", mode);
     DEBUG_MEMORY(DEBUG_HIGH);
   }
 

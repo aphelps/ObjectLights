@@ -7,14 +7,16 @@
 
 extern Triangle *triangles;
 
-#define PUSH_BUTTON_PIN 2
+#define PUSH_BUTTON_INTERRUPT 1
+#define PUSH_BUTTON_PIN       3
+
 void buttonInterrupt(void);
 int getButtonValue();
 
 /* Photo sensor */
 #define PHOTO_PIN A0
-#define PHOTO_THRESHOLD_LOW  85  /* Consider light off when below this level */
-#define PHOTO_THRESHOLD_HIGH 100 /* Consider light on when above this level */
+#define PHOTO_THRESHOLD_LOW  250  /* Consider light off when below this level */
+#define PHOTO_THRESHOLD_HIGH 300 /* Consider light on when above this level */
 #define PHOTO_DELAY_MS 100       /* Minimum time between readings */
 
 extern uint16_t photo_value; /* Last value of the photo sensor */
