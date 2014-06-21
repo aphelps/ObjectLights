@@ -631,7 +631,7 @@ void squaresVectors(Square *squares, int size,
 
   unsigned long now = millis();
 
-  if ((arg->next_time == 0) || 
+  if ((arg->next_time == 0) ||
       (CHECK_TAP_1()) ||
       (CHECK_TAP_2()) ||
       (unsigned long)(now - prev_reset) >  (unsigned long)RESET_PERIOD) {

@@ -38,32 +38,24 @@ void readHMTLConfiguration() {
   config_max_t readoutputs[CUBE_MAX_OUTPUTS];
   int offset;
 
-  /* Attempt to read the configuration */
-  offset = hmtl_read_config(&config, readoutputs, CUBE_MAX_OUTPUTS);
-  if (offset < 0) {
-    hmtl_default_config(&config);
-    DEBUG_PRINTLN(DEBUG_LOW, "ERROR: Using default config");
-  }
- if (config.num_outputs > CUBE_MAX_OUTPUTS) {
-    DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
-    DEBUG_ERR_STATE(DEBUG_ERR_INVALID);
-  }
-  for (int i = 0; i < config.num_outputs; i++) {
-    outputs[i] = (output_hdr_t *)&readoutputs[i];
-  }
-  DEBUG_COMMAND(DEBUG_HIGH, hmtl_print_config(&config, outputs));
+  uint32_t outputs_found = hmtl_setup(&config, readoutputs, outputs,
+				     NULL, CUBE_MAX_OUTPUTS,
+				     &rs485, &pixels, &touch_sensor,
+				     NULL, NULL, &offset);
 
-  // XXX: Perform output validation, check that pins are used only once, etc
+  if (!(outputs_found & (1 << HMTL_OUTPUT_RS485))) {
+    DEBUG_ERR("No RS485 config found");
+    DEBUG_ERR_STATE(1);
+  }
 
-  /* Initialize the outputs */
-  for (int i = 0; i < config.num_outputs; i++) {
-    void *data = NULL;
-    switch (((output_hdr_t *)outputs[i])->type) {
-    case HMTL_OUTPUT_PIXELS: data = &pixels; break;
-    case HMTL_OUTPUT_MPR121: data = &touch_sensor; break;
-    case HMTL_OUTPUT_RS485: data = &rs485; break;
-    }
-    hmtl_setup_output((output_hdr_t *)outputs[i], data);
+  if (!(outputs_found & (1 << HMTL_OUTPUT_PIXELS))) {
+    DEBUG_ERR("No pixels config found");
+    DEBUG_ERR_STATE(2);
+  }
+
+  if (!(outputs_found & (1 << HMTL_OUTPUT_MPR121))) {
+    DEBUG_ERR("No mpr121 config found");
+    DEBUG_ERR_STATE(3);
   }
 
   /* Store the configured address */

@@ -13,7 +13,7 @@
 #include "SPI.h"
 #include "Wire.h"
 #include "Adafruit_WS2801.h"
-s
+
 
 #define DEBUG_LEVEL DEBUG_MID
 #include "Debug.h"
