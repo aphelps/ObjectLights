@@ -33,7 +33,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 18 // %META INCR
+#define CUBE_LIGHT_BUILD 19 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {
@@ -108,7 +108,7 @@ void loop()
   /* Check the sensor values */
   //sensor_photo();
   sensor_cap();
-  sensor_range();
+  //  sensor_range();
 
   handle_sensors();
 

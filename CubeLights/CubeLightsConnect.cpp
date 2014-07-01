@@ -115,3 +115,18 @@ void sendHMTLBlink(uint16_t address, uint8_t output,
 					off_color);
   rs485.sendMsgTo(address, send_buffer, len);
 }
+
+void sendHMTLTimedChange(uint16_t address, uint8_t output,
+			 uint32_t change_period,
+			 uint32_t start_color,
+			 uint32_t stop_color) {
+  DEBUG_VALUE(DEBUG_TRACE, "sendHMTLTimedChange: addr:", address);
+  DEBUG_VALUELN(DEBUG_TRACE, " out:", output);
+
+  uint16_t len = hmtl_program_timed_change_fmt(send_buffer, SEND_BUFFER_SIZE,
+					       address, output,
+					       change_period,
+					       start_color,
+					       stop_color);
+  rs485.sendMsgTo(address, send_buffer, len);
+}

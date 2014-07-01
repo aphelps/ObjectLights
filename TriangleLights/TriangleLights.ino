@@ -28,9 +28,7 @@
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 
-int numLeds = 50;
 PixelUtil pixels;
-
 RS485Socket rs485;
 
 int numTriangles = 0;
@@ -114,8 +112,8 @@ void setup()
   initializePins();
 
   /* Generate the geometry */
-  triangles = buildIcosohedron(&numTriangles, numLeds);
-  //triangles = buildCylinder(&numTriangles, numLeds);
+  triangles = buildIcosohedron(&numTriangles, pixels.numPixels());
+  //triangles = buildCylinder(&numTriangles, pixels.numPixels());
 
   DEBUG_VALUELN(DEBUG_LOW, "Inited with numTriangles:", numTriangles);
 }
@@ -123,7 +121,7 @@ void setup()
 void loop() {
 
 #if 0
-  for (int i = 0; i < numLeds; i++) {
+  for (int i = 0; i < pixels.numPixels(); i++) {
     pixels.setPixelRGB(i, 255, 255, 255);
   }
   pixels.update();

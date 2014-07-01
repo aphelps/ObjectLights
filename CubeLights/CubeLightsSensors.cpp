@@ -86,11 +86,11 @@ void sensor_cap(void)
 #endif
 
   if (touch_sensor.readTouchInputs()) {
-    DEBUG_PRINT(DEBUG_HIGH, "Cap:");
+    DEBUG_PRINT(DEBUG_TRACE, "Cap:");
     for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
-      DEBUG_VALUE(DEBUG_HIGH, " ", touch_sensor.touched(i));
+      DEBUG_VALUE(DEBUG_TRACE, " ", touch_sensor.touched(i));
     }
-    DEBUG_VALUELN(DEBUG_HIGH, " ms:", millis());
+    DEBUG_VALUELN(DEBUG_TRACE, " ms:", millis());
   }
 }
 
@@ -162,6 +162,7 @@ void handle_sensors() {
     }
   }
 #endif
+
 #if SENSOR_MODE == 1
 #define NUM_UI_MODES 2
   static byte uiMode = 0;
@@ -241,10 +242,17 @@ void handle_sensors() {
 
   if (CHECK_LONG_BOTH()) {
     uiMode = (uiMode + 1) % NUM_UI_MODES;
+    DEBUG_VALUELN(DEBUG_LOW, "Enter ui mode: ", uiMode);
   }
 
   switch (uiMode) {
   case 0: {
+    if (CHECK_LONG_BOTH()) {
+      // Just entered this mode
+      set_mode_to(FINAL_MODE, MODE_NONE);
+      DEBUG_PRINTLN(DEBUG_HIGH, "Entered default UI");
+    }
+
     // If just sensor 1 is being touched
     if (CHECK_TOUCH_1() && !CHECK_TOUCH_BOTH()) {
       // Set followup color
@@ -283,6 +291,7 @@ void handle_sensors() {
     }
     break;
   }
+#if 0
   case 1: {
     if (CHECK_LONG_BOTH()) {
       // Just entered mode changing state
@@ -291,7 +300,7 @@ void handle_sensors() {
       modeConfigs[FINAL_MODE].data.u32s[0] =
 	FACE_LED_MASK(0xFF, ((1 << 0) | (1 << 2) | (1 << 6) | (1 << 8)));
       set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
-      DEBUG_PRINTLN(DEBUG_HIGH, "Entered mode change");
+      DEBUG_PRINTLN(DEBUG_LOW, "Entered mode change");
     }
 
     if (CHECK_TAP_1() && !CHECK_TOUCH_BOTH()) {
@@ -304,6 +313,99 @@ void handle_sensors() {
     }
     
     break;
+  }
+#endif
+  case 1: {
+    /*
+     * This mode is the remote control for a simple flame effect.
+     * - sensor 1: while held opens solenoid
+     * - sensor 2: tapped for brief open
+     */
+
+#define IGNITER_OUTPUT 0
+#define PILOT_VALVE 1
+#define POOF_OUTPUT 2
+
+#define REFRESH_PERIOD 150
+    static unsigned long last_send = 0;
+
+#define PILOT_OFF      0
+#define PILOT_IGNITING 1
+#define PILOT_ON       2
+    static byte pilot_state = PILOT_OFF;
+
+    if (CHECK_LONG_BOTH()) {
+      // Just entered mode changing state
+
+      if (pilot_state == PILOT_OFF) {
+	/* If the pilot hadn't previously been ignited, do so now */
+	DEBUG_PRINTLN(DEBUG_HIGH, "Igniting pilot light");
+
+	/* Turn on the hot surface igniter */
+	sendHMTLTimedChange(ADDRESS_POOFER_UNIT, IGNITER_OUTPUT,
+			    30000, 0xFFFFFFFF, 0);
+	last_send = now;
+	
+	modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
+      } else {
+	modeConfigs[FINAL_MODE].fgColor = pixel_color(0, 255, 0);
+      }
+
+      modeConfigs[FINAL_MODE].data.u32s[0] =
+	FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 7) | (1 << 8)));
+      set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
+      DEBUG_HEXVALLN(DEBUG_HIGH, "Entered poofer control.  Mask:", 
+		     modeConfigs[FINAL_MODE].data.u32s[0]);
+    }
+
+    if (pilot_state == PILOT_OFF) {
+      if (now - last_send > 5000) {
+	/* Once the igniter has had time to warm up, open the pilot valve */
+	sendHMTLValue(ADDRESS_POOFER_UNIT, PILOT_VALVE, 255);
+	pilot_state = PILOT_IGNITING;
+	modeConfigs[FINAL_MODE].data.u32s[0] =
+	  FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 8)));
+
+	DEBUG_PRINTLN(DEBUG_HIGH, "Opening pilot light value");
+      }
+    } else if (pilot_state == PILOT_IGNITING) {
+      if (now - last_send > 30000) {
+	/* The pilot light should be triggered by this point */
+	pilot_state = PILOT_ON;
+	modeConfigs[FINAL_MODE].data.u32s[0] =
+	  FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 7) | (1 << 8)));
+	modeConfigs[FINAL_MODE].fgColor = pixel_color(0, 255, 0);
+
+	DEBUG_PRINTLN(DEBUG_HIGH, "Flame on!!!");
+      }
+    } else {
+      if (CHECK_TOUCH_1() && !CHECK_TOUCH_BOTH()) {
+	if (CHECK_CHANGE_1()) {
+	  last_send = 0;
+	}
+
+	if (now - last_send > REFRESH_PERIOD) {
+	  /* Send a brief on value, repeated calls will keep the valve open */
+	  sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
+			      250, 0xFFFFFFFF, 0);
+	  last_send = now;
+	  DEBUG_PRINTLN(DEBUG_HIGH, "Sending poof");
+	}
+      } else if (CHECK_CHANGE_1() && !CHECK_TOUCH_BOTH()) {
+	/* The sensor was released, send a disable message */
+	// XXX - Add program cancel message
+	sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
+			    10, 0, 0);
+	last_send = now;
+	  DEBUG_PRINTLN(DEBUG_HIGH, "Disable poof");
+      } else if (CHECK_TOUCH_2() && CHECK_CHANGE_2()) {
+	/* Send a stutter open */
+	sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
+			    100, 0xFFFFFFFF, 0);
+	last_send = now;
+	DEBUG_PRINTLN(DEBUG_HIGH, "Quick poof");
+      }
+    }
   }
   }
 

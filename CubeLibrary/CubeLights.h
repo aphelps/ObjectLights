@@ -115,9 +115,11 @@ extern RS485Socket rs485;
 extern byte my_address;
 
 //#define ADDRESS_RECV_TEST  RS485_ADDR_ANY
-#define ADDRESS_SOUND_UNIT 0x01
+#define ADDRESS_SOUND_UNIT  0x01
 //#define ADDRESS_TRIANGLES  0x10
-#define ADDRESS_TRIGGER_UNIT 0x01
+
+#define ADDRESS_LIGHT_UNIT  0x41
+#define ADDRESS_POOFER_UNIT 0x40
 
 void initializeConnect();
 
@@ -128,7 +130,9 @@ void sendHMTLValue(uint16_t address, uint8_t offset, int value);
 void sendHMTLBlink(uint16_t address, uint8_t output,
 		   uint16_t on_period, uint32_t on_color,
 		   uint16_t off_period, uint32_t off_color);
-
+void sendHMTLTimedChange(uint16_t address, uint8_t output,
+			 uint32_t change_period,
+			 uint32_t start_color, uint32_t stop_color);
 /***** Cube light modes *******************************************************/
 
 /* Return the current mode value */

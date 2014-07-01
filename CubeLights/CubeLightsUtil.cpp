@@ -968,16 +968,16 @@ void squaresStrobe(Square *squares, int size,
 
     if (strobe->on) {
       setAllSquares(squares, size, arg->fgColor);
-#ifdef ADDRESS_TRIGGER_UNIT
+#ifdef ADDRESS_LIGHT_UNIT
 #ifndef STROBE_PROGRAM
-      sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 255);		    
+      sendHMTLValue(ADDRESS_LIGHT_UNIT, 3, 255);		    
 #endif
 #endif
     } else {
       setAllSquares(squares, size, arg->bgColor);
-#ifdef ADDRESS_TRIGGER_UNIT
+#ifdef ADDRESS_LIGHT_UNIT
 #ifndef STROBE_PROGRAM
-      sendHMTLValue(ADDRESS_TRIGGER_UNIT, 0, 0);
+      sendHMTLValue(ADDRESS_LIGHT_UNIT, 3, 0);
 #endif
 #endif
 
@@ -1006,7 +1006,7 @@ void squaresStrobe(Square *squares, int size,
 
 #ifdef STROBE_PROGRAM
     if (update) {
-      sendHMTLBlink(ADDRESS_TRIGGER_UNIT, 0, 
+      sendHMTLBlink(ADDRESS_LIGHT_UNIT, 0, 
 		    strobe->on_period, arg->fgColor,
 		    strobe->off_period, arg->bgColor);
     }

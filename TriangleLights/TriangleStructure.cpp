@@ -410,7 +410,8 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   triangles = initTriangles(triangleCount);
 
   int led = numLeds - 1;
-#if 0 // This is the HTML prototype module config
+#define TRI_VERSION 2
+#if TRI_VERSION == 0 // This is the HTML prototype module config
   setLeds(triangles, 0, led); led -= 3; // 47 - R
   setLeds(triangles, 4, led); led -= 3; // 44 - G
   setLeds(triangles, 3, led); led -= 3; // 41 - B
@@ -430,7 +431,7 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   setLeds(triangles, 10, led); led -= 3; // 5 - P
   setLeds(triangles, 5,  led); led -= 3; // 2 - T,R
 #endif
-#if 1
+#if TRI_VERSION == 1
   setLeds(triangles, 0,  led, led-1, led-2); led -= 3; // 47 - R x
   setLeds(triangles, 5,  led-2, led, led-1); led -= 3; // 44 - G x
   setLeds(triangles, 11, led-1, led-2, led); led -= 3; // 41 - B x
@@ -450,8 +451,14 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   led--;   // Had to skip an LED due to wire lengths
   setLeds(triangles, 14, led, led-2, led-1); led -= 3; // 4 - P x
   setLeds(triangles, 19, led-2, led-1, led); led -= 3; // 1 - T,R
-
 #endif
+
+#if TRI_VERSION == 2 // This is the HTML prototype module config
+  for (int i = 0; i < triangleCount; i++) {
+    setLeds(triangles, i, led); led -= 3;
+  }
+#endif
+
   // XXX: This is very manual, is there a way to generate this programmatically?
   *numTriangles = 0;
   makeEdge  (triangles,  0,  0,  1);
