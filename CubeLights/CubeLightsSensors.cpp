@@ -164,7 +164,7 @@ void handle_sensors() {
 #endif
 
 #if SENSOR_MODE == 1
-#define NUM_UI_MODES 2
+#define NUM_UI_MODES 1
   static byte uiMode = 0;
 
   /****************************************************************************

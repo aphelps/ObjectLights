@@ -30,7 +30,7 @@ uint8_t validModes[] = {
   //  , MODE_LIGHT_CENTER
   //  , MODE_BAR_CIRCLE
   , MODE_CRAWL
-  , MODE_BLINK_PATTERN
+  // , MODE_BLINK_PATTERN
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
   , MODE_SIMPLE_LIFE
@@ -53,7 +53,7 @@ square_mode_t modeFunctions[] = {
   NULL, //squaresLightCenter,
   NULL, //squaresBarCircle,
   squaresCrawl,
-  squaresBlinkPattern,
+  NULL, //squaresBlinkPattern,
   NULL, //squaresOrbitTest,
   squaresVectors,
   squaresSimpleLife,
@@ -86,7 +86,7 @@ uint16_t modePeriods[] = {
 };
 
 uint8_t current_modes[MAX_MODES] = {
-  0, // VALID_MODES - 1,  // This is the starting mode
+  VALID_MODES - 3,  // This is the starting mode
   MODE_NONE,
   MODE_NONE
 };
