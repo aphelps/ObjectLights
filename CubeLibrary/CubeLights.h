@@ -109,6 +109,14 @@ extern MPR121 touch_sensor;
 void sensor_cap_init(void);
 void sensor_cap(void);
 
+
+/* Sensor modes */
+typedef void (*sensor_mode_t)(boolean entered, boolean exited);
+
+void sensor_mode_basic_control(boolean entered, boolean exited);
+void sensor_mode_poofer_control(boolean entered, boolean exited);
+void sensor_mode_mode_control(boolean entered, boolean exited);
+
 /***** Cube Light Connectivity ***********************************************/
 
 extern RS485Socket rs485;
@@ -188,7 +196,8 @@ extern uint16_t followupPeriods[];
 #define MODE_VECTORS        15
 #define MODE_SIMPLE_LIFE    16
 #define MODE_SOUND_TEST     17
-#define MODE_STROBE         18
+#define MODE_SOUND_TEST2    18
+#define MODE_STROBE         19
 
 void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
 void squaresSetupPattern(Square *squares, int size, pattern_args_t *arg);
@@ -206,6 +215,7 @@ void squaresOrbitTest(Square *squares, int size, pattern_args_t *arg);
 void squaresVectors(Square *squares, int size, pattern_args_t *arg);
 void squaresSimpleLife(Square *squares, int size, pattern_args_t *arg);
 void squaresSoundTest(Square *squares, int size, pattern_args_t *arg);
+void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg);
 void squaresStrobe(Square *squares, int size, pattern_args_t *arg);
 
 

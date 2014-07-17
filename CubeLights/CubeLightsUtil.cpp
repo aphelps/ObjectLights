@@ -802,7 +802,7 @@ void squaresSimpleLife(Square *squares, int size,
  * Example mode to fetch sound samples from a remote module
  */
 //#define SOUND_LEVELED
-#define SOUND_TEST_TIMEOUT 2000 // Max milliseconds to wait on a response
+#define SOUND_TEST_TIMEOUT 500 // Max milliseconds to wait on a response
 void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
   static unsigned long lastSend = 0;
 
@@ -821,7 +821,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 #endif
     lastSend = millis();
 
-    DEBUG_PRINT(DEBUG_HIGH, "SoundTest: Sent request...");
+    DEBUG_PRINT(DEBUG_TRACE, "SoundTest: Sent request...");
   } else if (lastSend != 0) {
     // Check for a response
     unsigned long elapsed = millis() - lastSend;
@@ -829,7 +829,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
     const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
     if (data != NULL) {
       // Data should be an array of 8 uint16_t
-      DEBUG_PRINT(DEBUG_HIGH, " value:");
+      DEBUG_PRINT(DEBUG_TRACE, " value:");
 #ifdef SOUND_LEVELED
       uint8_t *valptr = (uint8_t *)data;
 #else
@@ -844,7 +844,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 #else
 	uint16_t val = *valptr;
 #endif
-	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
+	DEBUG_HEXVAL(DEBUG_TRACE, " ", val);
 
 	/* Shift the new value into each column */
 	uint32_t newcolor;
@@ -865,13 +865,91 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 
 	valptr++;
       }
-      DEBUG_VALUE(DEBUG_HIGH, " Elapsed:", elapsed);
+      DEBUG_VALUE(DEBUG_TRACE, " Elapsed:", elapsed);
 
       /* Set the top to the average */
       total = total / col;
-      squares[CUBE_TOP].setColor(pixel_heat(total > 15 ? 255 : total * total));
-      DEBUG_VALUE(DEBUG_HIGH, " avg:", total);
+
+      byte heat = total > 15 ? 255 : total * total;
+
+      squares[CUBE_TOP].setColor(pixel_heat(heat));
+      DEBUG_VALUE(DEBUG_TRACE, " avg:", total);
       DEBUG_PRINT_END();
+
+#if 0
+      // XXX - Trigger if over
+      if (heat > 250) {
+	static unsigned long last_send = 0;
+	if (millis() - last_send > 100) {
+	  sendHMTLTimedChange(ADDRESS_POOFER_UNIT, 2,
+			      250, 0xFFFFFFFF, 0);
+	  last_send = millis();
+	}
+      }
+#endif
+
+      lastSend = 0; // Reset the lastSend time so another request can be sent
+    } else {
+      if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
+	DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
+	lastSend = 0; // Reset the lastSend time so another request can be sent
+      }
+    }
+  }
+}
+
+/*
+ * Example mode to fetch sound samples from a remote module
+ */
+#define SOUND_TEST_TIMEOUT 500 // Max milliseconds to wait on a response
+void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
+  static unsigned long lastSend = 0;
+
+  if (arg->next_time == 0) {
+    setAllSquares(squares, size, arg->bgColor);
+  }
+
+  if ((millis() > arg->next_time) && (lastSend == 0)) {
+    // Send the data request
+    arg->next_time += arg->periodms;
+
+    sendByte('S', ADDRESS_SOUND_UNIT);
+    lastSend = millis();
+
+    DEBUG_PRINT(DEBUG_HIGH, "SoundTest: Sent request...");
+  } else if (lastSend != 0) {
+    // Check for a response
+    unsigned long elapsed = millis() - lastSend;
+    unsigned int msglen;
+    const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
+    if (data != NULL) {
+      // Data should be an array of 8 uint16_t
+      DEBUG_PRINT(DEBUG_HIGH, " value:");
+      uint16_t *valptr = (uint16_t *)data;
+
+      byte face = 0;
+      byte led = 0;
+      while ((unsigned int)valptr - (unsigned int)data < msglen) {
+	uint16_t val = *valptr;
+
+	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
+
+	byte heat = (val > 15 ? 255 : val * val);
+	uint32_t newcolor = pixel_heat(heat);
+
+	squares[face].setColor(led, newcolor);
+
+	led++;
+	if (led == Square::NUM_LEDS) {
+	  led = 0;
+	  face++;
+	}
+	if (face > size)
+	  break;
+
+	valptr++;
+      }
+      DEBUG_VALUELN(DEBUG_HIGH, " Elapsed:", elapsed);
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {
@@ -906,7 +984,7 @@ void squaresLightCenter(Square *squares, int size,
 
 void squaresBlinkPattern(Square *squares, int size,
 			 pattern_args_t *arg) {
-  static boolean *on = (boolean *)&arg->data.bytes;
+  static boolean *on = (boolean *)&arg->data.u32s[1];
 
   if (arg->next_time == 0) {
     arg->next_time = millis();
@@ -923,15 +1001,17 @@ void squaresBlinkPattern(Square *squares, int size,
   else color = arg->bgColor;
 
   byte face_mask = FACES_FROM_MASK(arg->data.u32s[0]);
+  uint32_t led_mask = LEDS_FROM_MASK(arg->data.u32s[0]);
   for (byte face = 0; face < size; face++) {
     if (face_mask & (1 << face)) {
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
-	if (arg->data.u32s[0] & (1 << led)) {
+	if (led_mask & (1 << led)) {
 	  squares[face].setColor(led, color);
 	}
       }
     }
   }
+
 }
 
 /*
