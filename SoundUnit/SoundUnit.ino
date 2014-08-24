@@ -18,7 +18,7 @@
 #include <math.h>
 #include <Wire.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+#define DEBUG_LEVEL DEBUG_ERROR
 #include <Debug.h>
 
 #include <SoftwareSerial.h>
@@ -109,7 +109,7 @@ PROGMEM uint8_t
  * For sending sound data back over RS485.  Set the buffer size large enough
  * to allow for all spectrum data
  */
-#define SEND_BUFFER_SIZE RS485_BUFFER_TOTAL(sizeof (spectrum)) 
+#define SEND_BUFFER_SIZE RS485_BUFFER_TOTAL(sizeof (spectrum) + 1)
 byte rs485_buffer[SEND_BUFFER_SIZE];
 byte *send_buffer; // Pointer to use for start of send data
 RS485Socket rs485(4, 7, 5, false);
@@ -125,7 +125,8 @@ RS485Socket rs485(4, 7, 5, false);
 void setup() {
   uint8_t i, j, nBins, *data;
 
-  Serial.begin(9600);
+  //  Serial.begin(9600);
+  Serial.begin(115200);
   DEBUG_PRINTLN(DEBUG_LOW, "SoundUnit starting");
 
   /* Configure the RS484 interface */
@@ -313,6 +314,7 @@ boolean handleMessages() {
       uint16_t *sendPtr = (uint16_t *)send_buffer;
       for (byte x = 0; x < FFT_N/2; x++) {
 	*sendPtr = spectrum[x];
+	sendPtr++;
       }
       response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
       break;
