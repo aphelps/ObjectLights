@@ -86,11 +86,13 @@ void sensor_cap(void)
 #endif
 
   if (touch_sensor.readTouchInputs()) {
-    DEBUG_PRINT(DEBUG_TRACE, "Cap:");
-    for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
-      DEBUG_VALUE(DEBUG_TRACE, " ", touch_sensor.touched(i));
-    }
-    DEBUG_VALUELN(DEBUG_TRACE, " ms:", millis());
+    DEBUG_COMMAND(DEBUG_TRACE,
+      DEBUG_PRINT(DEBUG_TRACE, "Cap:");
+      for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
+        DEBUG_VALUE(DEBUG_TRACE, " ", touch_sensor.touched(i));
+      }
+      DEBUG_VALUELN(DEBUG_TRACE, " ms:", millis());
+    );
   }
 }
 
@@ -286,8 +288,9 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
    */
 
 #define IGNITER_OUTPUT 0
-#define PILOT_VALVE 1
-#define POOF_OUTPUT 2
+#define PILOT_VALVE    1
+#define POOF_OUTPUT    2
+#define LIGHT_OUTPUT   3
 
 #define REFRESH_PERIOD 150
   static unsigned long last_send = 0;
@@ -299,12 +302,18 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
   static byte pilot_state = PILOT_OFF;
 
   if (exited) {
-    if (pilot_state != PILOT_ON) {
+    if (pilot_state == PILOT_ON) {
+      // Set the external light to dim
+      sendHMTLValue(ADDRESS_POOFER_UNIT, LIGHT_OUTPUT, 8);
+    } else {
       /*
        * State was changed while in ignition sequence, send command to
        * turn off the ignitor and pilot valve
        */
       //XXX - Clear program, or set value to off?
+
+      // Set the external light to off
+      sendHMTLValue(ADDRESS_POOFER_UNIT, LIGHT_OUTPUT, 0);
     }
 
     return;
@@ -312,6 +321,9 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
 
   if (entered) {
     // Just entered mode changing state
+
+    // Turn the external light to max
+    sendHMTLValue(ADDRESS_POOFER_UNIT, LIGHT_OUTPUT, 255);
 
     if (pilot_state == PILOT_OFF) {
       /* If the pilot hadn't previously been ignited, do so now */

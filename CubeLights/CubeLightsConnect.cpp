@@ -91,42 +91,26 @@ void recvData() {
 }
 
 void sendHMTLValue(uint16_t address, uint8_t output, int value) {
-  DEBUG_VALUE(DEBUG_TRACE, "sendHMTLValue: addr:", address);
-  DEBUG_VALUE(DEBUG_TRACE, " out:", output);
-  DEBUG_VALUELN(DEBUG_TRACE, " value:", value);
-
-  uint16_t len = hmtl_value_fmt(send_buffer, SEND_BUFFER_SIZE,
-				address, output, value);
-  rs485.sendMsgTo(address, send_buffer, len);
+  hmtl_send_value(&rs485, send_buffer, SEND_BUFFER_SIZE,
+		  address, output, value);
 }
 
 void sendHMTLBlink(uint16_t address, uint8_t output,
 		   uint16_t on_period, uint32_t on_color,
 		   uint16_t off_period, uint32_t off_color) {
-
-  DEBUG_VALUE(DEBUG_TRACE, "sendHMTLBlink: addr:", address);
-  DEBUG_VALUELN(DEBUG_TRACE, " out:", output);
-
-  uint16_t len = hmtl_program_blink_fmt(send_buffer, SEND_BUFFER_SIZE,
-					address, output,
-					on_period, 
-					on_color,
-					off_period, 
-					off_color);
-  rs485.sendMsgTo(address, send_buffer, len);
+  hmtl_send_blink(&rs485, send_buffer, SEND_BUFFER_SIZE,
+		  address, output,
+		  on_period, on_color,
+		  off_period, off_color);
 }
 
 void sendHMTLTimedChange(uint16_t address, uint8_t output,
 			 uint32_t change_period,
 			 uint32_t start_color,
 			 uint32_t stop_color) {
-  DEBUG_VALUE(DEBUG_TRACE, "sendHMTLTimedChange: addr:", address);
-  DEBUG_VALUELN(DEBUG_TRACE, " out:", output);
-
-  uint16_t len = hmtl_program_timed_change_fmt(send_buffer, SEND_BUFFER_SIZE,
-					       address, output,
-					       change_period,
-					       start_color,
-					       stop_color);
-  rs485.sendMsgTo(address, send_buffer, len);
+  hmtl_send_timed_change(&rs485, send_buffer, SEND_BUFFER_SIZE,
+			 address, output,
+			 change_period,
+			 start_color,
+			 stop_color);
 }

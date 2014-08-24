@@ -126,8 +126,8 @@ extern byte my_address;
 #define ADDRESS_SOUND_UNIT  0x01
 //#define ADDRESS_TRIANGLES  0x10
 
-#define ADDRESS_LIGHT_UNIT  0x41
 #define ADDRESS_POOFER_UNIT 0x40
+#define ADDRESS_LIGHT_UNIT ADDRESS_POOFER_UNIT //0x41
 
 void initializeConnect();
 
