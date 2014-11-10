@@ -35,7 +35,6 @@ boolean wrote_config = false;
 
 #define PIN_DEBUG_LED 13
 
-int numLeds = 45 + FIRST_LED;
 int numSquares = 6;
 
 #define MAX_OUTPUTS 4
@@ -55,44 +54,22 @@ config_max_t readoutputs[MAX_OUTPUTS];
 
 int configOffset = -1;
 
+// XXX: These should probably come from libraries
+RS485Socket rs485;
+MPR121 touch_sensor;
+uint16_t my_address;
+
 void setup() 
 {
   Serial.begin(9600);
 
   DEBUG_PRINTLN(DEBUG_LOW, "*** CubeConfigure started ***");
 
-  // Initialize the squares
-  squares = buildCube(&numSquares, numLeds, FIRST_LED);
+  /* Read the current configuration from EEProm */
+  readHMTLConfiguration();
   clearSquares();
 
-  readconfig.address = -1;
-  configOffset = hmtl_read_config(&readconfig, 
-				  readoutputs, 
-				  MAX_OUTPUTS);
-  if (configOffset < 0) {
-    DEBUG_ERR("Failed to read configuration");
-    DEBUG_ERR_STATE(1);
-  } else {
-
-    // XXX - This should verify that configs exist for all expected components
-
-    DEBUG_VALUELN(DEBUG_LOW, "Read config.  offset=", configOffset);
-    memcpy(&config, &readconfig, sizeof (config_hdr_t));
-    for (int i = 0; i < config.num_outputs; i++) {
-      if (i >= MAX_OUTPUTS) {
-        DEBUG_VALUELN(0, "Too many outputs:", config.num_outputs);
-        return;
-      }
-      outputs[i] = (output_hdr_t *)&readoutputs[i];
-    }
-
-    // Read the Cube-specific configuration
-    readCubeConfiguration(squares, numSquares, configOffset);
-  }
-
   pinMode(PIN_DEBUG_LED, OUTPUT);
-
-  pixels.init(numLeds, 12, 8); //pixel_output.dataPin, pixel_output.clockPin);
 
   DEBUG_VALUELN(DEBUG_LOW, "Configure initialized.  End address=",
 		configOffset);
@@ -263,7 +240,7 @@ void cliHandler(char **tokens, byte numtokens) {
     config_pixels_t *pixels = NULL;
     for (int i = 0; i < config.num_outputs; i++) {
       if (outputs[i]->type == HMTL_OUTPUT_PIXELS) {
-	pixels = (config_pixels_t *)outputs[i];
+        pixels = (config_pixels_t *)outputs[i];
       }
     }
     if (pixels == NULL) {
