@@ -33,7 +33,7 @@
 
 
 RS485Socket rs485;
-byte my_address = 0;
+uint16_t my_address = 0;
 
 #define SEND_BUFFER_SIZE RS485_BUFFER_TOTAL(sizeof (msg_hdr_t) + sizeof (msg_max_t) + 16) // XXX: Could this be smaller?
 
