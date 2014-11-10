@@ -38,6 +38,8 @@ void readHMTLConfiguration() {
   config_max_t readoutputs[CUBE_MAX_OUTPUTS];
   int offset;
 
+  // XXX: Use ObjectConfiguation version???
+
   uint32_t outputs_found = hmtl_setup(&config, readoutputs, outputs,
 				     NULL, CUBE_MAX_OUTPUTS,
 				     &rs485, &pixels, &touch_sensor,
