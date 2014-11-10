@@ -5,7 +5,9 @@
 
 #include "PixelUtil.h"
 #include "TriangleStructure.h"
-#include "TriangleLights.h"
+
+// XXX: Relying on an array allocated by the main sketch feels icky
+extern Triangle *triangles;
 
 Triangle::Triangle(unsigned int _id) {
   updated = false;

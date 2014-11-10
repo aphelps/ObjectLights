@@ -3,7 +3,7 @@
  * License: Create Commons Attribution-Non-Commercial
  * Copyright: 2014
  *
- * Code for communicating with remote modules
+ * Main sketch for running TriangleLights
  ******************************************************************************/
 
 #include <Arduino.h>
@@ -23,8 +23,8 @@
 #include "PixelUtil.h"
 #include "RS485Utils.h"
 #include "MPR121.h" // XXX This needs to go
-#include "ObjectConfiguration.h"
 
+#include "ObjectConfiguration.h"
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 
@@ -100,13 +100,8 @@ void setup()
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(3) + analogRead(4) + micros());
 
-#define CONFIG_ENABLED
-#ifdef CONFIG_ENABLED
   //Wire.begin(); // Needed for MPR121
   readHMTLConfiguration(&pixels, &rs485, NULL);
-#else
-
-#endif
 
   /* Setup the sensors */
   initializePins();
@@ -119,14 +114,6 @@ void setup()
 }
 
 void loop() {
-
-#if 0
-  for (int i = 0; i < pixels.numPixels(); i++) {
-    pixels.setPixelRGB(i, 255, 255, 255);
-  }
-  pixels.update();
-  return;
-#endif
 
   static byte prev_mode = -1;
   byte mode;
