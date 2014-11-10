@@ -854,10 +854,10 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 	} else {
 	  newcolor = 0;
 	}
-	squares[face].shiftColumnDown(col % SQUARE_LED_COLS, newcolor);
+	squares[face].shiftColumnDown(col % Square::SQUARE_LED_COLS, newcolor);
 
 	col++;
-	if (col % SQUARE_LED_COLS == 0) {
+	if (col % Square::SQUARE_LED_COLS == 0) {
 	  face++;
 	}
 

@@ -1,3 +1,11 @@
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
+ *
+ * Definition of an ObjectLights square
+ */
+
 #ifndef SQUARESTRUCTURE
 #define SQUARESTRUCTURE
 
@@ -14,18 +22,17 @@
  *    +------------+
  *   2      2       1
  */
-#define SQUARE_NUM_EDGES 4
-#define SQUARE_NUM_VERTICES 4
-#define SQUARE_VERTEX_ORDER 1
 
-#define SQUARE_LED_ROWS 3
-#define SQUARE_LED_COLS 3
 
 class Square {
  public:
+  /* Geometry values */
   static const byte NUM_EDGES    = 4;
   static const byte NUM_VERTICES = 4;
   static const byte VERTEX_ORDER = 1;
+
+  static const byte SQUARE_LED_ROWS = 3;
+  static const byte SQUARE_LED_COLS = 3;
   static const byte NUM_LEDS = SQUARE_LED_ROWS * SQUARE_LED_COLS;
 
   /* Edge values */
