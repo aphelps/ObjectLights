@@ -29,11 +29,12 @@
 #include "SquareStructure.h"
 #include "CubeLights.h"
 
+#include "Geometry.h"
 
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 19 // %META INCR
+#define CUBE_LIGHT_BUILD 20 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {

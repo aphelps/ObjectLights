@@ -4,14 +4,9 @@
  * Copyright: 2014
  *
  * Definition of an ObjectLights square
- */
-
-#ifndef SQUARESTRUCTURE
-#define SQUARESTRUCTURE
-
-#include "PixelUtil.h"
-
-/*
+ *
+ * -----------------------------------------------------------------------------
+ *
  *   3      0       0
  *    +------------+
  *    | 0    1    2|
@@ -22,9 +17,13 @@
  *    +------------+
  *   2      2       1
  */
+#ifndef SQUARESTRUCTURE
+#define SQUARESTRUCTURE
 
+#include "PixelUtil.h"
+#include "Geometry.h"
 
-class Square {
+class Square : public Geometry {
  public:
   /* Geometry values */
   static const byte NUM_EDGES    = 4;
@@ -43,13 +42,6 @@ class Square {
 
   /* LED values */
   static const byte CENTER = 4;
-
-  /* Constants for no-values */
-  static const byte NO_LED = (byte)-1;
-  static const byte NO_FACE = (byte)-1;
-  static const byte NO_DIRECTION = (byte)-1;
-  static const byte NO_INDEX = (byte)-1;
-  static const byte NO_EDGE = (byte)-1;
 
   Square() {};
   Square(unsigned int id);

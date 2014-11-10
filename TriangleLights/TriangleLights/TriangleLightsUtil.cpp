@@ -308,7 +308,7 @@ void mergeAdjacent(Triangle *triangles, int size) {
   uint32_t color;
 
   for (int tri = 0; tri < size; tri++) {
-    for (byte vertex = 0; vertex < TRIANGLE_NUM_VERTICES; vertex++) {
+    for (byte vertex = 0; vertex < Triangle::NUM_VERTICES; vertex++) {
       movementCornerCCW(&triangles[tri], vertex, &rightT, &rightV);
       movementCornerCW(&triangles[tri], vertex, &leftT, &leftV);
 
@@ -827,7 +827,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     } while (!triangles[tri].hasLeds());
     currentIndex = 0;
     snakeTriangles[currentIndex] = tri;
-    snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
+    snakeVertices[currentIndex] = random(0, Triangle::NUM_EDGES);
 
     colorMode++;
     DEBUG_VALUE(DEBUG_HIGH, " colormode=", colorMode);
@@ -902,12 +902,12 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
 	break;
       case 2:
 	// Same triangle, vertex to the left
-	vert = (currentVertex + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
+	vert = (currentVertex + Triangle::NUM_EDGES - 1) % Triangle::NUM_EDGES;
 	tri = snakeTriangles[currentIndex];
 	break;
       case 3: {
 	// Same triangle, vertex to the right
-	vert = (currentVertex + 1) % TRIANGLE_NUM_EDGES;
+	vert = (currentVertex + 1) % Triangle::NUM_EDGES;
 	tri = snakeTriangles[currentIndex];
 	break;
       }
@@ -932,7 +932,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       nextIndex = currentIndex - 1;
     }
     if ((snakeTriangles[nextIndex] < size) && 
-	(snakeVertices[nextIndex] < TRIANGLE_NUM_VERTICES)) 
+	(snakeVertices[nextIndex] < Triangle::NUM_VERTICES)) 
       triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex], 
 						    config->bgColor);
 
@@ -986,7 +986,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     } while (!triangles[tri].hasLeds());
     currentIndex = 0;
     snakeTriangles[currentIndex] = tri;
-    snakeVertices[currentIndex] = random(0, TRIANGLE_NUM_EDGES);
+    snakeVertices[currentIndex] = random(0, Triangle::NUM_EDGES);
 
     colorMode++;
     DEBUG_VALUE(DEBUG_HIGH, " colormode=", colorMode);
@@ -1077,12 +1077,12 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
 	}
 	case 2:
 	  // Same triangle, vertex to the left
-	  vert = (currentVertex + TRIANGLE_NUM_EDGES - 1) % TRIANGLE_NUM_EDGES;
+	  vert = (currentVertex + Triangle::NUM_EDGES - 1) % Triangle::NUM_EDGES;
 	  tri = snakeTriangles[activeIndex];
 	  break;
 	case 3: {
 	  // Same triangle, vertex to the right
-	  vert = (currentVertex + 1) % TRIANGLE_NUM_EDGES;
+	  vert = (currentVertex + 1) % Triangle::NUM_EDGES;
 	  tri = snakeTriangles[activeIndex];
 	  break;
 	}
@@ -1111,7 +1111,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
       nextIndex = currentIndex - 1;
     }
     if ((snakeTriangles[nextIndex] < size) && 
-	(snakeVertices[nextIndex] < TRIANGLE_NUM_VERTICES)) 
+	(snakeVertices[nextIndex] < Triangle::NUM_VERTICES)) 
       triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex], 
 						    config->bgColor);
 
@@ -1174,7 +1174,7 @@ void trianglesVertexShift(Triangle *triangles, int size, int periodms,
     mode = random(0, num_modes);
 
     for (int tri = 0; tri < size; tri++) {
-      for (byte vertex = 0; vertex < TRIANGLE_NUM_VERTICES; vertex++) {
+      for (byte vertex = 0; vertex < Triangle::NUM_VERTICES; vertex++) {
 	Triangle *sourceT;
 	byte sourceV;
 	uint32_t color;

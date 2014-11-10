@@ -14,14 +14,14 @@ Triangle::Triangle(unsigned int _id) {
   mark = 0;
   id = _id;
 
-  for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
+  for (int e = 0; e < NUM_EDGES; e++) {
     edges[e] = NO_ID;
   }
 
-  for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
+  for (int v = 0; v < NUM_VERTICES; v++) {
     leds[v].pixel = NO_LED;
 
-    for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
+    for (int o = 0; o < VERTEX_ORDER; o++) {
       vertices[v][o] = NO_ID;
     }
   }
@@ -173,8 +173,8 @@ byte Triangle::getBlue(byte vertex) {
  *
  */
 byte Triangle::matchVertex(Triangle *neighbor) {
-  for (byte v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
-    for (byte i = 0; i < TRIANGLE_VERTEX_ORDER; i++) {
+  for (byte v = 0; v < NUM_VERTICES; v++) {
+    for (byte i = 0; i < VERTEX_ORDER; i++) {
       if (getVertex(v, i) == neighbor) {
 	return v;
       }
@@ -193,7 +193,7 @@ byte Triangle::matchVertex(Triangle *neighbor) {
  */
 byte Triangle::matchVertexRight(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
-  for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
+  for (byte edge = 0; edge < NUM_EDGES; edge++) {
     if (getEdge(edge) == neighbor) {
       // XXX - This doesn't consider the vertex at all!!!
       return edge;
@@ -212,10 +212,10 @@ byte Triangle::matchVertexRight(Triangle *neighbor, byte vertex) {
  */
 byte Triangle::matchVertexLeft(Triangle *neighbor, byte vertex) {
   /* Find the edge of the neighbor */
-  for (byte edge = 0; edge < TRIANGLE_NUM_EDGES; edge++) {
+  for (byte edge = 0; edge < NUM_EDGES; edge++) {
     if (getEdge(edge) == neighbor) {
       // XXX - This doesn't consider the vertex at all!!!
-      return (edge + 1) % TRIANGLE_NUM_EDGES;
+      return (edge + 1) % NUM_EDGES;
     }
   }
   return (byte)-1;
@@ -251,7 +251,7 @@ Triangle *Triangle::leftOfVertex(byte vertex) {
  * /_______\
  */
 Triangle *Triangle::rightOfVertex(byte vertex) {
-  if (vertex >= TRIANGLE_NUM_VERTICES) {
+  if (vertex >= NUM_VERTICES) {
     DEBUG_VALUE(DEBUG_ERROR, "rightOfVertex: invalid vertex:", vertex);
     DEBUG_VALUELN(DEBUG_ERROR, " id:", id);
     return NULL;
@@ -261,14 +261,14 @@ Triangle *Triangle::rightOfVertex(byte vertex) {
 
 void Triangle::print(byte level) {
   DEBUG_VALUE(level, "Tri: ", id);
-  for (int e = 0; e < TRIANGLE_NUM_EDGES; e++) {
+  for (int e = 0; e < NUM_EDGES; e++) {
     if (getEdge(e) != NULL) DEBUG_VALUE(level, " e:", getEdge(e)->id);
   }
 
-  for (int v = 0; v < TRIANGLE_NUM_VERTICES; v++) {
+  for (int v = 0; v < NUM_VERTICES; v++) {
     DEBUG_VALUE(level, " v:", v);
     DEBUG_VALUE(level, "-", getLED(v)->pixel); 
-    for (int o = 0; o < TRIANGLE_VERTEX_ORDER; o++) {
+    for (int o = 0; o < VERTEX_ORDER; o++) {
       if (getVertex(v, o) != NULL) DEBUG_VALUE(level, " ", getVertex(v, o)->id);
     }
   }

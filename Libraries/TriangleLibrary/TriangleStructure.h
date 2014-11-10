@@ -1,9 +1,12 @@
-#ifndef TRIANGLESTRUCTURE
-#define TRIANGLESTRUCTURE
-
-#include "PixelUtil.h"
-
-/*
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2014
+ *
+ * Definition of an ObjectLights triangle
+ *
+ * -----------------------------------------------------------------------------
+ *
  * A triangle is defined such that it has sides and vertices numbered 0-2,
  * starting at its "top" and going clockwise from there.
  *
@@ -21,16 +24,19 @@
  * then it cannot also neighbor at a vertex.  Vertex neighbors are also indexed
  * clockwise (or left to right if triangle is positioned with vertex on top).
  */
+#ifndef TRIANGLESTRUCTURE
+#define TRIANGLESTRUCTURE
 
-#define TRIANGLE_NUM_EDGES 3
-#define TRIANGLE_NUM_VERTICES 3
-#define TRIANGLE_VERTEX_ORDER 2
-class Triangle {
+#include "PixelUtil.h"
+
+#include "Geometry.h"
+
+class Triangle : public Geometry {
  public:
-
-  static const byte NO_LED = (byte)-1;
-  static const byte NO_VERTEX = (byte)-1;
-  static const byte NO_ID = (byte)-1;
+  /* Geometry values */
+  static const byte NUM_EDGES = 3;
+  static const byte NUM_VERTICES = 3;
+  static const byte VERTEX_ORDER = 2;
 
   Triangle() {};
   Triangle(unsigned int id);
@@ -75,8 +81,8 @@ class Triangle {
   byte mark;
 
  private:
-  byte edges[TRIANGLE_NUM_EDGES];
-  byte vertices[TRIANGLE_NUM_VERTICES][TRIANGLE_VERTEX_ORDER];
+  byte edges[NUM_EDGES];
+  byte vertices[NUM_VERTICES][VERTEX_ORDER];
 };
 
 /* Send updated values to a Pixel chain */
@@ -90,7 +96,7 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds);
 Triangle* buildCylinder(int *numTriangles, int numLeds);
 
 /* Macros for rotating around the vertices of a triangle */
-#define VERTEX_CW(v) ((v + 1) % TRIANGLE_NUM_VERTICES)
-#define VERTEX_CCW(v) ((v + TRIANGLE_NUM_VERTICES - 1) % TRIANGLE_NUM_VERTICES)
+#define VERTEX_CW(v) ((v + 1) % Triangle::NUM_VERTICES)
+#define VERTEX_CCW(v) ((v + Triangle::NUM_VERTICES - 1) % Triangle::NUM_VERTICES)
 
 #endif
