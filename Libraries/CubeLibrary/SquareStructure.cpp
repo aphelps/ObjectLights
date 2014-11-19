@@ -6,14 +6,17 @@
 #include "PixelUtil.h"
 #include "SquareStructure.h"
 
+// XXX: Relying on an array allocated by the main sketch feels icky
+extern Square *squares;
+
+
 Square::Square(unsigned int _id) {
-  hasLeds = false;
   updated = false;
   mark = 0;
   id = _id;
 
   for (int e = 0; e < NUM_EDGES; e++) {
-    edges[e] = NULL;
+    edges[e] = NO_ID;
   }
 
   for (int v = 0; v < NUM_VERTICES; v++) {
@@ -27,25 +30,24 @@ Square::Square(unsigned int _id) {
 
 
 Square *Square::getEdge(byte edge) {
-  return edges[edge];
+  return &squares[edges[edge]];
 }
 
 void Square::setEdge(byte edge, Square *square) {
-  edges[edge] = square;
+  edges[edge] = square->id;
 }
 
 Square *Square::getVertex(byte vertex, byte index) {
-  return vertices[vertex][index];
+  return &squares[vertices[vertex][index]];
 }
 
 void Square::setVertex(byte vertex, byte index, Square *square) {
-  vertices[vertex][index] = square;
+  vertices[vertex][index] = square->id;
 }
 
 void Square::setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2,
 			  uint16_t p3, uint16_t p4, uint16_t p5,
 			  uint16_t p6, uint16_t p7, uint16_t p8) {
-  hasLeds = true;
   leds[0].pixel = p0;
   leds[1].pixel = p1;
   leds[2].pixel = p2;
@@ -58,12 +60,11 @@ void Square::setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2,
 }
 
 void Square::setLedPixel(byte led, uint16_t pixel) {
-  hasLeds = true;
   leds[led].pixel = pixel;
 }
 
 void Square::setColor(byte r, byte g, byte b) {
-  if (hasLeds) {
+  if (hasLeds()) {
     for (int i = 0; i < NUM_LEDS; i++) {
       leds[i].setColor(r, g, b);
     }
@@ -72,14 +73,14 @@ void Square::setColor(byte r, byte g, byte b) {
 }
 
 void Square::setColor(byte led, byte r, byte g, byte b) {
-  if (hasLeds) {
+  if (hasLeds()) {
     leds[led].setColor(r, g, b);
     updated = true;
   }
 }
 
 void Square::setColor(uint32_t c) {
-  if (hasLeds) {
+  if (hasLeds()) {
     for (int i = 0; i < NUM_LEDS; i++) {
       leds[i].setColor(c);
     }
@@ -88,7 +89,7 @@ void Square::setColor(uint32_t c) {
 }
 
 void Square::setColor(byte led, uint32_t c) {
-  if (hasLeds) {
+  if (hasLeds()) {
     leds[led].setColor(c);
     updated = true;
   }
@@ -145,7 +146,7 @@ void Square::setColorEdge(byte edge, uint32_t c) {
 extern PixelUtil pixels;
 
 uint32_t Square::getColor() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixels.getColor(leds[0].pixel);
   } else {
     return 0;
@@ -153,7 +154,7 @@ uint32_t Square::getColor() {
 }
 
 uint32_t Square::getColor(byte led) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixels.getColor(leds[led].pixel);
   } else {
     return 0;
@@ -161,7 +162,7 @@ uint32_t Square::getColor(byte led) {
 }
 
 byte Square::getRed() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_red(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
@@ -169,7 +170,7 @@ byte Square::getRed() {
 }
 
 byte Square::getRed(byte vertex) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_red(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
@@ -178,7 +179,7 @@ byte Square::getRed(byte vertex) {
 
 
 byte Square::getGreen() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_green(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
@@ -186,7 +187,7 @@ byte Square::getGreen() {
 }
 
 byte Square::getGreen(byte vertex) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_green(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
@@ -195,7 +196,7 @@ byte Square::getGreen(byte vertex) {
 
 
 byte Square::getBlue() {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_blue(pixels.getColor(leds[0].pixel));
   } else {
     return 0;
@@ -203,7 +204,7 @@ byte Square::getBlue() {
 }
 
 byte Square::getBlue(byte vertex) {
-  if (hasLeds) {
+  if (hasLeds()) {
     return pixel_blue(pixels.getColor(leds[vertex].pixel));
   } else {
     return 0;
@@ -217,7 +218,7 @@ byte Square::getBlue(byte vertex) {
 /* Returns the edge of this square adjacent to the target square */
 byte Square::matchEdge(Square *square) {
   for (byte edge = 0; edge < NUM_EDGES; edge++) {
-    if (edges[edge] == square) return edge;
+    if (getEdge(edge) == square) return edge;
   }
   return NO_EDGE;
 }
@@ -387,7 +388,7 @@ uint16_t Square::ledTowards(byte led, byte direction) {
   /*
    * Next LED is on the next face
    */
-  Square *next_square = edges[direction];
+  Square *next_square = getEdge(direction);
   next_led = next_square->matchLED(this, led);
   return FACE_AND_LED(next_square->id, next_led);
 }
@@ -423,7 +424,7 @@ int Square::toBytes(byte *bytes, int size) {
 
   // Write out the IDs of the adjacent edges
   for (int face = 0; face < NUM_EDGES; face++) {
-    bytes[i++] = edges[face]->id;
+    bytes[i++] = getEdge(face)->id;
   }
 
   // Write out the pixel values
@@ -434,7 +435,7 @@ int Square::toBytes(byte *bytes, int size) {
   return i;
 }
 
-void Square::fromBytes(byte *bytes, int size, Square *squares, int numSquares) {
+void Square::fromBytes(byte *bytes, int size, Geometry *squares, int numSquares) {
   int i = 0;
 
   // Read the ID
@@ -443,9 +444,7 @@ void Square::fromBytes(byte *bytes, int size, Square *squares, int numSquares) {
   // Read the IDs of the adjacent edges
   for (int face = 0; face < NUM_EDGES; face++) {
     int id = bytes[i++];
-    for (int f = 0; f < numSquares; f++) {
-      if (squares[f].id == id) edges[face] = &squares[f];
-    }
+    edges[face] = id;
   }
 
   // Read the pixel values
@@ -454,6 +453,11 @@ void Square::fromBytes(byte *bytes, int size, Square *squares, int numSquares) {
   }
 }
 
+#ifdef DEBUG_LEVEL
+void Square::print(byte level) {
+
+}
+#endif
 
 /* Send updated values to a Pixel chain */
 void updateSquarePixels(Square *squares, int numSquares,

@@ -131,16 +131,16 @@ void squaresTestPattern(Square *squares, int size,
     /* Clear the color of the previous square and its edges*/
     squares[current % size].setColor(0, 0, 0);
     for (byte edge = 0; edge < 3; edge++) {
-      squares[current % size].edges[edge]->setColor(0, 0, 0);
+      squares[current % size].getEdge(edge)->setColor(0, 0, 0);
     }
 
     current = (current + 1) % size;
 
     /* Set the color on the new square and its edges */
     squares[current % size].setColor(255, 0, 0);
-    squares[current % size].edges[0]->setColor(00, 01, 00);
-    squares[current % size].edges[1]->setColor(00, 00, 01);
-    squares[current % size].edges[2]->setColor(01, 00, 01);
+    squares[current % size].getEdge(0)->setColor(00, 01, 00);
+    squares[current % size].getEdge(1)->setColor(00, 00, 01);
+    squares[current % size].getEdge(2)->setColor(01, 00, 01);
   }
 }
 
@@ -199,20 +199,20 @@ void squaresRandomNeighbor(Square *squares, int size,
     /* Clear the color of the previous square */
     current->setColor(0, 0, 0);
     for (byte edge = 0; edge < 3; edge++) {
-      current->edges[edge]->setColor(0, 0, 0);
+      current->getEdge(edge)->setColor(0, 0, 0);
     }
 
     /* Choose the next square */
     byte edge;
     do {
       edge = random(0, Square::NUM_EDGES);
-    } while (!current->edges[edge]->hasLeds);
-    current = current->edges[edge];
+    } while (!current->getEdge(edge)->hasLeds());
+    current = current->getEdge(edge);
 
     /* Set the color on the new square */
     current->setColor(arg->fgColor);
     for (byte edge = 0; edge < 3; edge++) {
-      current->edges[edge]->setColor(fadeTowards(arg->fgColor, 0, 95));
+      current->getEdge(edge)->setColor(fadeTowards(arg->fgColor, 0, 95));
     }
   }
 
@@ -464,14 +464,14 @@ void squaresBarCircle(Square *squares, int size,
   if (millis() > arg->next_time) {
     arg->next_time += arg->periodms;
 
-    Square *top = face->edges[Square::TOP];
+    Square *top = face->getEdge(Square::TOP);
     top->setColorEdge(top->matchEdge(face), arg->bgColor);
     face->setColorColumn(current_bar, arg->bgColor);
 
     current_bar = (current_bar + 1) % 3;
     if (current_bar == 0) {
-      face = face->edges[Square::RIGHT];
-      top = face->edges[Square::TOP];
+      face = face->getEdge(Square::RIGHT);
+      top = face->getEdge(Square::TOP);
     }
 
     top->setColorEdge(top->matchEdge(face), arg->fgColor);
@@ -513,7 +513,7 @@ void squaresCrawl(Square *squares, int size,
     case 0: {
       do {
 	if (led == Square::CENTER) break;
-	newface = face->edges[random(0, Square::NUM_EDGES)];
+	newface = face->getEdge(random(0, Square::NUM_EDGES));
 	//	if (newface->hasLeds) {
 	  newled = newface->matchLED(face, led);
 	  //}
@@ -572,7 +572,7 @@ void squaresOrbitTest(Square *squares, int size,
 
   if (setup) {
     face = startface;
-    prevface = face->edges[direction];
+    prevface = face->getEdge(direction);
     led = startled;
     setAllSquares(squares, size, arg->bgColor);
   }

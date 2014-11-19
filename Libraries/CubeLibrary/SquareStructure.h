@@ -88,20 +88,18 @@ class Square : public Geometry {
   uint16_t ledAwayFrom(Square *square, byte led);
   uint16_t ledTowards(byte led, byte direction);
 
-  /* Serialization functions */
-  int toBytes(byte *bytes, int size);
-  void fromBytes(byte *bytes, int size, Square *squares, int numSquares);
-
   void print(byte level);
 
+  /* Serialization functions */
+  int toBytes(byte *bytes, int size);
+  void fromBytes(byte *bytes, int size, Geometry *squares, int numSquares);
+
   // Variables - be careful of object size
-  boolean hasLeds;
-  boolean updated;
-  byte id;
   RGB leds[NUM_LEDS];
-  Square *edges[NUM_EDGES];
-  Square *vertices[NUM_VERTICES][VERTEX_ORDER];
-  byte mark;
+
+ protected:
+  byte edges[NUM_EDGES];
+  byte vertices[NUM_VERTICES][VERTEX_ORDER];
 };
 
 /* Send updated values to a Pixel chain */

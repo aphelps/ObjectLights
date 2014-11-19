@@ -95,7 +95,7 @@ int readCubeConfiguration(Square *squares, int numSquares, int offset) {
     DEBUG_VALUE(DEBUG_LOW, " - face=", face);
     DEBUG_VALUE(DEBUG_LOW, " offset=", offset);
     DEBUG_VALUE(DEBUG_LOW, " id=",  squares[face].id);
-    DEBUG_VALUE(DEBUG_LOW, " top=", squares[face].edges[Square::TOP]->id);
+    DEBUG_VALUE(DEBUG_LOW, " top=", squares[face].getEdge(Square::TOP)->id);
   }
   DEBUG_PRINT_END();
 

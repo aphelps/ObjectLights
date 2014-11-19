@@ -295,17 +295,17 @@ void setSquareFace(byte face, uint32_t color, boolean neighbors) {
   current_face = face;
 
   if (neighbors) {
-    squares[face].edges[Square::TOP]->setColor(128, 0, 0);
-    squares[face].edges[Square::TOP]->setColor(1, 0, 0, 0);
+    squares[face].getEdge(Square::TOP)->setColor(128, 0, 0);
+    squares[face].getEdge(Square::TOP)->setColor(1, 0, 0, 0);
 
-    squares[face].edges[Square::RIGHT]->setColor(0, 128, 0);
-    squares[face].edges[Square::RIGHT]->setColor(1, 0, 0, 0);
+    squares[face].getEdge(Square::RIGHT)->setColor(0, 128, 0);
+    squares[face].getEdge(Square::RIGHT)->setColor(1, 0, 0, 0);
 
-    squares[face].edges[Square::BOTTOM]->setColor(0, 0, 128);
-    squares[face].edges[Square::BOTTOM]->setColor(1, 0, 0, 0);
+    squares[face].getEdge(Square::BOTTOM)->setColor(0, 0, 128);
+    squares[face].getEdge(Square::BOTTOM)->setColor(1, 0, 0, 0);
 
-    squares[face].edges[Square::LEFT]->setColor(128, 0, 128);
-    squares[face].edges[Square::LEFT]->setColor(1, 0, 0, 0);
+    squares[face].getEdge(Square::LEFT)->setColor(128, 0, 128);
+    squares[face].getEdge(Square::LEFT)->setColor(1, 0, 0, 0);
   }
 
   updateSquarePixels(squares, numSquares, &pixels);
