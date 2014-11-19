@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Write out a CubeLight configuration and provide a CLI for establishing the
- * individual faces and LEDs of the Cube.
- *
  * Author: Adam Phelps
  * License: Creative Commons Attribution-Non-Commercial
  * Copyright: 2014
+ *
+ * Write out a CubeLight configuration and provide a CLI for establishing the
+ * individual faces and LEDs of the Cube.
  ******************************************************************************/
 
 #include "EEPROM.h"
@@ -26,6 +26,7 @@
 #include "SerialCLI.h"
 #include "RS485Utils.h"
 
+#include "Geometry.h"
 #include "SquareStructure.h"
 #include "CubeLights.h"
 #include "CubeConfig.h"
@@ -52,8 +53,6 @@ SerialCLI serialcli(128, cliHandler);
 config_hdr_t readconfig;
 config_max_t readoutputs[MAX_OUTPUTS];
 
-int configOffset = -1;
-
 // XXX: These should probably come from libraries
 RS485Socket rs485;
 MPR121 touch_sensor;
@@ -71,8 +70,7 @@ void setup()
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
-  DEBUG_VALUELN(DEBUG_LOW, "Configure initialized.  End address=",
-		configOffset);
+  DEBUG_PRINTLN(DEBUG_LOW, "Configure initialized");
   DEBUG_MEMORY(DEBUG_HIGH);
 }
 
@@ -87,11 +85,6 @@ void loop()
   }
 
   serialcli.checkSerial();
-
-  //  for (int tri = 0; tri < numSquares; tri++) {
-  //    squares[tri].setColor(pixel_color(255, 0, 0));
-  //    squares[tri].mark = 0;
-  //  }
 
   blink_value(PIN_DEBUG_LED, config.address, 250, 4);
   delay(10);
@@ -256,7 +249,7 @@ void cliHandler(char **tokens, byte numtokens) {
 
   case 'w': {
     if (strcmp(tokens[0], "write") == 0) {
-      configOffset = hmtl_write_config(&config, outputs);
+      int configOffset = hmtl_write_config(&config, outputs);
       if (configOffset < 0) {
 	DEBUG_ERR("Failed to write config");
       }

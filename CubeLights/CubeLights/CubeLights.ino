@@ -68,28 +68,15 @@ void setup()
   Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_LOW, "*** CubeLights Initializing ***");
   DEBUG_PRINTLN(DEBUG_LOW, "* Baud is 9600");
-  //Serial.print("Set baud rate to 115200");
-  //Serial.begin(115200);
 
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(0) + analogRead(2) + micros());
 
-#ifdef CONFIG_ENABLED
   Wire.begin();
   readHMTLConfiguration();
 
   /* Setup the external connection */
   initializeConnect();
-#else
-  /* Generate the geometry */
-  int numLeds = 45 + FIRST_LED;
-  int numSquares = NUM_SQUARES;
-  squares = buildCube(&numSquares, numLeds, FIRST_LED);
-  DEBUG_VALUELN(DEBUG_LOW, "* Inited with NUM_SQUARES:", numSquares);
-
-  pixels = PixelUtil(numLeds, 12, 8);
-  sensor_cap_init(); /* Initialize the capacitive sensors */
-#endif
 
   /* Setup the sensors */
   initializePins();
