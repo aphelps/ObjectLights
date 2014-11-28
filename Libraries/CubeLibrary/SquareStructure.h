@@ -94,6 +94,11 @@ class Square : public Geometry {
   int toBytes(byte *bytes, int size);
   void fromBytes(byte *bytes, int size, Geometry *squares, int numSquares);
 
+  /* Functions for returning constants for superclass */
+  byte numEdges() { return NUM_EDGES; }
+  byte numVertices() { return NUM_VERTICES; }
+  byte numLeds() { return NUM_LEDS; }
+
   // Variables - be careful of object size
   RGB leds[NUM_LEDS];
 

@@ -22,6 +22,13 @@ class Geometry {
   static const byte NO_ID = (byte)-1;
 
   /*
+   * Functions for getting constants from sub-classes
+   */
+  virtual byte numEdges();
+  virtual byte numVertices();
+  virtual byte numLeds();
+
+  /*
    * Serialization functions
    */
 

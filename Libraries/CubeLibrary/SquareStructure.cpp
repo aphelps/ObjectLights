@@ -415,6 +415,13 @@ uint16_t Square::ledAwayFrom(Square *square, byte led) {
 
 /******************************************************************************
  * Serialization functions
+ *
+ * Serialized format:
+ *   ID             1B
+ *   IDs of edges   4B
+ *   pixels         9B
+ *   ------------  ---
+ *   Total         14B 
  */
 int Square::toBytes(byte *bytes, int size) {
   int i = 0;
@@ -424,7 +431,7 @@ int Square::toBytes(byte *bytes, int size) {
 
   // Write out the IDs of the adjacent edges
   for (int face = 0; face < NUM_EDGES; face++) {
-    bytes[i++] = getEdge(face)->id;
+    bytes[i++] = edges[face];
   }
 
   // Write out the pixel values
