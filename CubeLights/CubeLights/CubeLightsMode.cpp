@@ -36,7 +36,7 @@ uint8_t validModes[] = {
   , MODE_SIMPLE_LIFE
   ///  , MODE_SOUND_TEST
   //, MODE_SOUND_TEST2
-  , MODE_STROBE
+  //, MODE_STROBE
 };
 #define VALID_MODES (sizeof (validModes) / sizeof (uint8_t))
 
@@ -60,7 +60,7 @@ square_mode_t modeFunctions[] = {
   squaresSimpleLife,
   NULL, ///squaresSoundTest,
   NULL, //squaresSoundTest2,
-  squaresStrobe
+  NULL, //squaresStrobe
 };
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (square_mode_t))
 
@@ -89,7 +89,7 @@ uint16_t modePeriods[] = {
 };
 
 uint8_t current_modes[MAX_MODES] = {
-  VALID_MODES - 2,  // This is the starting mode
+  0, //VALID_MODES - 5,  // This is the starting mode
   MODE_NONE,
   MODE_NONE
 };

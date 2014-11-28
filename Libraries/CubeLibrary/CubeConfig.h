@@ -13,8 +13,11 @@
 #define DEE_CUBE    1
 #define PARENT_CUBE 2
 #define SETH_CUBE   3
+#define OTHER_CUBE  4
 
-#define CUBE_NUMBER ADAM_CUBE
+#define BIG_CUBE    5
+
+#define CUBE_NUMBER BIG_CUBE
 
 #define CUBE_VERSION 1
 
@@ -31,6 +34,13 @@
 #elif CUBE_NUMBER == ADAM_CUBE
   #define CAP_SENSOR_1 0
   #define CAP_SENSOR_2 1
+  #define CAP_SENSOR_1_TOUCH 15
+  #define CAP_SENSOR_1_RELEASE 2
+  #define CAP_SENSOR_2_TOUCH 15
+  #define CAP_SENSOR_2_RELEASE 2
+#elif CUBE_NUMBER == BIG_CUBE
+  #define CAP_SENSOR_1 11
+  #define CAP_SENSOR_2 9
   #define CAP_SENSOR_1_TOUCH 15
   #define CAP_SENSOR_1_RELEASE 2
   #define CAP_SENSOR_2_TOUCH 15
