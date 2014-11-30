@@ -826,11 +826,11 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
     // Check for a response
     unsigned long elapsed = millis() - lastSend;
     unsigned int msglen;
-    const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
+    const byte *data = rs485.getMsg(my_address, &msglen);
     if (data != NULL) {
-      // Data should be an array of 8 uint16_t
       DEBUG_PRINT(DEBUG_TRACE, " value:");
 #ifdef SOUND_LEVELED
+      // Data should be an array of 8 uint16_t
       uint8_t *valptr = (uint8_t *)data;
 #else
       uint16_t *valptr = (uint16_t *)data;
@@ -840,30 +840,30 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
       uint32_t total = 0;
       while ((unsigned int)valptr - (unsigned int)data < msglen) {
 #ifdef SOUND_LEVELED
-	uint8_t val = *valptr;
+        uint8_t val = *valptr;
 #else
-	uint16_t val = *valptr;
+        uint16_t val = *valptr;
 #endif
-	DEBUG_HEXVAL(DEBUG_TRACE, " ", val);
+        DEBUG_HEXVAL(DEBUG_TRACE, " ", val);
 
-	/* Shift the new value into each column */
-	uint32_t newcolor;
-	if (val) {
-	  byte heat = (val > 15 ? 255 : val * val);
-	  newcolor = pixel_heat(heat);
-	} else {
-	  newcolor = 0;
-	}
-	squares[face].shiftColumnDown(col % Square::SQUARE_LED_COLS, newcolor);
+        /* Shift the new value into each column */
+        uint32_t newcolor;
+        if (val) {
+          byte heat = (val > 15 ? 255 : val * val);
+          newcolor = pixel_heat(heat);
+        } else {
+          newcolor = 0;
+        }
+        squares[face].shiftColumnDown(col % Square::SQUARE_LED_COLS, newcolor);
 
-	col++;
-	if (col % Square::SQUARE_LED_COLS == 0) {
-	  face++;
-	}
+        col++;
+        if (col % Square::SQUARE_LED_COLS == 0) {
+          face++;
+        }
 
-	total += val;
+        total += val;
 
-	valptr++;
+        valptr++;
       }
       DEBUG_VALUE(DEBUG_TRACE, " Elapsed:", elapsed);
 
@@ -879,20 +879,20 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 #if 0
       // XXX - Trigger if over
       if (heat > 250) {
-	static unsigned long last_send = 0;
-	if (millis() - last_send > 100) {
-	  sendHMTLTimedChange(ADDRESS_POOFER_UNIT, 2,
-			      250, 0xFFFFFFFF, 0);
-	  last_send = millis();
-	}
+        static unsigned long last_send = 0;
+        if (millis() - last_send > 100) {
+          sendHMTLTimedChange(ADDRESS_POOFER_UNIT, 2,
+                              250, 0xFFFFFFFF, 0);
+          last_send = millis();
+        }
       }
 #endif
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {
       if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
-	DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
-	lastSend = 0; // Reset the lastSend time so another request can be sent
+        DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
+        lastSend = 0; // Reset the lastSend time so another request can be sent
       }
     }
   }
@@ -930,32 +930,32 @@ void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
       byte face = 0;
       byte led = 0;
       while ((unsigned int)valptr - (unsigned int)data < msglen) {
-	uint16_t val = *valptr;
+        uint16_t val = *valptr;
 
-	DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
+        DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
 
-	byte heat = (val > 15 ? 255 : val * val);
-	uint32_t newcolor = pixel_heat(heat);
+        byte heat = (val > 15 ? 255 : val * val);
+        uint32_t newcolor = pixel_heat(heat);
 
-	squares[face].setColor(led, newcolor);
+        squares[face].setColor(led, newcolor);
 
-	led++;
-	if (led == Square::NUM_LEDS) {
-	  led = 0;
-	  face++;
-	}
-	if (face > size)
-	  break;
+        led++;
+        if (led == Square::NUM_LEDS) {
+          led = 0;
+          face++;
+        }
+        if (face > size)
+          break;
 
-	valptr++;
+        valptr++;
       }
       DEBUG_VALUELN(DEBUG_HIGH, " Elapsed:", elapsed);
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {
       if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
-	DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
-	lastSend = 0; // Reset the lastSend time so another request can be sent
+        DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
+        lastSend = 0; // Reset the lastSend time so another request can be sent
       }
     }
   }

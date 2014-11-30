@@ -18,6 +18,7 @@
 #include <math.h>
 #include <Wire.h>
 
+#define DEBUG_XMIT DEBUG_MID
 #define DEBUG_LEVEL DEBUG_ERROR
 #include <Debug.h>
 
@@ -114,11 +115,10 @@ byte rs485_buffer[SEND_BUFFER_SIZE];
 byte *send_buffer; // Pointer to use for start of send data
 RS485Socket rs485(4, 7, 5, false);
 #define MY_ADDR 0x01
-#define DEST_ADDR 0x00
 
-#define RED_LED     10
+#define RED_LED     13
 #define GREEN_LED   11
-#define BLUE_LED    13
+#define BLUE_LED    10
 
 
 
@@ -305,16 +305,17 @@ boolean handleMessages() {
   if (data != NULL) {
     uint16_t response_len = 0;
 
-    DEBUG_VALUE(DEBUG_TRACE, "Recv: command=", data[0]);
-    DEBUG_VALUE(DEBUG_TRACE, " len=", msglen);
+    DEBUG_VALUE(DEBUG_XMIT, "Recv: command=", data[0]);
+    DEBUG_VALUE(DEBUG_XMIT, " len=", msglen);
+    DEBUG_VALUE(DEBUG_XMIT, " data=", (char)data[0]);
 
     switch (data[0]) {
     case 'S': {
       // Return the entire spectrum array
       uint16_t *sendPtr = (uint16_t *)send_buffer;
       for (byte x = 0; x < FFT_N/2; x++) {
-	*sendPtr = spectrum[x];
-	sendPtr++;
+        *sendPtr = spectrum[x];
+        sendPtr++;
       }
       response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
       break;
@@ -323,8 +324,8 @@ boolean handleMessages() {
       // Return the current raw column values
       uint16_t *sendPtr = (uint16_t *)send_buffer;
       for (byte c = 0; c < NUM_COLUMNS; c++) {
-	*sendPtr = col[c][colCount];
-	sendPtr++;
+        *sendPtr = col[c][colCount];
+        sendPtr++;
       }
       response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
       break;
@@ -333,8 +334,8 @@ boolean handleMessages() {
       // Return the current leveled column values
       uint8_t *sendPtr = (uint8_t *)send_buffer;
       for (byte c = 0; c < NUM_COLUMNS; c++) {
-	*sendPtr = colLeveled[c];
-	sendPtr++;
+        *sendPtr = colLeveled[c];
+        sendPtr++;
       }
       response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
       break;
@@ -342,8 +343,10 @@ boolean handleMessages() {
     }
 
     if (response_len > 0) {
-      DEBUG_VALUE(DEBUG_TRACE, " retlen=", response_len);
-      rs485.sendMsgTo(DEST_ADDR, send_buffer, response_len);
+      DEBUG_VALUE(DEBUG_XMIT, " retlen=", response_len);
+      uint16_t source_address = RS485_SOURCE_FROM_DATA(data);
+      DEBUG_VALUE(DEBUG_XMIT, " retaddr=", source_address);
+      rs485.sendMsgTo(source_address, send_buffer, response_len);
     }
 
     DEBUG_PRINT_END();
