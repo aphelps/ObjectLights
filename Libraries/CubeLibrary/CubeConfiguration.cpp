@@ -32,18 +32,18 @@ PixelUtil pixels;
 Square *squares;
 
 #define CUBE_MAX_OUTPUTS 4
-void readHMTLConfiguration() {
-  config_hdr_t config;
-  output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
-  config_max_t readoutputs[CUBE_MAX_OUTPUTS];
+void readHMTLConfiguration(config_hdr_t *config, 
+                           output_hdr_t *outputs[],
+                           config_max_t readoutputs[],
+                           byte max_outputs) {
   int offset;
 
   // XXX: Use ObjectConfiguation version???
 
-  uint32_t outputs_found = hmtl_setup(&config, readoutputs, outputs,
-				     NULL, CUBE_MAX_OUTPUTS,
-				     &rs485, &pixels, &touch_sensor,
-				     NULL, NULL, &offset);
+  uint32_t outputs_found = hmtl_setup(config, readoutputs, outputs,
+                                      NULL, max_outputs,
+                                      &rs485, &pixels, &touch_sensor,
+                                      NULL, NULL, &offset);
 
   if (!(outputs_found & (1 << HMTL_OUTPUT_RS485))) {
     DEBUG_ERR("No RS485 config found");
@@ -61,7 +61,7 @@ void readHMTLConfiguration() {
   }
 
   /* Store the configured address */
-  my_address = config.address;
+  my_address = config->address;
 
   /* Construct the initial cube geometry */
   int numSquares;
@@ -92,10 +92,10 @@ int readCubeConfiguration(Square *squares, int numSquares, int offset) {
     }
     squares[face].fromBytes(bytes, CONFIG_BUFFER_SZ, squares, numSquares);
 
-    DEBUG_VALUE(DEBUG_LOW, " - face=", face);
+    DEBUG_VALUE(DEBUG_LOW, "face=", face);
     DEBUG_VALUE(DEBUG_LOW, " offset=", offset);
     DEBUG_VALUE(DEBUG_LOW, " id=",  squares[face].id);
-    DEBUG_VALUE(DEBUG_LOW, " top=", squares[face].getEdge(Square::TOP)->id);
+    DEBUG_VALUELN(DEBUG_LOW, " top=", squares[face].getEdge(Square::TOP)->id);
   }
   DEBUG_PRINT_END();
 

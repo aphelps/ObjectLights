@@ -41,6 +41,7 @@ int numSquares = 6;
 #define MAX_OUTPUTS 4
 config_hdr_t config;
 output_hdr_t *outputs[MAX_OUTPUTS];
+config_max_t readoutputs[MAX_OUTPUTS];
 
 config_value_t val_output, val_output2, val_output3, val_output4;
 config_rgb_t rgb_output, rgb_output2;
@@ -49,9 +50,6 @@ config_mpr121_t mpr121_output;
 config_rs485_t rs485_output;
 
 SerialCLI serialcli(128, cliHandler);
-
-config_hdr_t readconfig;
-config_max_t readoutputs[MAX_OUTPUTS];
 
 // XXX: These should probably come from libraries
 RS485Socket rs485;
@@ -65,12 +63,11 @@ void setup()
   DEBUG_PRINTLN(DEBUG_LOW, "*** CubeConfigure started ***");
 
   /* Read the current configuration from EEProm */
-  readHMTLConfiguration();
-  clearSquares();
+  readHMTLConfiguration(&config, outputs, readoutputs, MAX_OUTPUTS);
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
-  DEBUG_PRINTLN(DEBUG_LOW, "Configure initialized");
+  DEBUG_PRINTLN(DEBUG_LOW, "*** Configure initialized ***");
   DEBUG_MEMORY(DEBUG_HIGH);
 }
 
@@ -81,6 +78,15 @@ void loop()
     DEBUG_VALUE(0, "My address:", config.address);
     DEBUG_VALUELN(0, " Was config written: ", wrote_config);
     hmtl_print_config(&config, outputs);
+
+    for (byte s = 0; s < NUM_SQUARES; s++) {
+      DEBUG_VALUE(DEBUG_LOW, "Square: ", s);
+      for (byte led = 0; led < Square::NUM_LEDS; led++) {
+        DEBUG_VALUE(DEBUG_LOW, " ", squares[s].leds[led].pixel);
+      }
+      DEBUG_PRINT_END();
+    }
+
     output_data = true;
   }
 

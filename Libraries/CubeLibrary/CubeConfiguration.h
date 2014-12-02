@@ -16,7 +16,10 @@ typedef struct {
 
 #define CONFIG_BUFFER_SZ 32 // Buffer size for reading and writing configs
 
-void readHMTLConfiguration();
+void readHMTLConfiguration(config_hdr_t *config, 
+                           output_hdr_t *outputs[],
+                           config_max_t readoutputs[],
+                           byte max_outputs);
 int readCubeConfiguration(Square *squares, int numSquares, int offset);
 int writeCubeConfiguration(Square *squares, int numSquares, int offset);
 

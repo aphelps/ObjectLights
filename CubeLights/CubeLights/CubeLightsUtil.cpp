@@ -429,7 +429,7 @@ void squaresSwitchRandom(Square *squares, int size,
   if (millis() > arg->next_time) {
     arg->next_time += arg->periodms;
 
-    byte square = random(0, 5);
+    byte square = random(0, NUM_SQUARES);
     byte led = random(0, Square::NUM_LEDS);
 
     if (squares[square].getColor(led) != arg->bgColor) {

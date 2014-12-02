@@ -34,7 +34,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 20 // %META INCR
+#define CUBE_LIGHT_BUILD 21 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {
@@ -73,7 +73,13 @@ void setup()
   randomSeed(analogRead(0) + analogRead(2) + micros());
 
   Wire.begin();
-  readHMTLConfiguration();
+
+
+ #define MAX_OUTPUTS 4
+  config_hdr_t config;
+  output_hdr_t *outputs[MAX_OUTPUTS];
+  config_max_t readoutputs[MAX_OUTPUTS];
+  readHMTLConfiguration(&config, outputs, readoutputs, MAX_OUTPUTS);
 
   /* Setup the external connection */
   initializeConnect();
