@@ -33,8 +33,8 @@ uint8_t validModes[] = {
   , MODE_BLINK_PATTERN
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
-  , MODE_SIMPLE_LIFE
-  ///  , MODE_SOUND_TEST
+  // , MODE_SIMPLE_LIFE
+  , MODE_SOUND_TEST
   //, MODE_SOUND_TEST2
   //, MODE_STROBE
 };
@@ -57,8 +57,8 @@ square_mode_t modeFunctions[] = {
   squaresBlinkPattern,
   NULL, //squaresOrbitTest,
   squaresVectors,
-  squaresSimpleLife,
-  NULL, ///squaresSoundTest,
+  NULL, //squaresSimpleLife,
+  squaresSoundTest,
   NULL, //squaresSoundTest2,
   NULL, //squaresStrobe
 };
@@ -89,7 +89,7 @@ uint16_t modePeriods[] = {
 };
 
 uint8_t current_modes[MAX_MODES] = {
-  0, //VALID_MODES - 5,  // This is the starting mode
+  VALID_MODES - 2,  // This is the starting mode
   MODE_NONE,
   MODE_NONE
 };
@@ -168,7 +168,7 @@ uint8_t validFollowups[] = {
   //  , MODE_CAP_RESPONSE
   //  , MODE_STATIC_NOISE
   //  , MODE_SWITCH_RANDOM
-  MODE_LIGHT_CENTER,
+  //MODE_LIGHT_CENTER,
   MODE_BLINK_PATTERN,
   (uint8_t)-1
 };

@@ -4,7 +4,7 @@
  * Copyright: 2014
  ******************************************************************************/
 
-#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_HIGH
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -242,18 +242,14 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
     DEBUG_PRINTLN(DEBUG_HIGH, "Entered default UI");
   }
 
-  // If just sensor 1 is being touched
-  if (CHECK_TOUCH_1() && !CHECK_TOUCH_BOTH()) {
-    // Set followup color
+  // If only one sensor is touched, adjust the color
+  if ((CHECK_TOUCH_1() || CHECK_TOUCH_2()) && !CHECK_TOUCH_BOTH()) {
     static byte color = 0;
-    color++;
-    modeConfigs[FINAL_MODE].fgColor = pixel_wheel(color);
-  }
-
-  // If just sensor 2 is being touched
-  if (CHECK_TOUCH_2() && !CHECK_TOUCH_BOTH()) {
-    static byte color = 0;
-    color++;
+    if (CHECK_TOUCH_1()) {
+      color++;
+    } else {
+      color--;
+    }
     modeConfigs[0].fgColor = pixel_wheel(color);
   }
 
@@ -329,9 +325,12 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
       /* If the pilot hadn't previously been ignited, do so now */
       DEBUG_PRINTLN(DEBUG_HIGH, "Igniting pilot light");
 
+      delay(10); // XXX - For some reason we need a delay between transmissions
+
       /* Turn on the hot surface igniter */
       sendHMTLTimedChange(ADDRESS_POOFER_UNIT, IGNITER_OUTPUT,
 			  30000, 0xFFFFFFFF, 0);
+
       last_send = now;
 	
       modeConfigs[FINAL_MODE].fgColor = pixel_color(255, 0, 0);
@@ -344,7 +343,6 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
     set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
     DEBUG_HEXVALLN(DEBUG_HIGH, "Entered poofer control.  Mask:", 
 		   modeConfigs[FINAL_MODE].data.u32s[0]);
-    DEBUG_HEXVALLN(DEBUG_HIGH, "YYY:", modeConfigs[FINAL_MODE].data.u32s[0]);
   }
 
   if (pilot_state == PILOT_OFF) {

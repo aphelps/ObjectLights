@@ -460,11 +460,12 @@ void Square::fromBytes(byte *bytes, int size, Geometry *squares, int numSquares)
   }
 }
 
-#ifdef DEBUG_LEVEL
 void Square::print(byte level) {
+#ifdef DEBUG_LEVEL
 
-}
 #endif
+}
+
 
 /* Send updated values to a Pixel chain */
 void updateSquarePixels(Square *squares, int numSquares,

@@ -40,13 +40,13 @@ Triangle *triangles;
 
 #define MODE_PERIOD 50
 triangle_mode_t modeFunctions[] = {
+  trianglesSetAll,
   trianglesVertexMergeFade,
-  trianglesVertexMerge,
+  //  trianglesVertexMerge,
   trianglesVertexShift,
   trianglesSnake2,
   trianglesLooping,
-  //  trianglesSetAll,
-  trianglesCircle,
+  //trianglesCircle,
   //  trianglesCircleCorner2,
   //  trianglesRandomNeighbor,
   //trianglesLifePattern,
@@ -60,13 +60,13 @@ triangle_mode_t modeFunctions[] = {
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (triangle_mode_t))
 
 uint16_t modePeriods[] = {
+  1000,
   MODE_PERIOD,
-  MODE_PERIOD,
+  //  MODE_PERIOD,
   MODE_PERIOD * 2,
   MODE_PERIOD,
   MODE_PERIOD,
-  //  1000,
-  MODE_PERIOD,
+  //MODE_PERIOD,
   //  MODE_PERIOD,
   //  MODE_PERIOD,
   // 500,
@@ -87,12 +87,13 @@ pattern_args_t patternConfig = {
 
 void setup()
 {
+  Serial.begin(9600);
+
   if (NUM_PERIODS != NUM_MODES) {
     DEBUG_ERR("NUM_MODES != NUM_PERIODS");
     DEBUG_ERR_STATE(1);
   }
 
-  Serial.begin(9600);
   DEBUG_PRINTLN(DEBUG_HIGH, "*** TriangleLights Initializing ***");
 
   pinMode(DEBUG_LED, OUTPUT);
@@ -101,16 +102,39 @@ void setup()
   randomSeed(analogRead(3) + analogRead(4) + micros());
 
   //Wire.begin(); // Needed for MPR121
-  readHMTLConfiguration(&pixels, &rs485, NULL);
+ #define MAX_OUTPUTS 4
+  config_hdr_t config;
+  output_hdr_t *outputs[MAX_OUTPUTS];
+  config_max_t readoutputs[MAX_OUTPUTS];
+  int configOffset = readHMTLConfiguration(&config, 
+                                           outputs, readoutputs, MAX_OUTPUTS,
+                                           &pixels, &rs485, NULL);
 
   /* Setup the sensors */
   initializePins();
 
+  //#if 0
+ XXX: WHY DOES THIS HAVE TO BE HERE???
   /* Generate the geometry */
   triangles = buildIcosohedron(&numTriangles, pixels.numPixels());
   //triangles = buildCylinder(&numTriangles, pixels.numPixels());
+  //#else
+  readTriangleStructure(configOffset, 
+                        &triangles,
+                        &numTriangles);
+  //#endif
 
   DEBUG_VALUELN(DEBUG_LOW, "Inited with numTriangles:", numTriangles);
+  delay(1000);
+
+    DEBUG_VALUE(0, "\nMy address:", config.address);
+    hmtl_print_config(&config, outputs);
+
+    DEBUG_VALUELN(0, "Triangles: ", numTriangles);
+    for (int tri = 0; tri < numTriangles; tri++) {
+      triangles[tri].print(0);
+    }
+
 }
 
 void loop() {

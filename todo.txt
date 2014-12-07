@@ -1,4 +1,4 @@
-Poofer control todo
+Cube Poofer control todo
 ===============
 * If not fully ignited, disable when exiting control mode
 * Need ability to turn it off
@@ -20,10 +20,6 @@ General todo
   - Improved color scheme
   - Fade brightness towards the tail of the snake
   - Intermittently choose a new color scheme
-* Optimize triangle structure
-  - Use the color data in the pixels rather than one in structure
-  - Change booleans to byte + flags
-  - Switch pointers to indexes
 * Figure out why Life2 has only red
 * Mode that lights up the points
 

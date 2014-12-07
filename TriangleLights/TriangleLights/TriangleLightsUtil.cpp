@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
 #include "TriangleLights.h"
@@ -997,40 +997,40 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
 
     /* Determine which colors to use for the snake */
     switch (colorMode % 1) {
-    case 0: {
-      for (int i = 0; i < SNAKE_LENGTH; i++) {
-	values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
+      case 0: {
+        for (int i = 0; i < SNAKE_LENGTH; i++) {
+          values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
+        }
+        break;
       }
-      break;
-    }
-    case 1: {
-      for (int i = 0; i < SNAKE_LENGTH; i++) {
-	byte red = 255 >> i;
-	values[i] = pixel_color(red, 0, 0);
+      case 1: {
+        for (int i = 0; i < SNAKE_LENGTH; i++) {
+          byte red = 255 >> i;
+          values[i] = pixel_color(red, 0, 0);
+        }
+        break;
       }
-      break;
-    }
-    case 2: {
-      for (int i = 0; i < SNAKE_LENGTH; i++) {
-	byte green = 255 >> i;
-	values[i] = pixel_color(0, green, 0);
+      case 2: {
+        for (int i = 0; i < SNAKE_LENGTH; i++) {
+          byte green = 255 >> i;
+          values[i] = pixel_color(0, green, 0);
+        }
+        break;
       }
-      break;
-    }
-    case 3: {
-      for (int i = 0; i < SNAKE_LENGTH; i++) {
-	byte blue = 255 >> i;
-	values[i] = pixel_color(0, 0, blue);
+      case 3: {
+        for (int i = 0; i < SNAKE_LENGTH; i++) {
+          byte blue = 255 >> i;
+          values[i] = pixel_color(0, 0, blue);
+        }
+        break;
       }
-      break;
-    }
-    case 4: {
-      for (int i = 0; i < SNAKE_LENGTH; i++) {
-	byte color = 255 >> i;
-	values[i] = pixel_color(color, color, color);
+      case 4: {
+        for (int i = 0; i < SNAKE_LENGTH; i++) {
+          byte color = 255 >> i;
+          values[i] = pixel_color(color, color, color);
+        }
+        break;
       }
-      break;
-    }
     }
 
     /* Clear the tail */
@@ -1049,51 +1049,52 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
 
       byte startDirection = random(0, 4);
       for (byte direction = 0; direction < 4; direction++) {
-	switch ((startDirection + direction) % 4) {
-	case 0:
-	default: {
-	  // Triangle to the left
-	  Triangle *t = current->leftOfVertex(currentVertex);
-	  if (t == NULL) {
-	    DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
-	    DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
-	  }
-	  tri = t->id;
-	  vert = triangles[tri].matchVertexRight(current, 
-						 currentVertex);	
-	  break;
-	}
-	case 1: {
-	  // Triangle to the right
-	  Triangle *t = current->rightOfVertex(currentVertex);
-	  if (t == NULL) {
-	    DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
-	    DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
-	  }
-	  tri = t->id;
-	  vert = triangles[tri].matchVertexLeft(current, 
-						currentVertex);
-	  break;
-	}
-	case 2:
-	  // Same triangle, vertex to the left
-	  vert = (currentVertex + Triangle::NUM_EDGES - 1) % Triangle::NUM_EDGES;
-	  tri = snakeTriangles[activeIndex];
-	  break;
-	case 3: {
-	  // Same triangle, vertex to the right
-	  vert = (currentVertex + 1) % Triangle::NUM_EDGES;
-	  tri = snakeTriangles[activeIndex];
-	  break;
-	}
-	}
+        switch ((startDirection + direction) % 4) {
+          case 0:
+          default: {
+            // Triangle to the left
+            Triangle *t = current->leftOfVertex(currentVertex);
+            if (t == NULL) {
+              DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
+              DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
+            }
+            tri = t->id;
+            vert = triangles[tri].matchVertexRight(current, 
+                                                   currentVertex);	
+            break;
+          }
+          case 1: {
+            // Triangle to the right
+            Triangle *t = current->rightOfVertex(currentVertex);
+            if (t == NULL) {
+              DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
+              DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
+            }
+            tri = t->id;
+            vert = triangles[tri].matchVertexLeft(current, 
+                                                  currentVertex);
+            break;
+          }
+          case 2: {
+            // Same triangle, vertex to the left
+            vert = (currentVertex + Triangle::NUM_EDGES - 1) % Triangle::NUM_EDGES;
+            tri = snakeTriangles[activeIndex];
+            break;
+          }
+          case 3: {
+            // Same triangle, vertex to the right
+            vert = (currentVertex + 1) % Triangle::NUM_EDGES;
+            tri = snakeTriangles[activeIndex];
+            break;
+          }
+        }
 
-	if ((triangles[tri].hasLeds()) &&
-	    (triangles[tri].leds[vert].color() == config->bgColor)) {
-	  // Verify that the choosen vertex is dark
-	  found = true;
-	  goto FOUND;
-	}
+        if ((triangles[tri].hasLeds()) &&
+            (triangles[tri].leds[vert].color() == config->bgColor)) {
+          // Verify that the choosen vertex is dark
+          found = true;
+          goto FOUND;
+        }
       }
     }
 
@@ -1111,9 +1112,9 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
       nextIndex = currentIndex - 1;
     }
     if ((snakeTriangles[nextIndex] < size) && 
-	(snakeVertices[nextIndex] < Triangle::NUM_VERTICES)) 
+        (snakeVertices[nextIndex] < Triangle::NUM_VERTICES)) 
       triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex], 
-						    config->bgColor);
+                                                    config->bgColor);
 
     /* Move the array index*/
     currentIndex = nextIndex;

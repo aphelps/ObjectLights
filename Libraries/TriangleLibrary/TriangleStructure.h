@@ -37,17 +37,21 @@ class Triangle : public Geometry {
   static const byte NUM_EDGES = 3;
   static const byte NUM_VERTICES = 3;
   static const byte VERTEX_ORDER = 2;
+  static const byte NUM_LEDS = 3;
 
   Triangle() {};
   Triangle(unsigned int id);
 
   Triangle *getEdge(byte edge);
   void setEdge(byte edge, Triangle *tri);
+  void setEdge(byte edge, byte neighbor);
 
   Triangle *getVertex(byte vertex, byte index);
   void setVertex(byte vertex, byte index, Triangle *tri);
+  void setVertex(byte vertex, byte index, byte neighbor);
 
   RGB* getLED(byte vertex);
+  void setLedPixel(uint8_t led, uint16_t pixel);
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2);
 
   void setColor(byte r, byte g, byte b);
@@ -56,7 +60,7 @@ class Triangle : public Geometry {
   void setColor(byte led, uint32_t c);
 
   uint32_t getColor();
-  uint32_t getColor(byte led);
+  uint32_t getColor(byte vertex);
   byte getRed();
   byte getRed(byte vertex);
   byte getGreen();
@@ -72,17 +76,31 @@ class Triangle : public Geometry {
 
   void print(byte level);
 
-  boolean hasLeds() { return (leds[0].pixel != NO_LED); }
+  /* Serialization functions */
+  int toBytes(byte *bytes, int size);
+  void fromBytes(byte *bytes, int size, Geometry *triangles, 
+                 geo_id_t numTriangles);
 
-  // Variables - be careful of object size
-  boolean updated; // XXX - Can this be determined as well?
-  byte id;
-  RGB leds[3]; // XXX - Change pixel addresses to bytes
+  /* Functions for returning constants for superclass */
+  byte numEdges() { return NUM_EDGES; }
+  byte numVertices() { return NUM_VERTICES; }
+  byte numLeds() { return NUM_LEDS; }
+
+  static void computeVertexNeighbors(Triangle *triangles,
+                                     int numTriangles);
+  static boolean verifyTriangleStructure(Triangle *triangles,
+                                         int numTriangles, 
+                                         geo_led_t numLeds);
+
+  /*
+   * Variables - be careful of object size
+   */
+  RGB leds[NUM_LEDS];
   byte mark;
 
- private:
-  byte edges[NUM_EDGES];
-  byte vertices[NUM_VERTICES][VERTEX_ORDER];
+ protected:
+  geo_id_t edges[NUM_EDGES];
+  geo_id_t vertices[NUM_VERTICES][VERTEX_ORDER];
 };
 
 /* Send updated values to a Pixel chain */
@@ -98,5 +116,18 @@ Triangle* buildCylinder(int *numTriangles, int numLeds);
 /* Macros for rotating around the vertices of a triangle */
 #define VERTEX_CW(v) ((v + 1) % Triangle::NUM_VERTICES)
 #define VERTEX_CCW(v) ((v + Triangle::NUM_VERTICES - 1) % Triangle::NUM_VERTICES)
+
+/* Serialization structure */
+typedef struct {
+  byte id;
+  byte edges[Triangle::NUM_EDGES];
+  byte leds[Triangle::NUM_LEDS];
+} triangle_config_t;
+
+/* Read or write out an entire structure */
+int readTriangleStructure(int offset, Triangle **triangles_ptr,
+                         int *numTriangles);
+int writeTriangleStructure(Triangle *triangles, int numTriangles, 
+                           int offset);
 
 #endif

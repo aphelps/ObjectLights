@@ -23,17 +23,19 @@
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
 
-#define CUBE_MAX_OUTPUTS 4
-int readHMTLConfiguration(PixelUtil *pixels, RS485Socket *rs485, MPR121 *mpr121) {
-  config_hdr_t config;
-  output_hdr_t *outputs[CUBE_MAX_OUTPUTS];
-  config_max_t readoutputs[CUBE_MAX_OUTPUTS];
+int readHMTLConfiguration(config_hdr_t *config, 
+                          output_hdr_t *outputs[],
+                          config_max_t readoutputs[],
+                          byte max_outputs,
+                          PixelUtil *pixels, 
+                          RS485Socket *rs485,
+                          MPR121 *mpr121) {
   int offset;
 
-  uint32_t outputs_found = hmtl_setup(&config, readoutputs, outputs,
-				     NULL, CUBE_MAX_OUTPUTS,
-				     rs485, pixels, mpr121, 
-				     NULL, NULL, &offset);
+  uint32_t outputs_found = hmtl_setup(config, readoutputs, outputs,
+                                      NULL, max_outputs,
+                                      rs485, pixels, mpr121, 
+                                      NULL, NULL, &offset);
 
   if ((rs485 != NULL) && !(outputs_found & (1 << HMTL_OUTPUT_RS485))) {
     DEBUG_ERR("No RS485 config found");
