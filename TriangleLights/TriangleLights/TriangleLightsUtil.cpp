@@ -192,15 +192,23 @@ void colorRainbowTrail(Triangle *current, byte currVertex,
  */
 
 void movementCornerCW(Triangle *currentTriangle, byte vertex,
-			 Triangle **nextTriangle, byte *nextVertex) {
+                      Triangle **nextTriangle, byte *nextVertex) {
   *nextTriangle = currentTriangle->leftOfVertex(vertex);
-  *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+  if (*nextTriangle == NULL) {
+    *nextVertex = NULL;
+  } else {
+    *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
+  }
 }
 
 void movementCornerCCW(Triangle *currentTriangle, byte vertex,
-			Triangle **nextTriangle, byte *nextVertex) {
+                       Triangle **nextTriangle, byte *nextVertex) {
   *nextTriangle = currentTriangle->rightOfVertex(vertex);
-  *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+  if (*nextTriangle == NULL) {
+    *nextVertex = NULL;
+  } else {
+    *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
+  }
 }
 
 /* Go in a large circle around a pentagon */
@@ -311,10 +319,16 @@ void mergeAdjacent(Triangle *triangles, int size) {
     for (byte vertex = 0; vertex < Triangle::NUM_VERTICES; vertex++) {
       movementCornerCCW(&triangles[tri], vertex, &rightT, &rightV);
       movementCornerCW(&triangles[tri], vertex, &leftT, &leftV);
+      
+      uint32_t leftColor, rightColor;
+      if (leftT == NULL) leftColor = 0;
+      else leftColor = leftT->getColor(leftV);
+
+      if (rightT == NULL) rightColor = 0;
+      else rightColor = rightT->getColor(rightV);
 
       // Get the midpoint of the neighbors
-      color = fadeTowards(leftT->getColor(leftV), rightT->getColor(rightV),
-			  50);
+      color = fadeTowards(leftColor, rightColor, 50);
       // Fade towards the midpoint color
       color = fadeTowards(triangles[tri].getColor(vertex), color, 5);
 
@@ -653,7 +667,7 @@ void trianglesCircle(Triangle *triangles, int size, int periodms,
 }
 
 void trianglesLooping(Triangle *triangles, int size, int periodms,
-			     boolean init, pattern_args_t *arg) {
+                      boolean init, pattern_args_t *arg) {
   static Triangle *current = &triangles[0];
   static byte vertex = 0;
   static byte mode = 0;
@@ -666,47 +680,49 @@ void trianglesLooping(Triangle *triangles, int size, int periodms,
   }
 
   if (millis() > next_time) {
-    Triangle *next;
+    Triangle *next = NULL;
     byte nextVertex;
     byte increment = 10;
     byte threshold = 5;
     next_time += periodms;
 
-    switch (mode % 6) {
-    case 0:
-      movementCornerCW(current, vertex, &next, &nextVertex);
-      increment = 5;
-      threshold = 5;
-      break;
-    case 1:
-      movementCornerCCW(current, vertex, &next, &nextVertex);
-      increment = 5;
-      threshold = 5;
-      break;
-    case 2:
-      movementCircleCW(current, vertex, &next, &nextVertex);
-      increment = 10;
-      threshold = 5;
-      break;
-    case 3:
-      movementCircleCCW(current, vertex, &next, &nextVertex);
-      increment = 10;
-      threshold = 5;
-      break;
-    case 4:
-      movementBelt1(current, vertex, &next, &nextVertex);
-      increment = 15;
-      threshold = 2;
-      break;
-    case 5:
-      movementBelt2(current, vertex, &next, &nextVertex);
-      increment = 15;
-      threshold = 2;
-      break;
-    }
+    while (next == NULL) {
+      switch (mode % 6) {
+        case 0:
+        movementCornerCW(current, vertex, &next, &nextVertex);
+        increment = 5;
+        threshold = 5;
+        break;
+        case 1:
+        movementCornerCCW(current, vertex, &next, &nextVertex);
+        increment = 5;
+        threshold = 5;
+        break;
+        case 2:
+        movementCircleCW(current, vertex, &next, &nextVertex);
+        increment = 10;
+        threshold = 5;
+        break;
+        case 3:
+        movementCircleCCW(current, vertex, &next, &nextVertex);
+        increment = 10;
+        threshold = 5;
+        break;
+        case 4:
+        movementBelt1(current, vertex, &next, &nextVertex);
+        increment = 15;
+        threshold = 2;
+        break;
+        case 5:
+        movementBelt2(current, vertex, &next, &nextVertex);
+        increment = 15;
+        threshold = 2;
+        break;
+      }
 
-    if (random(0, 100) < threshold) {
-      mode += random(0, 6);
+      if (random(0, 100) < threshold) {
+        mode += random(0, 6);
+      }
     }
 
     //colorWhiteBuildupFade(current, vertex, next, nextVertex, triangles, size, increment);
@@ -1054,10 +1070,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
           default: {
             // Triangle to the left
             Triangle *t = current->leftOfVertex(currentVertex);
-            if (t == NULL) {
-              DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
-              DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
-            }
+            if (t == NULL) continue;
             tri = t->id;
             vert = triangles[tri].matchVertexRight(current, 
                                                    currentVertex);	
@@ -1066,10 +1079,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
           case 1: {
             // Triangle to the right
             Triangle *t = current->rightOfVertex(currentVertex);
-            if (t == NULL) {
-              DEBUG_VALUE(DEBUG_ERROR, "XXX: id:", current->id);
-              DEBUG_VALUELN(DEBUG_ERROR, " index:", activeIndex);
-            }
+            if (t == NULL) continue;
             tri = t->id;
             vert = triangles[tri].matchVertexLeft(current, 
                                                   currentVertex);
@@ -1158,7 +1168,7 @@ void trianglesSetAll(Triangle *triangles, int size, int periodms,
 
 /* Shift the color of a vertex randomly around */
 void trianglesVertexShift(Triangle *triangles, int size, int periodms,
-			    boolean init, pattern_args_t *arg) {
+                          boolean init, pattern_args_t *arg) {
   static byte mode = 0;
   byte num_modes = 4;
 
@@ -1176,36 +1186,37 @@ void trianglesVertexShift(Triangle *triangles, int size, int periodms,
 
     for (int tri = 0; tri < size; tri++) {
       for (byte vertex = 0; vertex < Triangle::NUM_VERTICES; vertex++) {
-	Triangle *sourceT;
-	byte sourceV;
-	uint32_t color;
+        Triangle *sourceT;
+        byte sourceV;
+        uint32_t color;
 
-	for (int i = 0; i < num_modes; i++ ) {
-        switch ((i + mode) % num_modes) {
-           case 0: {
-             // Set the color of the vertex to that of the vertex to its right
-             movementCornerCCW(&triangles[tri], vertex, &sourceT, &sourceV);
-	     break;
-           }
-           case 1: {
-             sourceT = &triangles[tri];
-	     sourceV = VERTEX_CW(vertex);
-	     break;
-           }
-           case 2: {
-             // Set the color of the vertex to that of the vertex to its right
-             movementCornerCCW(&triangles[tri], vertex, &sourceT, &sourceV);
-	     break;
-           }
-           case 3: {
-             sourceT = &triangles[tri];
-	     sourceV = VERTEX_CW(vertex);
-	     break;
-           }
-        }
+        for (int i = 0; i < num_modes; i++ ) {
+          switch ((i + mode) % num_modes) {
+            case 0: {
+              // Set the color of the vertex to that of the vertex to its right
+              movementCornerCCW(&triangles[tri], vertex, &sourceT, &sourceV);
+              break;
+            }
+            case 1: {
+              sourceT = &triangles[tri];
+              sourceV = VERTEX_CW(vertex);
+              break;
+            }
+            case 2: {
+              // Set the color of the vertex to that of the vertex to its right
+              movementCornerCCW(&triangles[tri], vertex, &sourceT, &sourceV);
+              break;
+            }
+            case 3: {
+              sourceT = &triangles[tri];
+              sourceV = VERTEX_CW(vertex);
+              break;
+            }
+          }
 
-	   color = sourceT->getColor(sourceV);
-	   if (color != 0) break;
+          if (sourceT) color = sourceT->getColor(sourceV);
+          else color = 0;
+          if (color != 0) break;
         }
 
        	triangles[tri].setColor(vertex, color);
@@ -1216,7 +1227,7 @@ void trianglesVertexShift(Triangle *triangles, int size, int periodms,
 }
     
 void trianglesVertexMerge(Triangle *triangles, int size, int periodms,
-			  boolean init, pattern_args_t *arg) {
+                          boolean init, pattern_args_t *arg) {
   static unsigned long next_mutation;
   static byte mutation = 0;
 

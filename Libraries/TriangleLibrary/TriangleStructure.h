@@ -47,8 +47,7 @@ class Triangle : public Geometry {
   void setEdge(byte edge, byte neighbor);
 
   Triangle *getVertex(byte vertex, byte index);
-  void setVertex(byte vertex, byte index, Triangle *tri);
-  void setVertex(byte vertex, byte index, byte neighbor);
+  geo_id_t getVertexID(byte vertex, byte index);
 
   RGB* getLED(byte vertex);
   void setLedPixel(uint8_t led, uint16_t pixel);
@@ -86,8 +85,6 @@ class Triangle : public Geometry {
   byte numVertices() { return NUM_VERTICES; }
   byte numLeds() { return NUM_LEDS; }
 
-  static void computeVertexNeighbors(Triangle *triangles,
-                                     int numTriangles);
   static boolean verifyTriangleStructure(Triangle *triangles,
                                          int numTriangles, 
                                          geo_led_t numLeds);
@@ -96,16 +93,18 @@ class Triangle : public Geometry {
    * Variables - be careful of object size
    */
   RGB leds[NUM_LEDS];
-  byte mark;
 
  protected:
   geo_id_t edges[NUM_EDGES];
-  geo_id_t vertices[NUM_VERTICES][VERTEX_ORDER];
 };
 
 /* Send updated values to a Pixel chain */
 void updateTrianglePixels(Triangle *triangles, int numTriangles,
 			  PixelUtil *pixels);
+
+
+#define TRI_ARRAY_SIZE 30
+Triangle* initTriangles(int triangleCount);
 
 /* Allocate and return a fully connected icosohedron */
 Triangle* buildIcosohedron(int *numTriangles, int numLeds);

@@ -68,9 +68,9 @@ void setup()
                                        &pixels, &rs485, NULL);
 
 
-  triangles = buildIcosohedron(&numTriangles, pixels.numPixels());
-    //numTriangles = 20;
-    //triangles = initTriangles(numTriangles);
+  //  triangles = buildIcosohedron(&numTriangles, pixels.numPixels());
+  numTriangles = TRI_ARRAY_SIZE;
+  triangles = initTriangles(numTriangles);
 
   DEBUG_PRINTLN(0, "Clearing triangle structure");
   for (int t = 0; t < numTriangles; t++) {
@@ -79,19 +79,13 @@ void setup()
     for (byte e = 0; e < Triangle::NUM_EDGES; e++) {
       triangles[t].setEdge(e, Triangle::NO_ID);
     }
-
-    for (byte v = 0; v < Triangle::NUM_VERTICES; v++) {
-      for (byte o = 0; o < Triangle::VERTEX_ORDER; o++) {
-        triangles[t].setVertex(v, o, Triangle::NO_ID);
-      }
-    }
   }
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
   DEBUG_VALUELN(DEBUG_LOW, "*** Configure initialized.  End address=",
                 configOffset);
-  DEBUG_MEMORY(DEBUG_HIGH);
+  DEBUG_MEMORY(DEBUG_LOW);
 }
 
 boolean output_data = false;
@@ -139,14 +133,16 @@ Serial.print(F(" \n"
   "  s <face> <led> - Set the geometry of the current pixel \n"
   "  S <face> <led> <pixel> - Set the geometry to a given pixel\n"
   "  T <face> <led> - Sequence starting from face and led\n"
+  "  R <face> - Reverse the 2nd and 3rd leds (common after T)\n"
   "  e <face> <edge> <neighbor> - Set the neighboring face\n"
   " \n"
   "  l <face> <led> - Toggle the state of an LED on the indicated face\n"
   "  f <face> - Light the indicated face\n"
+  "  F <face> - Light the indicate face and all neighbors\n"
+  "  N - Advance to the next face\n"
   "\n"
   "  P - Print the current configuration\n"
   "  v - Verify the current configuration\n"
-  "  N - Computer the vertex neighbors\n"
   "  read  - Read in the configuration\n"
   "  write - Write out the configuration\n"
   "\n"
@@ -265,6 +261,18 @@ void cliHandler(char **tokens, byte numtokens) {
 
       break;
     }
+    case 'R': {
+      if (numtokens < 2) return;
+      byte face = atoi(tokens[1]);
+
+      DEBUG_VALUELN(DEBUG_LOW, "Reversing face:", face);
+
+      geo_led_t led1 = triangles[face].getLED(1)->pixel;
+      geo_led_t led2 = triangles[face].getLED(2)->pixel;
+      triangles[face].setLedPixel(1, led2);
+      triangles[face].setLedPixel(2, led1);
+      break;
+    }
     case 'e': {
       if (numtokens < 4) return;
       byte face = atoi(tokens[1]);
@@ -304,12 +312,23 @@ void cliHandler(char **tokens, byte numtokens) {
         return;
       }
 
-      DEBUG_VALUE(DEBUG_LOW, "Light Face:", face);
-      for (int l = 0; l < Triangle::NUM_LEDS; l++) {
-        DEBUG_VALUE(DEBUG_LOW, " ", triangles[face].getLED(l)->pixel);
-      }
+      DEBUG_PRINT(DEBUG_LOW, "Light Face:");
+      triangles[face].print(DEBUG_LOW);
+      //      for (int l = 0; l < Triangle::NUM_LEDS; l++) {
+      //  DEBUG_VALUE(DEBUG_LOW, " ", triangles[face].getLED(l)->pixel);
+      // }
       DEBUG_PRINT_END();
       setTriangleFace(face, pixel_color(255, 255, 255), tokens[0][0] == 'F');
+      break;
+    }
+    case 'N': {
+      byte face = (current_face + 1) % numTriangles;
+
+      DEBUG_PRINT(DEBUG_LOW, "Light Face:");
+      triangles[face].print(DEBUG_LOW);
+
+      setTriangleFace(face, pixel_color(255, 255, 255), true);
+
       break;
     }
 
@@ -317,24 +336,17 @@ void cliHandler(char **tokens, byte numtokens) {
      * Verification
      */
     case 'v': {
-      DEBUG_PRINT(0, "*** Verifying triangle structure:");
+      DEBUG_PRINTLN(0, "*** Verifying triangle structure:");
       if (Triangle::verifyTriangleStructure(triangles, numTriangles, 
                                             pixels.numPixels())) {
-        DEBUG_PRINTLN(0, " passed");
+        DEBUG_PRINTLN(0, "\tpassed");
       } else {
-        DEBUG_PRINTLN(0, " failed");
+        DEBUG_PRINTLN(0, "\tfailed");
       }
       break;
     }
 
     case 'P': {
-      output_data = false;
-      break;
-    }
-
-    case 'N': {
-      DEBUG_PRINTLN(0, "*** Computing neighbors")
-      Triangle::computeVertexNeighbors(triangles, numTriangles);
       output_data = false;
       break;
     }
@@ -443,6 +455,26 @@ void setTriangleFace(byte face, uint32_t color, boolean neighbors) {
 #define TEST
 #ifdef TEST
     Triangle *tri;
+
+    byte index;
+
+    for (index = 0; (index == 0) || (tri != NULL); index++) {
+      tri = triangles[face].getVertex(0, index);
+      if (tri != NULL) tri->setColor(4, 0, 0);
+    }
+
+    for (index = 0; (index == 0) || (tri != NULL); index++) {
+      tri = triangles[face].getVertex(1, index);
+      if (tri != NULL) tri->setColor(0, 4, 0);
+    }
+
+    for (index = 0; (index == 0) || (tri != NULL); index++) {
+      tri = triangles[face].getVertex(2, index);
+      if (tri != NULL) tri->setColor(0, 0, 4);
+    }
+
+
+#else
     for (byte o = 0; o < Triangle::VERTEX_ORDER; o++) {
       tri = triangles[face].getVertex(0, o);
       if (tri != NULL)

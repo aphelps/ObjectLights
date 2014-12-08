@@ -63,7 +63,10 @@ class Geometry {
 
   /* Return whether this object has LEDs defined */
   boolean hasLeds() { return (leds[0].pixel != NO_LED); }
-
+  
+  /*
+   * Variables - be careful of object size
+   */
   byte id;
 
   RGB leds[];

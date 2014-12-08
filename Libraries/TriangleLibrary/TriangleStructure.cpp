@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-//#define DEBUG_LEVEL DEBUG_LOW
+#define DEBUG_LEVEL DEBUG_LOW
 #include "Debug.h"
 
 #include "EEPromUtils.h"
@@ -22,10 +22,6 @@ Triangle::Triangle(unsigned int _id) {
 
   for (int v = 0; v < NUM_VERTICES; v++) {
     leds[v].pixel = NO_LED;
-
-    for (int o = 0; o < VERTEX_ORDER; o++) {
-      vertices[v][o] = NO_ID;
-    }
   }
 
   DEBUG_VALUELN(DEBUG_MID, "Created Triangle id:", id);
@@ -45,25 +41,46 @@ void  Triangle::setEdge(byte edge, byte neighbor) {
   edges[edge] = neighbor;
 }
 
+/*
+ * Get the vertex neighbor by traversing clockwise.
+ *
+ *      ______
+ *    /\      /
+ *   /  \  1 /
+ *  /  0 \  /
+ * /______\/______
+ * \     c/\      /
+ *  \  L /V \ E  /
+ *   \  /    \  /
+ *    \/______\/
+ */
 Triangle *Triangle::getVertex(byte vertex, geo_id_t index) {
-  if (vertices[vertex][index] == NO_VERTEX)
-    return NULL;
-  return &triangles[vertices[vertex][index]];
+  Triangle *neighbor = leftOfVertex(vertex);  // L in diagram
+  Triangle *end = rightOfVertex(vertex); // E in diangram
+  Triangle *current = this;
+  byte currentVertex = vertex; // V in diagran
+  
+  for (byte i = 0; i <= index; i++) {
+    if (neighbor == NULL) return NULL;
+
+    currentVertex = neighbor->matchVertexRight(current, 
+                                               currentVertex); // c in diagram
+    if (currentVertex == NO_VERTEX) return NULL;
+
+    current = neighbor;
+    neighbor = neighbor->leftOfVertex(currentVertex);
+
+    if (neighbor == end) return NULL;
+  }
+
+  return neighbor;
 }
 
-void Triangle::setVertex(byte vertex, byte index, Triangle *tri) {
-  geo_id_t id;
-
-  if (tri == NULL) id = NO_ID;
-  else id = tri->id;
-
-  vertices[vertex][index] = id;
+geo_id_t Triangle::getVertexID(byte vertex, byte index) {
+  Triangle *neighbor = getVertex(vertex, index);
+  if (neighbor) return neighbor->id;
+  else return NO_ID;
 }
-
-void Triangle::setVertex(byte vertex, byte index, geo_id_t neighbor) {
-  vertices[vertex][index] = neighbor;
-}
-
 
 RGB *Triangle::getLED(byte vertex) {
   return &(leds[vertex]);
@@ -293,10 +310,10 @@ void Triangle::print(byte level) {
   }
 
   for (int v = 0; v < NUM_VERTICES; v++) {
-    DEBUG_VALUE(level, "\tv:", v);
-    DEBUG_VALUE(level, "-", leds[v].pixel); 
+    DEBUG_VALUE(level, "\tv:", leds[v].pixel);
+
     for (int o = 0; o < VERTEX_ORDER; o++) {
-      DEBUG_VALUE(level, ",", vertices[v][o]);
+      DEBUG_VALUE(level, "-", getVertexID(v, o));
     }
   }
 
@@ -314,7 +331,7 @@ void makeEdge(Triangle *triangles, int tri, int edge, int neighbor) {
 
 void makeVertex(Triangle *triangles, int tri, int vertex, int index,
 		int neighbor) {
-  triangles[tri].setVertex(vertex, index, &triangles[neighbor]);
+  //XXX: Ditch this? triangles[tri].setVertex(vertex, index, &triangles[neighbor]);
 }
 
 void setLeds(Triangle *triangles, int tri, int baseLed) {
@@ -326,7 +343,6 @@ void setLeds(Triangle *triangles, int tri, int led1, int led2, int led3) {
 }
 
 /* Initialize the triangle array */
-#define TRI_ARRAY_SIZE 20
 Triangle triangleArray[TRI_ARRAY_SIZE];
 Triangle* initTriangles(int triangleCount) {
   if (triangleCount > TRI_ARRAY_SIZE) {
@@ -783,15 +799,6 @@ void Triangle::fromBytes(byte *bytes, int size, Geometry *triangles,
   for (int led = 0; led < NUM_LEDS; led++ ) {
     leds[led].pixel = config->leds[led];
   }
-
-#if 0
-  // Vertex neighbors can be figured out from edge neighbors
-  for (int v = 0; v < NUM_VERTICES; v++) {
-    for (int o = 0; o < VERTEX_ORDER; o++) {
-      vertices[v][o] = NO_VERTEX;
-    }
-  }
-#endif
 }
 
 // This should be the max of triangle_config_t and geometry_config_t
@@ -831,9 +838,6 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
     triangles[face].print(DEBUG_LOW);
   }
   DEBUG_PRINT_END();
-
-  /* Interpolate the vertex neighbors */
-  Triangle::computeVertexNeighbors(triangles, readTriangles);
 
   triangles_ptr = &triangles;
   *numTriangles = readTriangles;
@@ -902,18 +906,6 @@ boolean Triangle::verifyTriangleStructure(Triangle *triangles,
         return false;
       }
     }
-
-    for (byte v = 0; v < Triangle::NUM_VERTICES; v++) {
-      for (byte o = 0; o < Triangle::VERTEX_ORDER; o++) {
-
-        if ((tri->vertices[v][o] != NO_VERTEX) && (tri->vertices[v][o] >= numTriangles)) {
-          DEBUG_VALUE(DEBUG_ERROR, "Tri:", t);
-          DEBUG_VALUE(DEBUG_ERROR, " invalid vertex:", v);
-          DEBUG_VALUELN(DEBUG_ERROR, ",", o);
-          return false;
-        }
-      }
-    }
   }
 
   /*
@@ -932,7 +924,7 @@ boolean Triangle::verifyTriangleStructure(Triangle *triangles,
       }
       for (byte v = 0; v < Triangle::NUM_VERTICES; v++) {
         for (byte o = 0; o < Triangle::VERTEX_ORDER; o++) {
-          if (triangles[t].vertices[v][o] == verify) {
+          if (triangles[t].getVertex(v, o)->id == verify) {
             vertex_count++;
           }
         }
@@ -965,50 +957,18 @@ boolean Triangle::verifyTriangleStructure(Triangle *triangles,
   return true;
 }
 
-/*
- * With correctly assigned edges the neighbors around a vertex can be determined.
- */
-void Triangle::computeVertexNeighbors(Triangle *triangles,
-                                      int numTriangles) {
-  for (geo_id_t t = 0; t < numTriangles; t++) {
-    Triangle *tri = &triangles[t];
-    for (byte v = 0; v < NUM_VERTICES; v++) {
-      Triangle *neighbor = tri->leftOfVertex(v);
-      Triangle *current = tri;
-      byte currentVertex = v;
-
-      for (byte o = 0; o < VERTEX_ORDER; o++) {
-        byte vert = neighbor->matchVertexRight(current, currentVertex);
-        Triangle *vertNeighbor = neighbor->leftOfVertex(vert);
-
-        DEBUG_VALUE(DEBUG_HIGH, "Set tri:", t);
-        DEBUG_VALUE(DEBUG_HIGH, " V:", v);
-        DEBUG_VALUE(DEBUG_HIGH, " O:", o);
-        DEBUG_VALUELN(DEBUG_HIGH, " id:", vertNeighbor->id);
-
-        tri->setVertex(v, o, vertNeighbor);
-
-        current = neighbor;
-        currentVertex = vert;
-        neighbor = vertNeighbor;
-      }
-    }
-  }
-}
-
 /* Send updated values to a Pixel chain */
 void updateTrianglePixels(Triangle *triangles, int numTriangles,
-			  PixelUtil *pixels) {
+                          PixelUtil *pixels) {
   boolean update = false;
   int updated = 0;
   for (int tri = 0; tri < numTriangles; tri++) {
     if (triangles[tri].updated) {
       update = true;
       for (byte led = 0; led < Triangle::NUM_LEDS; led++) {
-	pixels->setPixelRGB(&(triangles[tri].leds[led]));
+        pixels->setPixelRGB(&(triangles[tri].leds[led]));
       }
       triangles[tri].updated = false;
-      DEBUG_VALUE(DEBUG_HIGH, "XXX: TRIANGLES UPDATED: addr=", (int)&triangles[tri]);
       updated++;
     }
   }
