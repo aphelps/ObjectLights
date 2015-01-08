@@ -69,7 +69,7 @@ class Geometry {
    */
   byte id;
 
-  RGB leds[];
+  PRGB leds[];
   byte mark;
   boolean updated; // XXX - Can this be determined some other way to save a byte?
 

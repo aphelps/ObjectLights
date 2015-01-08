@@ -92,7 +92,7 @@ class Square : public Geometry {
 
   /* Serialization functions */
   int toBytes(byte *bytes, int size);
-  void fromBytes(byte *bytes, int size, Geometry *squares, int numSquares);
+  void fromBytes(byte *bytes, int size, Geometry *squares, geo_id_t numSquares);
 
   /* Functions for returning constants for superclass */
   byte numEdges() { return NUM_EDGES; }
@@ -100,7 +100,7 @@ class Square : public Geometry {
   byte numLeds() { return NUM_LEDS; }
 
   // Variables - be careful of object size
-  RGB leds[NUM_LEDS];
+  PRGB leds[NUM_LEDS];
 
  protected:
   byte edges[NUM_EDGES];

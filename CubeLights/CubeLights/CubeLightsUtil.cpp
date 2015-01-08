@@ -6,7 +6,7 @@
 
 #include <Arduino.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
 #include "CubeConfig.h"

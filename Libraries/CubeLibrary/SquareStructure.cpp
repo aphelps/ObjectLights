@@ -442,7 +442,8 @@ int Square::toBytes(byte *bytes, int size) {
   return i;
 }
 
-void Square::fromBytes(byte *bytes, int size, Geometry *squares, int numSquares) {
+void Square::fromBytes(byte *bytes, int size, Geometry *squares, 
+                       geo_id_t numSquares) {
   int i = 0;
 
   // Read the ID

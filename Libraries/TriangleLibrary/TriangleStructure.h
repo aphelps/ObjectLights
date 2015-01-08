@@ -49,7 +49,7 @@ class Triangle : public Geometry {
   Triangle *getVertex(byte vertex, byte index);
   geo_id_t getVertexID(byte vertex, byte index);
 
-  RGB* getLED(byte vertex);
+  PRGB* getLED(byte vertex);
   void setLedPixel(uint8_t led, uint16_t pixel);
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2);
 
@@ -92,7 +92,7 @@ class Triangle : public Geometry {
   /*
    * Variables - be careful of object size
    */
-  RGB leds[NUM_LEDS];
+  PRGB leds[NUM_LEDS];
 
  protected:
   geo_id_t edges[NUM_EDGES];

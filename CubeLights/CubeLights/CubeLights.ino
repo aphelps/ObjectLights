@@ -9,7 +9,7 @@
 #include <NewPing.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_WS2801.h>
+#include <FastLED.h>
 #include <SoftwareSerial.h>
 #include <RS485_non_blocking.h>
 
@@ -34,7 +34,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 21 // %META INCR
+#define CUBE_LIGHT_BUILD 24 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {

@@ -9,7 +9,7 @@
 #include <Arduino.h>
 #include "SPI.h"
 #include "Wire.h" // XXX: This also needs to go
-#include "Adafruit_WS2801.h"
+#include "FastLED.h"
 #include "EEPROM.h"
 #include <RS485_non_blocking.h>
 #include <SoftwareSerial.h>
@@ -113,28 +113,15 @@ void setup()
   /* Setup the sensors */
   initializePins();
 
-  //#if 0
- XXX: WHY DOES THIS HAVE TO BE HERE???
-  /* Generate the geometry */
+  // TODO: WHY DOES THIS HAVE TO BE HERE??? Get rid of it somehow?
   triangles = buildIcosohedron(&numTriangles, pixels.numPixels());
-  //triangles = buildCylinder(&numTriangles, pixels.numPixels());
-  //#else
+
+  /* Read the triangle structure from EEPROM */
   readTriangleStructure(configOffset, 
                         &triangles,
                         &numTriangles);
-  //#endif
 
   DEBUG_VALUELN(DEBUG_LOW, "Inited with numTriangles:", numTriangles);
-  delay(1000);
-
-    DEBUG_VALUE(0, "\nMy address:", config.address);
-    hmtl_print_config(&config, outputs);
-
-    DEBUG_VALUELN(0, "Triangles: ", numTriangles);
-    for (int tri = 0; tri < numTriangles; tri++) {
-      triangles[tri].print(0);
-    }
-
 }
 
 void loop() {

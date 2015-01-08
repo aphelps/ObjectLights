@@ -9,7 +9,7 @@
 #include <NewPing.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_WS2801.h>
+#include <FastLED.h>
 #include <SoftwareSerial.h>
 #include <RS485_non_blocking.h>
 

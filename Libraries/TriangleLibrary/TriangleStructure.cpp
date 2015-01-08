@@ -82,7 +82,7 @@ geo_id_t Triangle::getVertexID(byte vertex, byte index) {
   else return NO_ID;
 }
 
-RGB *Triangle::getLED(byte vertex) {
+PRGB *Triangle::getLED(byte vertex) {
   return &(leds[vertex]);
 }
 
