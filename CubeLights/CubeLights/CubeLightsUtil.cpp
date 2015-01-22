@@ -409,9 +409,9 @@ void squaresStaticNoise(Square *squares, int size,
 	  byte red = pixel_red(arg->fgColor) >> facter;
 	  byte green = pixel_green(arg->fgColor) >> facter;
 	  byte blue = pixel_blue(arg->fgColor) >> facter;
-	  //DEBUG_VALUE(DEBUG_HIGH, "r=", red);
-	  //DEBUG_VALUE(DEBUG_HIGH, " g=", green);
-	  //DEBUG_VALUELN(DEBUG_HIGH, " b=", blue);
+	  //DEBUG4_VALUE("r=", red);
+	  //DEBUG4_VALUE(" g=", green);
+	  //DEBUG4_VALUELN(" b=", blue);
 	  squares[square].setColor(led, red, green, blue);
 	}
       }
@@ -528,9 +528,9 @@ void squaresCrawl(Square *squares, int size,
     led = newled;
     face = newface;
 
-    DEBUG_VALUE(DEBUG_TRACE, "crawl: mode=", mode);
-    DEBUG_VALUE(DEBUG_TRACE, " face=", face->id);
-    DEBUG_VALUELN(DEBUG_TRACE, " led=", led);
+    DEBUG5_VALUE("crawl: mode=", mode);
+    DEBUG5_VALUE(" face=", face->id);
+    DEBUG5_VALUELN(" led=", led);
  
     face->setColor(led, arg->bgColor);
   }
@@ -591,8 +591,8 @@ void squaresOrbitTest(Square *squares, int size,
     }
     face->setColor(led, arg->fgColor);
     startface->setColor(startled, pixel_color(255, 0, 0));
-    DEBUG_VALUE(DEBUG_TRACE, "Orbit: ", face->id);
-    DEBUG_VALUELN(DEBUG_TRACE, ":", led);
+    DEBUG5_VALUE("Orbit: ", face->id);
+    DEBUG5_VALUELN(":", led);
   }
 }
 
@@ -647,8 +647,8 @@ void squaresVectors(Square *squares, int size,
     }
     setAllSquares(squares, size, arg->bgColor);
     arg->next_time = 0;
-    DEBUG_VALUE(DEBUG_HIGH, "Num=", num_vectors);
-    DEBUG_VALUELN(DEBUG_HIGH, " reset=", prev_reset);
+    DEBUG4_VALUE("Num=", num_vectors);
+    DEBUG4_VALUELN(" reset=", prev_reset);
     prev_reset = now;
     arg->next_time = millis();
   }
@@ -683,9 +683,9 @@ void squaresVectors(Square *squares, int size,
       // Update the vector
       vectors[v] = next_vector;
 
-      DEBUG_VALUE(DEBUG_TRACE, "Curr=", FACE_FROM_COMBO(vectors[v].led_in_face));
-      DEBUG_VALUE(DEBUG_TRACE, ",", LED_FROM_COMBO(vectors[v].led_in_face));
-      DEBUG_VALUELN(DEBUG_TRACE, "-", vectors[v].direction);
+      DEBUG5_VALUE("Curr=", FACE_FROM_COMBO(vectors[v].led_in_face));
+      DEBUG5_VALUE(",", LED_FROM_COMBO(vectors[v].led_in_face));
+      DEBUG5_VALUELN("-", vectors[v].direction);
     }
 
     // Update the color
@@ -770,9 +770,9 @@ void squaresSimpleLife(Square *squares, int size,
 
       arg->data.u32s[SIMPLE_LIFE_SPLASH] = now;
 
-      DEBUG_VALUE(DEBUG_HIGH, "Splash: ", face);
-      DEBUG_VALUE(DEBUG_HIGH, ", ", led);
-      DEBUG_VALUELN(DEBUG_HIGH, ", ", c);
+      DEBUG4_VALUE("Splash: ", face);
+      DEBUG4_VALUE(", ", led);
+      DEBUG4_VALUELN(", ", c);
     }
 
     if (count == 0) {
@@ -821,14 +821,14 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 #endif
     lastSend = millis();
 
-    DEBUG_PRINT(DEBUG_TRACE, "SoundTest: Sent request...");
+    DEBUG5_PRINT("SoundTest: Sent request...");
   } else if (lastSend != 0) {
     // Check for a response
     unsigned long elapsed = millis() - lastSend;
     unsigned int msglen;
     const byte *data = rs485.getMsg(my_address, &msglen);
     if (data != NULL) {
-      DEBUG_PRINT(DEBUG_TRACE, " value:");
+      DEBUG5_PRINT(" value:");
 #ifdef SOUND_LEVELED
       // Data should be an array of 8 uint16_t
       uint8_t *valptr = (uint8_t *)data;
@@ -844,7 +844,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 #else
         uint16_t val = *valptr;
 #endif
-        DEBUG_HEXVAL(DEBUG_TRACE, " ", val);
+        DEBUG5_HEXVAL(" ", val);
 
         /* Shift the new value into each column */
         uint32_t newcolor;
@@ -865,7 +865,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 
         valptr++;
       }
-      DEBUG_VALUE(DEBUG_TRACE, " Elapsed:", elapsed);
+      DEBUG5_VALUE(" Elapsed:", elapsed);
 
       /* Set the top to the average */
       total = total / col;
@@ -873,7 +873,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
       byte heat = total > 15 ? 255 : total * total;
 
       squares[CUBE_TOP].setColor(pixel_heat(heat));
-      DEBUG_VALUE(DEBUG_TRACE, " avg:", total);
+      DEBUG5_VALUE(" avg:", total);
       DEBUG_PRINT_END();
 
 #if 0
@@ -891,7 +891,7 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {
       if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
-        DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
+        DEBUG4_VALUELN("SoundTest: No response after ", elapsed);
         lastSend = 0; // Reset the lastSend time so another request can be sent
       }
     }
@@ -916,7 +916,7 @@ void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
     sendByte('S', ADDRESS_SOUND_UNIT);
     lastSend = millis();
 
-    DEBUG_PRINT(DEBUG_HIGH, "SoundTest: Sent request...");
+    DEBUG4_PRINT("SoundTest: Sent request...");
   } else if (lastSend != 0) {
     // Check for a response
     unsigned long elapsed = millis() - lastSend;
@@ -924,7 +924,7 @@ void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
     const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
     if (data != NULL) {
       // Data should be an array of 8 uint16_t
-      DEBUG_PRINT(DEBUG_HIGH, " value:");
+      DEBUG4_PRINT(" value:");
       uint16_t *valptr = (uint16_t *)data;
 
       byte face = 0;
@@ -932,7 +932,7 @@ void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
       while ((unsigned int)valptr - (unsigned int)data < msglen) {
         uint16_t val = *valptr;
 
-        DEBUG_HEXVAL(DEBUG_HIGH, " ", val);
+        DEBUG4_HEXVAL(" ", val);
 
         byte heat = (val > 15 ? 255 : val * val);
         uint32_t newcolor = pixel_heat(heat);
@@ -949,12 +949,12 @@ void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
 
         valptr++;
       }
-      DEBUG_VALUELN(DEBUG_HIGH, " Elapsed:", elapsed);
+      DEBUG4_VALUELN(" Elapsed:", elapsed);
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {
       if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
-        DEBUG_VALUELN(DEBUG_HIGH, "SoundTest: No response after ", elapsed);
+        DEBUG4_VALUELN("SoundTest: No response after ", elapsed);
         lastSend = 0; // Reset the lastSend time so another request can be sent
       }
     }

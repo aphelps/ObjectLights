@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
 #include "PixelUtil.h"
@@ -25,7 +25,7 @@ Square::Square(unsigned int _id) {
     }
   }
 
-  DEBUG_VALUELN(DEBUG_MID, "Created Square ", id);
+  DEBUG3_VALUELN("Created Square ", id);
 }
 
 
@@ -404,7 +404,7 @@ uint16_t Square::ledAwayFrom(Square *square, byte led) {
    */
   byte direction = matchEdge(square);
   if (direction == NO_DIRECTION) {
-    DEBUG_PRINTLN(DEBUG_HIGH, "ledAwayFrom: invalid");
+    DEBUG4_PRINTLN("ledAwayFrom: invalid");
     return (uint16_t)-1;
   }
   direction = (direction + 2) % Square::NUM_EDGES;
@@ -461,8 +461,8 @@ void Square::fromBytes(byte *bytes, int size, Geometry *squares,
   }
 }
 
-void Square::print(byte level) {
-#ifdef DEBUG_LEVEL
+void Square::print() {
+#if DEBUG_LEVEL >= 3
 
 #endif
 }
@@ -486,7 +486,7 @@ void updateSquarePixels(Square *squares, int numSquares,
 
   if (update) {
     pixels->update();
-    DEBUG_VALUELN(DEBUG_TRACE, "Updated squares:", updated);
+    DEBUG5_VALUELN("Updated squares:", updated);
   }
 }
 

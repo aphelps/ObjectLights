@@ -80,7 +80,7 @@ int readCubeConfiguration(Square *squares, int numSquares, int offset) {
   // Read the overall configuration
   offset = EEPROM_safe_read(offset, bytes, CONFIG_BUFFER_SZ);
   cube_config_t *config = (cube_config_t *)bytes;
-  DEBUG_VALUE(DEBUG_LOW, "Read version=", config->version);
+  DEBUG2_VALUE("Read version=", config->version);
   // XXX - What to do with config?
 
   // Read all squares and initialize them
@@ -92,10 +92,10 @@ int readCubeConfiguration(Square *squares, int numSquares, int offset) {
     }
     squares[face].fromBytes(bytes, CONFIG_BUFFER_SZ, squares, numSquares);
 
-    DEBUG_VALUE(DEBUG_LOW, "face=", face);
-    DEBUG_VALUE(DEBUG_LOW, " offset=", offset);
-    DEBUG_VALUE(DEBUG_LOW, " id=",  squares[face].id);
-    DEBUG_VALUELN(DEBUG_LOW, " top=", squares[face].getEdge(Square::TOP)->id);
+    DEBUG2_VALUE("face=", face);
+    DEBUG2_VALUE(" offset=", offset);
+    DEBUG2_VALUE(" id=",  squares[face].id);
+    DEBUG2_VALUELN(" top=", squares[face].getEdge(Square::TOP)->id);
   }
   DEBUG_PRINT_END();
 
@@ -122,10 +122,10 @@ int writeCubeConfiguration(Square *squares, int numSquares, int offset) {
       DEBUG_ERR("Failed to write squares data");
       break;
     }
-    DEBUG_VALUE(DEBUG_LOW, "Wrote face=", face);
-    DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
+    DEBUG2_VALUE("Wrote face=", face);
+    DEBUG2_VALUELN(" offset=", offset);
   }
-  DEBUG_VALUELN(DEBUG_LOW, "Wrote cube config. end address=", offset);
+  DEBUG2_VALUELN("Wrote cube config. end address=", offset);
 
   return offset;
 }

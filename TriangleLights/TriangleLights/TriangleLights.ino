@@ -21,6 +21,7 @@
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
 #include "PixelUtil.h"
+#include "Socket.h"
 #include "RS485Utils.h"
 #include "MPR121.h" // XXX This needs to go
 
@@ -94,7 +95,7 @@ void setup()
     DEBUG_ERR_STATE(1);
   }
 
-  DEBUG_PRINTLN(DEBUG_HIGH, "*** TriangleLights Initializing ***");
+  DEBUG4_PRINTLN("*** TriangleLights Initializing ***");
 
   pinMode(DEBUG_LED, OUTPUT);
 
@@ -121,7 +122,7 @@ void setup()
                         &triangles,
                         &numTriangles);
 
-  DEBUG_VALUELN(DEBUG_LOW, "Inited with numTriangles:", numTriangles);
+  DEBUG2_VALUELN("Inited with numTriangles:", numTriangles);
 }
 
 void loop() {
@@ -131,7 +132,7 @@ void loop() {
 
   mode = getButtonValue() % NUM_MODES;
   if (mode != prev_mode) {
-    DEBUG_VALUELN(DEBUG_HIGH, "mode=", mode);
+    DEBUG4_VALUELN("mode=", mode);
     DEBUG_MEMORY(DEBUG_HIGH);
   }
 

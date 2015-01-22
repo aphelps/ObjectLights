@@ -88,7 +88,7 @@ class Square : public Geometry {
   uint16_t ledAwayFrom(Square *square, byte led);
   uint16_t ledTowards(byte led, byte direction);
 
-  void print(byte level);
+  void print();
 
   /* Serialization functions */
   int toBytes(byte *bytes, int size);

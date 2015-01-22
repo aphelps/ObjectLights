@@ -60,7 +60,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  DEBUG_PRINTLN(DEBUG_LOW, "*** TriangleConfigure started ***");
+  DEBUG2_PRINTLN("*** TriangleConfigure started ***");
 
   /* Read the current configuration from EEProm */
   configOffset = readHMTLConfiguration(&config,
@@ -72,7 +72,7 @@ void setup()
   numTriangles = TRI_ARRAY_SIZE;
   triangles = initTriangles(numTriangles);
 
-  DEBUG_PRINTLN(0, "Clearing triangle structure");
+  DEBUG1_PRINTLN("Clearing triangle structure");
   for (int t = 0; t < numTriangles; t++) {
     triangles[t].setLedPixels(Geometry::NO_LED, Geometry::NO_LED, 
                               Geometry::NO_LED);
@@ -83,7 +83,7 @@ void setup()
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
-  DEBUG_VALUELN(DEBUG_LOW, "*** Configure initialized.  End address=",
+  DEBUG2_VALUELN("*** Configure initialized.  End address=",
                 configOffset);
   DEBUG_MEMORY(DEBUG_LOW);
 }
@@ -94,13 +94,13 @@ boolean update = false;
 void loop() 
 {
   if (!output_data) {
-    DEBUG_VALUE(0, "\nMy address:", config.address);
-    DEBUG_VALUELN(0, " Was config written: ", wrote_config);
+    DEBUG1_VALUE("\nMy address:", config.address);
+    DEBUG1_VALUELN(" Was config written: ", wrote_config);
     hmtl_print_config(&config, outputs);
 
-    DEBUG_VALUELN(0, "Triangles: ", numTriangles);
+    DEBUG1_VALUELN("Triangles: ", numTriangles);
     for (int tri = 0; tri < numTriangles; tri++) {
-      triangles[tri].print(0);
+      triangles[tri].print();
     }
 
     print_usage();
@@ -171,7 +171,7 @@ void cliHandler(char **tokens, byte numtokens) {
       clearPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
+      DEBUG2_VALUELN("current:", currentPixel);
       break;
     }
     case 'C': {
@@ -182,7 +182,7 @@ void cliHandler(char **tokens, byte numtokens) {
       clearPixels();
       pixels.setPixelRGB(currentPixel, 0, 255, 0);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "set current to:", currentPixel);
+      DEBUG2_VALUELN("set current to:", currentPixel);
       break;
     }
     case 'n': {
@@ -190,7 +190,7 @@ void cliHandler(char **tokens, byte numtokens) {
       currentPixel = (currentPixel + 1) % pixels.numPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
+      DEBUG2_VALUELN("current:", currentPixel);
       break;
     }
     case 'p': {
@@ -198,7 +198,7 @@ void cliHandler(char **tokens, byte numtokens) {
       currentPixel = (currentPixel + pixels.numPixels() - 1) % pixels.numPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "next:", currentPixel);
+      DEBUG2_VALUELN("next:", currentPixel);
       break;
     }
 
@@ -215,9 +215,9 @@ void cliHandler(char **tokens, byte numtokens) {
 
       triangles[face].setLedPixel(led, currentPixel);
       setTriangleLED(face, led, pixel_color(255, 0, 0));
-      DEBUG_VALUE(DEBUG_LOW, "Set Face:", face);
-      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
-      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", currentPixel);
+      DEBUG2_VALUE("Set Face:", face);
+      DEBUG2_VALUE(" LED:", led);
+      DEBUG2_VALUELN(" Pixel:", currentPixel);
       break;
     }
 
@@ -233,9 +233,9 @@ void cliHandler(char **tokens, byte numtokens) {
 
       triangles[face].setLedPixel(led, pixel);
       setTriangleLED(face, led, pixel_color(255, 0, 0));
-      DEBUG_VALUE(DEBUG_LOW, "Set Face:", face);
-      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
-      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", pixel);
+      DEBUG2_VALUE("Set Face:", face);
+      DEBUG2_VALUE(" LED:", led);
+      DEBUG2_VALUELN(" Pixel:", pixel);
       break;
     }
 
@@ -245,8 +245,8 @@ void cliHandler(char **tokens, byte numtokens) {
       byte face = atoi(tokens[1]);
       uint16_t pixel = atoi(tokens[2]);
 
-      DEBUG_VALUE(DEBUG_LOW, "Sequence from face:", face);
-      DEBUG_VALUELN(DEBUG_LOW, " pix:", pixel);
+      DEBUG2_VALUE("Sequence from face:", face);
+      DEBUG2_VALUELN(" pix:", pixel);
 
       for (int t = face; t < numTriangles; t++) {
         for (int l = 0; l < Triangle::NUM_LEDS; l++) {
@@ -265,7 +265,7 @@ void cliHandler(char **tokens, byte numtokens) {
       if (numtokens < 2) return;
       byte face = atoi(tokens[1]);
 
-      DEBUG_VALUELN(DEBUG_LOW, "Reversing face:", face);
+      DEBUG2_VALUELN("Reversing face:", face);
 
       geo_led_t led1 = triangles[face].getLED(1)->pixel;
       geo_led_t led2 = triangles[face].getLED(2)->pixel;
@@ -280,9 +280,9 @@ void cliHandler(char **tokens, byte numtokens) {
       byte neighbor = atoi(tokens[3]);
 
       // TODO: Validate
-      DEBUG_VALUE(DEBUG_LOW, "Set face:", face);
-      DEBUG_VALUE(DEBUG_LOW, " edge:", edge);
-      DEBUG_VALUELN(DEBUG_LOW, " neighbor:", neighbor);
+      DEBUG2_VALUE("Set face:", face);
+      DEBUG2_VALUE(" edge:", edge);
+      DEBUG2_VALUELN(" neighbor:", neighbor);
 
       triangles[face].setEdge(edge, neighbor);
 
@@ -298,9 +298,9 @@ void cliHandler(char **tokens, byte numtokens) {
       if (numtokens < 3) return;
       byte face = atoi(tokens[1]);
       byte led = atoi(tokens[2]);
-      DEBUG_VALUE(DEBUG_LOW, "Light Face:", face);
-      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
-      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", triangles[face].leds[led].pixel);
+      DEBUG2_VALUE("Light Face:", face);
+      DEBUG2_VALUE(" LED:", led);
+      DEBUG2_VALUELN(" Pixel:", triangles[face].leds[led].pixel);
       setTriangleLED(face, led, pixel_color(255, 255, 255));
       break;
     }
@@ -312,10 +312,10 @@ void cliHandler(char **tokens, byte numtokens) {
         return;
       }
 
-      DEBUG_PRINT(DEBUG_LOW, "Light Face:");
-      triangles[face].print(DEBUG_LOW);
+      DEBUG2_PRINT("Light Face:");
+      triangles[face].print();
       //      for (int l = 0; l < Triangle::NUM_LEDS; l++) {
-      //  DEBUG_VALUE(DEBUG_LOW, " ", triangles[face].getLED(l)->pixel);
+      //  DEBUG2_VALUE(" ", triangles[face].getLED(l)->pixel);
       // }
       DEBUG_PRINT_END();
       setTriangleFace(face, pixel_color(255, 255, 255), tokens[0][0] == 'F');
@@ -324,8 +324,8 @@ void cliHandler(char **tokens, byte numtokens) {
     case 'N': {
       byte face = (current_face + 1) % numTriangles;
 
-      DEBUG_PRINT(DEBUG_LOW, "Light Face:");
-      triangles[face].print(DEBUG_LOW);
+      DEBUG2_PRINT("Light Face:");
+      triangles[face].print();
 
       setTriangleFace(face, pixel_color(255, 255, 255), true);
 
@@ -336,12 +336,12 @@ void cliHandler(char **tokens, byte numtokens) {
      * Verification
      */
     case 'v': {
-      DEBUG_PRINTLN(0, "*** Verifying triangle structure:");
+      DEBUG1_PRINTLN("*** Verifying triangle structure:");
       if (Triangle::verifyTriangleStructure(triangles, numTriangles, 
                                             pixels.numPixels())) {
-        DEBUG_PRINTLN(0, "\tpassed");
+        DEBUG1_PRINTLN("\tpassed");
       } else {
-        DEBUG_PRINTLN(0, "\tfailed");
+        DEBUG1_PRINTLN("\tfailed");
       }
       break;
     }
@@ -356,7 +356,7 @@ void cliHandler(char **tokens, byte numtokens) {
      */
     case 'r': {
       if (strcmp(tokens[0], "read") == 0) {
-        DEBUG_PRINTLN(0, "\n*** READING CONFIGURATION ***\n");
+        DEBUG1_PRINTLN("\n*** READING CONFIGURATION ***\n");
 
         int configOffset = hmtl_read_config(&config,
                                             readoutputs, 
@@ -379,7 +379,7 @@ void cliHandler(char **tokens, byte numtokens) {
 
     case 'w': {
       if (strcmp(tokens[0], "write") == 0) {
-        DEBUG_PRINTLN(0, "\n*** WRITING CONFIGURATION ***\n");
+        DEBUG1_PRINTLN("\n*** WRITING CONFIGURATION ***\n");
 
         int configOffset = hmtl_write_config(&config, outputs);
         if (configOffset < 0) {

@@ -18,6 +18,7 @@
 
 #include "GeneralUtils.h"
 #include "PixelUtil.h"
+#include "Socket.h"
 #include "RS485Utils.h"
 #include "MPR121.h"
 #include "EEPromUtils.h"
@@ -34,7 +35,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 24 // %META INCR
+#define CUBE_LIGHT_BUILD 25 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {
@@ -66,8 +67,8 @@ pattern_args_t modeConfigs[MAX_MODES] = {
 void setup()
 {
   Serial.begin(9600);
-  DEBUG_PRINTLN(DEBUG_LOW, "*** CubeLights Initializing ***");
-  DEBUG_PRINTLN(DEBUG_LOW, "* Baud is 9600");
+  DEBUG2_PRINTLN("*** CubeLights Initializing ***");
+  DEBUG2_PRINTLN("* Baud is 9600");
 
   /* Initialize random see by reading from an unconnected analog pin */
   randomSeed(analogRead(0) + analogRead(2) + micros());
@@ -87,8 +88,8 @@ void setup()
   /* Setup the sensors */
   initializePins();
 
-  DEBUG_VALUE(DEBUG_LOW, "* Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
-  DEBUG_VALUELN(DEBUG_LOW, " Build=", CUBE_LIGHT_BUILD);
+  DEBUG2_VALUE("* Setup complete for CUBE_NUMBER=", CUBE_NUMBER);
+  DEBUG2_VALUELN(" Build=", CUBE_LIGHT_BUILD);
   DEBUG_MEMORY(DEBUG_HIGH);
 }
 
@@ -117,7 +118,7 @@ void loop()
   /* Send any changes */
   updateSquarePixels(squares, NUM_SQUARES, &pixels);
 
-  DEBUG_COMMAND(DEBUG_TRACE, // Flash the debug LED
+  DEBUG5_COMMAND(// Flash the debug LED
 		static unsigned long next_millis = 0;
 		if (millis() > next_millis) {
 		  if (next_millis % 2 == 0) {

@@ -60,14 +60,14 @@ void setup()
 {
   Serial.begin(9600);
 
-  DEBUG_PRINTLN(DEBUG_LOW, "*** CubeConfigure started ***");
+  DEBUG2_PRINTLN("*** CubeConfigure started ***");
 
   /* Read the current configuration from EEProm */
   readHMTLConfiguration(&config, outputs, readoutputs, MAX_OUTPUTS);
 
   pinMode(PIN_DEBUG_LED, OUTPUT);
 
-  DEBUG_PRINTLN(DEBUG_LOW, "*** Configure initialized ***");
+  DEBUG2_PRINTLN("*** Configure initialized ***");
   DEBUG_MEMORY(DEBUG_HIGH);
 }
 
@@ -75,14 +75,14 @@ boolean output_data = false;
 void loop() 
 {
   if (!output_data) {
-    DEBUG_VALUE(0, "My address:", config.address);
-    DEBUG_VALUELN(0, " Was config written: ", wrote_config);
+    DEBUG1_VALUE("My address:", config.address);
+    DEBUG1_VALUELN(" Was config written: ", wrote_config);
     hmtl_print_config(&config, outputs);
 
     for (byte s = 0; s < NUM_SQUARES; s++) {
-      DEBUG_VALUE(DEBUG_LOW, "Square: ", s);
+      DEBUG2_VALUE("Square: ", s);
       for (byte led = 0; led < Square::NUM_LEDS; led++) {
-        DEBUG_VALUE(DEBUG_LOW, " ", squares[s].leds[led].pixel);
+        DEBUG2_VALUE(" ", squares[s].leds[led].pixel);
       }
       DEBUG_PRINT_END();
     }
@@ -120,9 +120,9 @@ void cliHandler(char **tokens, byte numtokens) {
       if (numtokens < 3) return;
       byte face = atoi(tokens[1]);
       byte led = atoi(tokens[2]);
-      DEBUG_VALUE(DEBUG_LOW, "Light Face:", face);
-      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
-      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", squares[face].leds[led].pixel);
+      DEBUG2_VALUE("Light Face:", face);
+      DEBUG2_VALUE(" LED:", led);
+      DEBUG2_VALUELN(" Pixel:", squares[face].leds[led].pixel);
       setSquareLED(face, led, pixel_color(255, 255, 255));
       break;
     }
@@ -130,7 +130,7 @@ void cliHandler(char **tokens, byte numtokens) {
     case 'f': {
       if (numtokens < 2) return;
       byte face = atoi(tokens[1]);
-      DEBUG_VALUELN(DEBUG_LOW, "Light Face:", face);
+      DEBUG2_VALUELN("Light Face:", face);
       setSquareFace(face, pixel_color(255, 255, 255), true);
       break;
     }
@@ -142,9 +142,9 @@ void cliHandler(char **tokens, byte numtokens) {
       byte led = atoi(tokens[2]);
       squares[face].setLedPixel(led, currentPixel);
       setSquareLED(face, led, pixel_color(255, 0, 0));
-      DEBUG_VALUE(DEBUG_LOW, "Set Face:", face);
-      DEBUG_VALUE(DEBUG_LOW, " LED:", led);
-      DEBUG_VALUELN(DEBUG_LOW, " Pixel:", currentPixel);
+      DEBUG2_VALUE("Set Face:", face);
+      DEBUG2_VALUE(" LED:", led);
+      DEBUG2_VALUELN(" Pixel:", currentPixel);
       break;
     }
 
@@ -152,7 +152,7 @@ void cliHandler(char **tokens, byte numtokens) {
       clearPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
+      DEBUG2_VALUELN("current:", currentPixel);
       break;
     }
 
@@ -165,7 +165,7 @@ void cliHandler(char **tokens, byte numtokens) {
       clearPixels();
       pixels.setPixelRGB(currentPixel, 0, 255, 0);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "set current:", currentPixel);
+      DEBUG2_VALUELN("set current:", currentPixel);
       break;
     }
 
@@ -174,7 +174,7 @@ void cliHandler(char **tokens, byte numtokens) {
       currentPixel = (currentPixel + 1) % pixels.numPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "current:", currentPixel);
+      DEBUG2_VALUELN("current:", currentPixel);
       break;
     }
 
@@ -183,7 +183,7 @@ void cliHandler(char **tokens, byte numtokens) {
       currentPixel = (currentPixel + pixels.numPixels() - 1) % pixels.numPixels();
       pixels.setPixelRGB(currentPixel, 255, 255, 255);
       pixels.update();
-      DEBUG_VALUELN(DEBUG_LOW, "next:", currentPixel);
+      DEBUG2_VALUELN("next:", currentPixel);
       break;
     }
 
@@ -224,9 +224,9 @@ void cliHandler(char **tokens, byte numtokens) {
     } else if (sensor == 1) {
         mpr121->thresholds[CAP_SENSOR_2] = (touch) | (release << 4);
     }
-    DEBUG_VALUE(DEBUG_LOW, "Set sensor ", sensor);
-    DEBUG_VALUE(DEBUG_LOW, " touch=", touch);
-    DEBUG_VALUELN(DEBUG_LOW, " release=", release);
+    DEBUG2_VALUE("Set sensor ", sensor);
+    DEBUG2_VALUE(" touch=", touch);
+    DEBUG2_VALUELN(" release=", release);
 
     break;
   }
@@ -248,7 +248,7 @@ void cliHandler(char **tokens, byte numtokens) {
     }
     pixels->numPixels = numleds;
 
-    DEBUG_VALUELN(DEBUG_LOW, "Set numpixels to ", numleds);
+    DEBUG2_VALUELN("Set numpixels to ", numleds);
 
     break;
   }

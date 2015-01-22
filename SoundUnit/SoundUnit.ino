@@ -19,11 +19,13 @@
 #include <Wire.h>
 
 #define DEBUG_XMIT DEBUG_MID
-#define DEBUG_LEVEL DEBUG_ERROR
+#define DEBUG_LEVEL DEBUG_LOW
 #include <Debug.h>
 
 #include <SoftwareSerial.h>
 #include <RS485_non_blocking.h>
+
+#include "Socket.h"
 #include "RS485Utils.h"
 
 // Microphone connects to Analog Pin 0.  Corresponding ADC channel number
@@ -127,7 +129,7 @@ void setup() {
 
   //  Serial.begin(9600);
   Serial.begin(115200);
-  DEBUG_PRINTLN(DEBUG_LOW, "SoundUnit starting");
+  DEBUG2_PRINTLN("SoundUnit starting");
 
   /* Configure the RS484 interface */
   rs485.setup();
@@ -167,31 +169,31 @@ void loop() {
     
 #ifdef DEBUG_LEVEL
     uint16_t total = 0;
-    DEBUG_PRINT(DEBUG_HIGH, "Post eq:");
+    DEBUG4_PRINT("Post eq:");
     for(uint16_t x = 0; x < FFT_N / 2; x++) {
-      DEBUG_VALUE(DEBUG_HIGH, " ", spectrum[x]);
+      DEBUG4_VALUE(" ", spectrum[x]);
       total += spectrum[x];
     }
-    DEBUG_VALUE(DEBUG_HIGH, " +", total);
+    DEBUG4_VALUE(" +", total);
 
     total = 0;
-    DEBUG_PRINT(DEBUG_HIGH, " col:");
+    DEBUG4_PRINT(" col:");
     for (byte c = 0; c < NUM_COLUMNS; c++) {
-      DEBUG_VALUE(DEBUG_HIGH, " ", col[c][colCount]);
+      DEBUG4_VALUE(" ", col[c][colCount]);
       total += col[c][colCount];
     }
-    DEBUG_VALUE(DEBUG_HIGH, " +", total);
+    DEBUG4_VALUE(" +", total);
 
     total = 0;
-    DEBUG_PRINT(DEBUG_HIGH, " lvl:");
+    DEBUG4_PRINT(" lvl:");
     for (byte c = 0; c < NUM_COLUMNS; c++) {
-      DEBUG_VALUE(DEBUG_HIGH, " ", colLeveled[c]);
+      DEBUG4_VALUE(" ", colLeveled[c]);
       total += colLeveled[c];
     }
-    DEBUG_VALUE(DEBUG_HIGH, " +", total);
+    DEBUG4_VALUE(" +", total);
 
     if (sentResponse) {
-      DEBUG_PRINT(DEBUG_HIGH, " Sent");
+      DEBUG4_PRINT(" Sent");
     }
 #endif
     sentResponse = false;

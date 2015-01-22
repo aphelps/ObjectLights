@@ -49,8 +49,8 @@ void initializeConnect() {
   rs485.setup();
   send_buffer = rs485.initBuffer(databuffer);
 
-  DEBUG_VALUE(DEBUG_LOW, "Initialized RS485. address=", my_address);
-  DEBUG_VALUELN(DEBUG_LOW, " bufsize=", SEND_BUFFER_SIZE);
+  DEBUG2_VALUE("Initialized RS485. address=", my_address);
+  DEBUG2_VALUELN(" bufsize=", SEND_BUFFER_SIZE);
 }
 
 
@@ -65,8 +65,8 @@ void sendInt(int value, byte address) {
   send_buffer[0] = (value & 0xFF00) >> 8;
   send_buffer[1] = (value & 0x00FF);
   rs485.sendMsgTo(address, send_buffer, sizeof (int));
-  DEBUG_HEXVAL(DEBUG_TRACE, "sendInt: to=0x", address);
-  DEBUG_HEXVALLN(DEBUG_TRACE, " val=", value);
+  DEBUG5_HEXVAL("sendInt: to=0x", address);
+  DEBUG5_HEXVALLN(" val=", value);
 }
 
 void sendLong(long value, byte address) {
@@ -75,8 +75,8 @@ void sendLong(long value, byte address) {
   send_buffer[2] = (value & 0x0000FF00) >> 8;
   send_buffer[3] = (value & 0x000000FF);
   rs485.sendMsgTo(address, send_buffer, sizeof (long));
-  DEBUG_HEXVAL(DEBUG_TRACE, "sendLong: to=0x", address);
-  DEBUG_HEXVALLN(DEBUG_TRACE, " val=", value);
+  DEBUG5_HEXVAL("sendLong: to=0x", address);
+  DEBUG5_HEXVALLN(" val=", value);
 }
 
 void recvData() {
@@ -85,7 +85,7 @@ void recvData() {
   //  const byte *data = rs485.getMsg(my_address, &msglen);
   const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
   if (data != NULL) {
-    DEBUG_VALUELN(DEBUG_HIGH, "recvData: len=", msglen);
+    DEBUG4_VALUELN("recvData: len=", msglen);
   }
 }
 

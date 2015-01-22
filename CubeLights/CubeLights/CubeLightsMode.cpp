@@ -34,7 +34,7 @@ uint8_t validModes[] = {
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
   // , MODE_SIMPLE_LIFE
-  , MODE_SOUND_TEST
+  // , MODE_SOUND_TEST
   //, MODE_SOUND_TEST2
   //, MODE_STROBE
 };
@@ -58,7 +58,7 @@ square_mode_t modeFunctions[] = {
   NULL, //squaresOrbitTest,
   squaresVectors,
   NULL, //squaresSimpleLife,
-  squaresSoundTest,
+  NULL, //squaresSoundTest,
   NULL, //squaresSoundTest2,
   NULL, //squaresStrobe
 };
@@ -116,8 +116,8 @@ void set_mode(uint8_t place, uint8_t new_mode) {
     // Set next_time to zero to trigger initialization
     modeConfigs[place].next_time = 0;
 
-    DEBUG_VALUE(DEBUG_MID, "Set mode ", place);
-    DEBUG_VALUELN(DEBUG_MID, "=", current_modes[place]);
+    DEBUG3_VALUE("Set mode ", place);
+    DEBUG3_VALUELN("=", current_modes[place]);
   }
 }
 
@@ -133,7 +133,7 @@ void set_mode_to(uint8_t place, uint8_t mode) {
       return;
     }
   }
-  DEBUG_VALUELN(DEBUG_ERROR, "Attempted to set invalid mode:", mode);
+  DEBUG1_VALUELN("Attempted to set invalid mode:", mode);
 }
 
 void increment_mode(uint8_t place)
@@ -148,8 +148,8 @@ void restore_mode(uint8_t place)
 {
   set_mode(place, previous_modes[place]);
   previous_modes[place] = MODE_NONE;
-  DEBUG_VALUE(DEBUG_HIGH, "Restored mode ", place);
-  DEBUG_VALUELN(DEBUG_HIGH, "=", current_modes[place]);
+  DEBUG4_VALUE("Restored mode ", place);
+  DEBUG4_VALUELN("=", current_modes[place]);
 }
 
 /***** Followups *************************************************************/

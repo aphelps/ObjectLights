@@ -73,7 +73,7 @@ class Triangle : public Geometry {
   byte matchVertexLeft(Triangle *neighbor, byte vertex);
   byte matchVertexRight(Triangle *neighbor, byte vertex);
 
-  void print(byte level);
+  void print();
 
   /* Serialization functions */
   int toBytes(byte *bytes, int size);

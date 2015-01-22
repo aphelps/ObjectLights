@@ -24,7 +24,7 @@ Triangle::Triangle(unsigned int _id) {
     leds[v].pixel = NO_LED;
   }
 
-  DEBUG_VALUELN(DEBUG_MID, "Created Triangle id:", id);
+  DEBUG3_VALUELN("Created Triangle id:", id);
 }
 
 Triangle *Triangle::getEdge(byte edge) {
@@ -276,8 +276,8 @@ Triangle *Triangle::leftOfVertex(byte vertex) {
   case 1: return getEdge(0); break;
   case 2: return getEdge(1); break;
   default:
-    DEBUG_VALUE(DEBUG_ERROR, "leftOfVertex: invalid vertex:", vertex);
-    DEBUG_VALUELN(DEBUG_ERROR, " id:", id);
+    DEBUG1_VALUE("leftOfVertex: invalid vertex:", vertex);
+    DEBUG1_VALUELN(" id:", id);
     return NULL;
     break;
   }
@@ -293,8 +293,8 @@ Triangle *Triangle::leftOfVertex(byte vertex) {
  */
 Triangle *Triangle::rightOfVertex(byte vertex) {
   if (vertex >= NUM_VERTICES) {
-    DEBUG_VALUE(DEBUG_ERROR, "rightOfVertex: invalid vertex:", vertex);
-    DEBUG_VALUELN(DEBUG_ERROR, " id:", id);
+    DEBUG1_VALUE("rightOfVertex: invalid vertex:", vertex);
+    DEBUG1_VALUELN(" id:", id);
     return NULL;
   }
   return getEdge(vertex);
@@ -303,21 +303,23 @@ Triangle *Triangle::rightOfVertex(byte vertex) {
 /*
  * Print a representation of the triangle
  */
-void Triangle::print(byte level) {
-  DEBUG_VALUE(level, " Tri:", id);
+void Triangle::print() {
+#if DEBUG_LEVEL >= 3
+  DEBUG3_VALUE(" Tri:", id);
   for (int e = 0; e < NUM_EDGES; e++) {
-    DEBUG_VALUE(level, "\te:", edges[e]);
+    DEBUG3_VALUE("\te:", edges[e]);
   }
 
   for (int v = 0; v < NUM_VERTICES; v++) {
-    DEBUG_VALUE(level, "\tv:", leds[v].pixel);
+    DEBUG3_VALUE("\tv:", leds[v].pixel);
 
     for (int o = 0; o < VERTEX_ORDER; o++) {
-      DEBUG_VALUE(level, "-", getVertexID(v, o));
+      DEBUG3_VALUE("-", getVertexID(v, o));
     }
   }
 
-  DEBUG_PRINTLN(level, "");
+  DEBUG3_PRINTLN(level, "");
+#endif
 }
 
 
@@ -351,7 +353,7 @@ Triangle* initTriangles(int triangleCount) {
   }
 
   Triangle *newtriangles = &(triangleArray[0]);//(Triangle *)malloc(sizeof (Triangle) * triangleCount);
-  DEBUG_COMMAND(DEBUG_ERROR,
+  DEBUG1_COMMAND(
                 if (newtriangles == NULL) {
                   DEBUG_ERR("Failed to malloc triangles");
                   debug_err_state(DEBUG_ERR_MALLOC);
@@ -426,7 +428,7 @@ Triangle* buildCylinder(int *numTriangles, int numLeds) {
   }
   *numTriangles = tri;
 
-  DEBUG_VALUELN(DEBUG_MID, "Cylinder numTriangles:", *numTriangles);
+  DEBUG3_VALUELN("Cylinder numTriangles:", *numTriangles);
 
   return triangles;
 }
@@ -747,13 +749,13 @@ Triangle* buildIcosohedron(int *numTriangles, int numLeds) {
   if (*numTriangles == triangleCount) goto ICOS_DONE;
 
  ICOS_DONE:
-  DEBUG_COMMAND(DEBUG_MID,
+  DEBUG3_COMMAND(
 		for (int t = 0; t < *numTriangles; t++) {
-		  triangles[t].print(DEBUG_MID);
+		  triangles[t].print();
 		}
 		);
 
-  DEBUG_VALUELN(DEBUG_MID, "Icos numTriangles:", *numTriangles);
+  DEBUG3_VALUELN("Icos numTriangles:", *numTriangles);
   return triangles;
 }
 
@@ -810,15 +812,15 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
   
   int newoffset = EEPROM_safe_read(offset, bytes, MAX_CONFIG_SZ);
   if (newoffset - offset != EEPROM_SIZE(sizeof (geometry_config_t))) {
-    DEBUG_VALUELN(DEBUG_ERROR, "Initial size invalid:", newoffset - offset);
+    DEBUG1_VALUELN("Initial size invalid:", newoffset - offset);
     return -1;
   }
   offset = newoffset;
 
   geometry_config_t *config = (geometry_config_t *)bytes;
-  DEBUG_VALUE(DEBUG_LOW, "Read triangles offset=", offset);
-  DEBUG_VALUE(DEBUG_LOW, " version=", config->version);
-  DEBUG_VALUELN(DEBUG_LOW, " num=", config->num_objects);
+  DEBUG2_VALUE("Read triangles offset=", offset);
+  DEBUG2_VALUE(" version=", config->version);
+  DEBUG2_VALUELN(" num=", config->num_objects);
 
   // Copy relevant data from config before next read
   uint16_t readTriangles = config->num_objects;
@@ -833,16 +835,16 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
     triangles[face].fromBytes(bytes, MAX_CONFIG_SZ, 
                               triangles, readTriangles);
 
-    DEBUG_VALUE(DEBUG_LOW, " - face=", face);
-    DEBUG_VALUE(DEBUG_LOW, " offset=", offset);
-    triangles[face].print(DEBUG_LOW);
+    DEBUG2_VALUE(" - face=", face);
+    DEBUG2_VALUE(" offset=", offset);
+    triangles[face].print();
   }
   DEBUG_PRINT_END();
 
   triangles_ptr = &triangles;
   *numTriangles = readTriangles;
 
-  DEBUG_PRINTLN(DEBUG_LOW, "Completed reading");
+  DEBUG2_PRINTLN("Completed reading");
 
   return offset;
 }
@@ -851,8 +853,8 @@ int writeTriangleStructure(Triangle *triangles, int numTriangles,
                                int offset) {
   byte bytes[MAX_CONFIG_SZ];
 
-  DEBUG_VALUE(DEBUG_LOW, "Writing triangles:", numTriangles);
-  DEBUG_VALUELN(DEBUG_LOW, " off:", offset);
+  DEBUG2_VALUE("Writing triangles:", numTriangles);
+  DEBUG2_VALUELN(" off:", offset);
 
   for (byte i = 0; i < MAX_CONFIG_SZ; i++) {
     bytes[i] = 0;
@@ -871,11 +873,11 @@ int writeTriangleStructure(Triangle *triangles, int numTriangles,
       DEBUG_ERR("Failed to write squares data");
       break;
     }
-    DEBUG_VALUE(DEBUG_LOW, "Wrote face=", tri);
-    DEBUG_VALUELN(DEBUG_LOW, " offset=", offset);
+    DEBUG2_VALUE("Wrote face=", tri);
+    DEBUG2_VALUELN(" offset=", offset);
   }
 
-  DEBUG_VALUELN(DEBUG_LOW, "Wrote triangle config. end address=", offset);
+  DEBUG2_VALUELN("Wrote triangle config. end address=", offset);
 
   return offset;
 }
@@ -893,23 +895,23 @@ boolean Triangle::verifyTriangleStructure(Triangle *triangles,
 
     for (byte l = 0; l < Triangle::NUM_LEDS; l++) {
       if ((tri->leds[l].pixel != Triangle::NO_LED) && (tri->leds[l].pixel >= numLeds)) {
-        DEBUG_VALUE(DEBUG_ERROR, "Tri:", t);
-        DEBUG_VALUELN(DEBUG_ERROR, " invalid led:", l);
+        DEBUG1_VALUE("Tri:", t);
+        DEBUG1_VALUELN(" invalid led:", l);
         return false;
       }
     }
 
     for (byte e = 0; e < Triangle::NUM_EDGES; e++) {
       if ((tri->edges[e] != NO_EDGE) && (tri->edges[e] >= numTriangles)) {
-        DEBUG_VALUE(DEBUG_ERROR, "Tri:", t);
-        DEBUG_VALUELN(DEBUG_ERROR, " invalid edge:", e);
+        DEBUG1_VALUE("Tri:", t);
+        DEBUG1_VALUELN(" invalid edge:", e);
         return false;
       }
     }
   }
 
   /*
-   *  Verify that all triangles have the correct number of other triangles
+   * Verify that all triangles have the correct number of other triangles
    * with edges to them.
    */
   for (geo_id_t verify = 0; verify < numTriangles; verify++) {
@@ -932,20 +934,20 @@ boolean Triangle::verifyTriangleStructure(Triangle *triangles,
     }
 
     if (edge_count > Triangle::NUM_EDGES) {
-      DEBUG_VALUE(DEBUG_ERROR, "Tri:", verify);
-      DEBUG_VALUELN(DEBUG_ERROR, " invalid edge count", edge_count);
+      DEBUG1_VALUE("Tri:", verify);
+      DEBUG1_VALUELN(" invalid edge count", edge_count);
       return false;
     } else if (edge_count < Triangle::NUM_EDGES) {
-      DEBUG_VALUE(DEBUG_ERROR, "Tri:", verify);
-      DEBUG_VALUELN(DEBUG_ERROR, " low edge:", edge_count);
+      DEBUG1_VALUE("Tri:", verify);
+      DEBUG1_VALUELN(" low edge:", edge_count);
     }
 
     if (vertex_count > (Triangle::NUM_VERTICES * Triangle::VERTEX_ORDER)) {
-      DEBUG_VALUE(DEBUG_ERROR, "Tri:", verify);
-      DEBUG_VALUELN(DEBUG_ERROR, " invalid vertex count:", vertex_count);
+      DEBUG1_VALUE("Tri:", verify);
+      DEBUG1_VALUELN(" invalid vertex count:", vertex_count);
     } else if (vertex_count > (Triangle::NUM_VERTICES * Triangle::VERTEX_ORDER)) {
-      DEBUG_VALUE(DEBUG_ERROR, "Tri:", verify);
-      DEBUG_VALUELN(DEBUG_ERROR, " low vertex count:", vertex_count);
+      DEBUG1_VALUE("Tri:", verify);
+      DEBUG1_VALUELN(" low vertex count:", vertex_count);
     }
 
   }
@@ -975,6 +977,6 @@ void updateTrianglePixels(Triangle *triangles, int numTriangles,
 
   if (update) {
     pixels->update();
-    DEBUG_VALUELN(DEBUG_HIGH, "Updated triangles:", updated);
+    DEBUG4_VALUELN("Updated triangles:", updated);
   }
 }

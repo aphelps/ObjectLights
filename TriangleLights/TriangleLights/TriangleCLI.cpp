@@ -8,7 +8,7 @@
 extern volatile uint16_t buttonValue;
 extern pattern_args_t patternConfig;
 void cliParse(char *command) {
-  DEBUG_VALUELN(DEBUG_MID, "received command=", command);
+  DEBUG3_VALUELN("received command=", command);
 
   char *value_ptr = command;
   while (*value_ptr != 0) {
@@ -25,11 +25,11 @@ void cliParse(char *command) {
   } else if (strncmp(command, "bgcolor", 6) == 0) {
     uint32_t color = strtol(value_ptr, NULL, 16);
     patternConfig.bgColor = color;
-    DEBUG_VALUELN(DEBUG_MID, "Set bgcolor to ", color);
+    DEBUG3_VALUELN("Set bgcolor to ", color);
   } else if (strncmp(command, "fgcolor", 6) == 0) {
     uint32_t color = strtol(value_ptr, NULL, 16);
     patternConfig.fgColor = color;
-    DEBUG_VALUELN(DEBUG_MID, "Set fgcolor to ", color);
+    DEBUG3_VALUELN("Set fgcolor to ", color);
   }
 }
 
@@ -37,10 +37,10 @@ void cliRead() {
   static char input[MAX_CLI_LEN];
   static int i = 0;
 
-  //  DEBUG_VALUELN(DEBUG_HIGH, "available=", Serial.available());
+  //  DEBUG4_VALUELN("available=", Serial.available());
   while (Serial.available()) {
     char c = (char)Serial.read();
-    //   DEBUG_VALUE(DEBUG_HIGH, " ", (byte)input[i]);
+    //   DEBUG4_VALUE(" ", (byte)input[i]);
 
     if (c == '\n') {
       input[i] = 0;

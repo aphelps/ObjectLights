@@ -59,7 +59,7 @@ class Geometry {
   /* 
    * Utility functions 
    */
-  virtual void print(byte level);
+  virtual void print();
 
   /* Return whether this object has LEDs defined */
   boolean hasLeds() { return (leds[0].pixel != NO_LED); }

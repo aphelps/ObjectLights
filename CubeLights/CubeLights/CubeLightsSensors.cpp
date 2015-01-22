@@ -4,7 +4,7 @@
  * Copyright: 2014
  ******************************************************************************/
 
-//#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_TRACE
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -31,13 +31,13 @@ void sensor_range(void)
     int new_range = sonar.ping_cm();
     if (new_range == 0) new_range = PING_MAX_CM;
     if (new_range != range_cm) {
-      DEBUG_COMMAND(DEBUG_HIGH,
-		    if (abs(new_range - range_cm) > 5) {
-		      DEBUG_VALUE(DEBUG_HIGH, " Ping cm:", new_range);
-		      DEBUG_VALUE(DEBUG_HIGH, " old_cm:", range_cm);
-		      DEBUG_VALUELN(DEBUG_HIGH, " time:", millis() - now);
-		    }
-		    );
+      DEBUG4_COMMAND(
+                     if (abs(new_range - range_cm) > 5) {
+                       DEBUG4_VALUE(" Ping cm:", new_range);
+                       DEBUG4_VALUE(" old_cm:", range_cm);
+                       DEBUG4_VALUELN(" time:", millis() - now);
+                     }
+                     );
       range_cm = new_range;
     }
   }
@@ -62,7 +62,7 @@ void sensor_photo(void)
     } else if (photo_value < PHOTO_THRESHOLD_LOW) {
       photo_dark = false;
     }
-    DEBUG_VALUE(DEBUG_HIGH, " Photo:", photo_value);
+    DEBUG4_VALUE(" Photo:", photo_value);
   }
 }
 #endif
@@ -86,13 +86,13 @@ void sensor_cap(void)
 #endif
 
   if (touch_sensor.readTouchInputs()) {
-    DEBUG_COMMAND(DEBUG_TRACE,
-      DEBUG_PRINT(DEBUG_TRACE, "Cap:");
-      for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
-        DEBUG_VALUE(DEBUG_TRACE, " ", touch_sensor.touched(i));
-      }
-      DEBUG_VALUELN(DEBUG_TRACE, " ms:", millis());
-    );
+    DEBUG5_COMMAND(
+                   DEBUG5_PRINT("Cap:");
+                   for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
+                     DEBUG5_VALUE(" ", touch_sensor.touched(i));
+                   }
+                   DEBUG5_VALUELN(" ms:", millis());
+                   );
   }
 }
 
@@ -132,7 +132,7 @@ void handle_sensors() {
     static unsigned long taptime1 = 0;
     if (now - taptime1 < CAP_DOUBLE_MS) {
       sensor_state |= SENSE_DOUBLE_1;
-      DEBUG_VALUELN(DEBUG_HIGH, "Double tap1 ms:", now - taptime1);
+      DEBUG4_VALUELN("Double tap1 ms:", now - taptime1);
     }
     taptime1 = now;
   }
@@ -146,7 +146,7 @@ void handle_sensors() {
     static unsigned long taptime2 = 0;
     if (now - taptime2 < CAP_DOUBLE_MS) {
       sensor_state |= SENSE_DOUBLE_2;
-      DEBUG_VALUELN(DEBUG_HIGH, "Double tap2 ms:", now - taptime2);
+      DEBUG4_VALUELN("Double tap2 ms:", now - taptime2);
     }
     taptime2 = now;
   }
@@ -160,7 +160,7 @@ void handle_sensors() {
     if (now - taptime < CAP_DOUBLE_MS) {
       // Rapid double tap
       sensor_state |= SENSE_DOUBLE_BOTH;
-      DEBUG_VALUELN(DEBUG_HIGH, "Double tap ms:", now - taptime);
+      DEBUG4_VALUELN("Double tap ms:", now - taptime);
     }
 
     doubleTime = now;
@@ -171,7 +171,7 @@ void handle_sensors() {
   if (CHECK_TOUCH_BOTH()) {
     if ((doubleTime > 0) && ((now - doubleTime) > 750)) {
       // Long touch period
-      DEBUG_PRINTLN(DEBUG_HIGH, "Long double touch");
+      DEBUG4_PRINTLN("Long double touch");
       sensor_state |= SENSE_LONG_BOTH;
       doubleTime = 0;
     }
@@ -195,7 +195,7 @@ void handle_sensors() {
     sensorFunctions[uiMode](false, true);
 
     uiMode = (uiMode + 1) % NUM_UI_MODES;
-    DEBUG_VALUELN(DEBUG_LOW, "Enter ui mode: ", uiMode);
+    DEBUG2_VALUELN("Enter ui mode: ", uiMode);
 
     // Send enter to new function
     sensorFunctions[uiMode](true, false);
@@ -239,7 +239,7 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
   if (entered) {
     // Just entered this mode, clear followup modes
     set_mode_to(FINAL_MODE, MODE_NONE);
-    DEBUG_PRINTLN(DEBUG_HIGH, "Entered default UI");
+    DEBUG4_PRINTLN("Entered default UI");
   }
 
   // If only one sensor is touched, adjust the color
@@ -323,13 +323,13 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
 
     if (pilot_state == PILOT_OFF) {
       /* If the pilot hadn't previously been ignited, do so now */
-      DEBUG_PRINTLN(DEBUG_HIGH, "Igniting pilot light");
+      DEBUG4_PRINTLN("Igniting pilot light");
 
       delay(10); // XXX - For some reason we need a delay between transmissions
 
       /* Turn on the hot surface igniter */
       sendHMTLTimedChange(ADDRESS_POOFER_UNIT, IGNITER_OUTPUT,
-			  30000, 0xFFFFFFFF, 0);
+                          30000, 0xFFFFFFFF, 0);
 
       last_send = now;
 	
@@ -341,8 +341,8 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
     modeConfigs[FINAL_MODE].data.u32s[0] = 0x0 | 
       FACE_LED_MASK(0x0F, ((1 << 6) | (1 << 7) | (1 << 8)));
     set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
-    DEBUG_HEXVALLN(DEBUG_HIGH, "Entered poofer control.  Mask:", 
-		   modeConfigs[FINAL_MODE].data.u32s[0]);
+    DEBUG4_HEXVALLN("Entered poofer control.  Mask:", 
+                    modeConfigs[FINAL_MODE].data.u32s[0]);
   }
 
   if (pilot_state == PILOT_OFF) {
@@ -351,46 +351,46 @@ void sensor_mode_poofer_control(boolean entered, boolean exited) {
       sendHMTLValue(ADDRESS_POOFER_UNIT, PILOT_VALVE, 255);
       pilot_state = PILOT_IGNITING;
       modeConfigs[FINAL_MODE].data.u32s[0] =
-	FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 8)));
+        FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 8)));
 
-      DEBUG_PRINTLN(DEBUG_HIGH, "Opening pilot light value");
+      DEBUG4_PRINTLN("Opening pilot light value");
     }
   } else if (pilot_state == PILOT_IGNITING) {
     if (now - last_send > 30000) {
       /* The pilot light should be triggered by this point */
       pilot_state = PILOT_ON;
       modeConfigs[FINAL_MODE].data.u32s[0] =
-	FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 7) | (1 << 8)));
+        FACE_LED_MASK(0xFF, ((1 << 6) | (1 << 7) | (1 << 8)));
       modeConfigs[FINAL_MODE].fgColor = pixel_color(0, 255, 0);
 
-      DEBUG_PRINTLN(DEBUG_HIGH, "Flame on!!!");
+      DEBUG4_PRINTLN("Flame on!!!");
     }
   } else {
     if (CHECK_TOUCH_1() && !CHECK_TOUCH_BOTH()) {
       if (CHECK_CHANGE_1()) {
-	last_send = 0;
+        last_send = 0;
       }
 
       if (now - last_send > REFRESH_PERIOD) {
-	/* Send a brief on value, repeated calls will keep the valve open */
-	sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
-			    250, 0xFFFFFFFF, 0);
-	last_send = now;
-	DEBUG_PRINTLN(DEBUG_HIGH, "Sending poof");
+        /* Send a brief on value, repeated calls will keep the valve open */
+        sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
+                            250, 0xFFFFFFFF, 0);
+        last_send = now;
+        DEBUG4_PRINTLN("Sending poof");
       }
     } else if (CHECK_CHANGE_1() && !CHECK_TOUCH_BOTH()) {
       /* The sensor was released, send a disable message */
       // XXX - Add program cancel message
       sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
-			  10, 0, 0);
+                          10, 0, 0);
       last_send = now;
-      DEBUG_PRINTLN(DEBUG_HIGH, "Disable poof");
+      DEBUG4_PRINTLN("Disable poof");
     } else if (CHECK_TOUCH_2() && CHECK_CHANGE_2()) {
       /* Send a stutter open */
       sendHMTLTimedChange(ADDRESS_POOFER_UNIT, POOF_OUTPUT,
-			  100, 0xFFFFFFFF, 0);
+                          100, 0xFFFFFFFF, 0);
       last_send = now;
-      DEBUG_PRINTLN(DEBUG_HIGH, "Quick poof");
+      DEBUG4_PRINTLN("Quick poof");
     }
   }
 
@@ -408,7 +408,7 @@ void sensor_mode_mode_control(boolean entered, boolean exited) {
     modeConfigs[FINAL_MODE].data.u32s[0] =
       FACE_LED_MASK(0xFF, ((1 << 0) | (1 << 2) | (1 << 6) | (1 << 8)));
     set_mode_to(FINAL_MODE, MODE_BLINK_PATTERN);
-    DEBUG_PRINTLN(DEBUG_LOW, "Entered mode change");
+    DEBUG2_PRINTLN("Entered mode change");
   }
 
   if (CHECK_TAP_1() && !CHECK_TOUCH_BOTH()) {

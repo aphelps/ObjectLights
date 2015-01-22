@@ -52,11 +52,11 @@ void sensor_photo(void)
 
     photo_value = analogRead(PHOTO_PIN);
     if ((photo_value > PHOTO_THRESHOLD_HIGH) && (!photo_dark)) {
-      DEBUG_VALUELN(DEBUG_HIGH, " Photo dark:", photo_value);
+      DEBUG4_VALUELN(" Photo dark:", photo_value);
       photo_dark = true;
     } else if ((photo_value < PHOTO_THRESHOLD_LOW) && (photo_dark)) {
       photo_dark = false;
-      DEBUG_VALUELN(DEBUG_HIGH, " Photo light:", photo_value);
+      DEBUG4_VALUELN(" Photo light:", photo_value);
     }
   }
 }
@@ -223,11 +223,11 @@ void movementCircleCW(Triangle *currentTriangle, byte vertex,
     *nextTriangle = currentTriangle->rightOfVertex(vertex);
     *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
   }
-  DEBUG_VALUE(DEBUG_TRACE, "phase=", phase);
-  DEBUG_VALUE(DEBUG_TRACE, " current=", currentTriangle->id);
-  DEBUG_VALUE(DEBUG_TRACE, ",", vertex);
-  DEBUG_VALUE(DEBUG_TRACE, " next=", (*nextTriangle)->id);
-  DEBUG_VALUELN(DEBUG_TRACE, ",", *nextVertex);
+  DEBUG5_VALUE("phase=", phase);
+  DEBUG5_VALUE(" current=", currentTriangle->id);
+  DEBUG5_VALUE(",", vertex);
+  DEBUG5_VALUE(" next=", (*nextTriangle)->id);
+  DEBUG5_VALUELN(",", *nextVertex);
 
   phase++;
 }
@@ -439,8 +439,8 @@ void trianglesSwapPattern(Triangle *triangles, int size, int periodms,
  
     uint32_t currentColor = triangles[current].getColor();
     uint32_t edgeColor = triangles[current].getEdge(edge)->getColor();
-    DEBUG_VALUE(DEBUG_TRACE, "curr color:", currentColor);
-    DEBUG_VALUELN(DEBUG_TRACE, "edge color:", edgeColor);
+    DEBUG5_VALUE("curr color:", currentColor);
+    DEBUG5_VALUELN("edge color:", edgeColor);
 
     triangles[current].setColor(edgeColor);
     triangles[current].getEdge(edge)->setColor(currentColor);
@@ -470,7 +470,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
     }
 
     for (int tri = 0; tri < size; tri++) {
-      DEBUG_VALUE(DEBUG_TRACE, " ", set[tri]);
+      DEBUG5_VALUE(" ", set[tri]);
       switch (set[tri]) {
       case 0:
       case 3:
@@ -483,7 +483,7 @@ void trianglesLifePattern(Triangle *triangles, int size, int periodms,
 	break;
       }
     }
-    DEBUG_PRINTLN(DEBUG_TRACE, "");
+    DEBUG5_PRINTLN("");
   }
 }
 
@@ -571,8 +571,8 @@ void trianglesCircleCorner(Triangle *triangles, int size, int periodms,
       next->setColor(vertex, 0, next->getRed(vertex), 0);
     }
 
-    DEBUG_VALUE(DEBUG_TRACE, "next=", next->id);
-    DEBUG_VALUELN(DEBUG_TRACE, " vert=", vertex);
+    DEBUG5_VALUE("next=", next->id);
+    DEBUG5_VALUELN(" vert=", vertex);
 
     next->setColor(vertex, 255, 0, next->getGreen(vertex));
     current = next;
@@ -803,9 +803,9 @@ void trianglesStaticNoise(Triangle *triangles, int size, int periodms,
 	  byte red = pixel_red(arg->fgColor) >> facter;
 	  byte green = pixel_green(arg->fgColor) >> facter;
 	  byte blue = pixel_blue(arg->fgColor) >> facter;
-	  //DEBUG_VALUE(DEBUG_HIGH, "r=", red);
-	  //DEBUG_VALUE(DEBUG_HIGH, " g=", green);
-	  //DEBUG_VALUELN(DEBUG_HIGH, " b=", blue);
+	  //DEBUG4_VALUE("r=", red);
+	  //DEBUG4_VALUE(" g=", green);
+	  //DEBUG4_VALUELN(" b=", blue);
 	  triangles[tri].setColor(led, red, green, blue);
 	}
       }
@@ -828,7 +828,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
   static byte colorMode = 0;
 
   if (init || (currentIndex == (byte)-1)) {
-    DEBUG_PRINT(DEBUG_HIGH, "Initializing:");
+    DEBUG4_PRINT("Initializing:");
     next_time = millis();
     setAllTriangles(triangles, size, config->bgColor);
     for (int i = 0; i < SNAKE_LENGTH; i++) {
@@ -846,7 +846,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     snakeVertices[currentIndex] = random(0, Triangle::NUM_EDGES);
 
     colorMode++;
-    DEBUG_VALUE(DEBUG_HIGH, " colormode=", colorMode);
+    DEBUG4_VALUE(" colormode=", colorMode);
   }
 
   if (millis() > next_time) {
@@ -938,7 +938,7 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     }
     if (!found) {
       currentIndex = (byte)-1;
-      DEBUG_PRINTLN(DEBUG_HIGH, "End of snake");
+      DEBUG4_PRINTLN("End of snake");
       return;
     }
 
@@ -967,9 +967,9 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
       }
     }
 
-    DEBUG_VALUE(DEBUG_TRACE, " i:", currentIndex);
-    DEBUG_VALUE(DEBUG_TRACE, " tri:", tri);
-    DEBUG_VALUELN(DEBUG_TRACE, " vert:", vert);
+    DEBUG5_VALUE(" i:", currentIndex);
+    DEBUG5_VALUE(" tri:", tri);
+    DEBUG5_VALUELN(" vert:", vert);
   }
 }
 
@@ -987,7 +987,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
   static byte colorMode = 0;
 
   if (init || (currentIndex == (byte)-1)) {
-    DEBUG_PRINT(DEBUG_HIGH, "Initializing:");
+    DEBUG4_PRINT("Initializing:");
     next_time = millis();
     setAllTriangles(triangles, size, config->bgColor);
     for (int i = 0; i < SNAKE_LENGTH; i++) {
@@ -1005,7 +1005,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     snakeVertices[currentIndex] = random(0, Triangle::NUM_EDGES);
 
     colorMode++;
-    DEBUG_VALUE(DEBUG_HIGH, " colormode=", colorMode);
+    DEBUG4_VALUE(" colormode=", colorMode);
   }
 
   if (millis() > next_time) {
@@ -1112,7 +1112,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
 
     if (!found) {
       currentIndex = (byte)-1;
-      DEBUG_PRINTLN(DEBUG_HIGH, "End of snake");
+      DEBUG4_PRINTLN("End of snake");
       return;
     }
 
@@ -1141,9 +1141,9 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
       }
     }
 
-    DEBUG_VALUE(DEBUG_TRACE, " i:", currentIndex);
-    DEBUG_VALUE(DEBUG_TRACE, " tri:", tri);
-    DEBUG_VALUELN(DEBUG_TRACE, " vert:", vert);
+    DEBUG5_VALUE(" i:", currentIndex);
+    DEBUG5_VALUE(" tri:", tri);
+    DEBUG5_VALUELN(" vert:", vert);
   }
 }
 
@@ -1158,11 +1158,11 @@ void trianglesSetAll(Triangle *triangles, int size, int periodms,
 
   if (millis() > next_time) {
     next_time += periodms;
-    DEBUG_HEXVAL(DEBUG_HIGH, "color=", arg->fgColor);
-    DEBUG_HEXVAL(DEBUG_HIGH, " getColor=", triangles[0].getColor());
-    DEBUG_HEXVAL(DEBUG_HIGH, " getRed=", triangles[0].getRed());
-    DEBUG_HEXVAL(DEBUG_HIGH, " getGreen=", triangles[0].getGreen());
-    DEBUG_HEXVALLN(DEBUG_HIGH, " getBlue=", triangles[0].getBlue());
+    DEBUG4_HEXVAL("color=", arg->fgColor);
+    DEBUG4_HEXVAL(" getColor=", triangles[0].getColor());
+    DEBUG4_HEXVAL(" getRed=", triangles[0].getRed());
+    DEBUG4_HEXVAL(" getGreen=", triangles[0].getGreen());
+    DEBUG4_HEXVALLN(" getBlue=", triangles[0].getBlue());
   }
 }
 
