@@ -14,13 +14,18 @@
 // varies among boards...it's ADC0 on Uno and Mega, ADC7 on Leonardo.
 // Other boards may require different settings; refer to datasheet.
 #ifdef __AVR_ATmega32U4__
- #define ADC_CHANNEL 7
+ #define SOUND_PIN 7
 #else
- #define ADC_CHANNEL 0
+ #define SOUND_PIN 0
 #endif
+
+#define LIGHT_PIN  1
+#define KNOB_PIN   4
+
 
 #define NUM_COLUMNS 8
 
+extern int16_t       capture[FFT_N];    // Audio capture buffer
 extern uint16_t      spectrum[FFT_N/2]; // Spectrum output buffer
 
 extern byte dotCount, // Frame counter for delaying dot-falling speed
@@ -32,6 +37,9 @@ extern uint16_t
   maxLvlAvg[NUM_COLUMNS], // pseudo rolling averages for the prior few frames.
   colDiv[NUM_COLUMNS];    // Used when filtering FFT output to 8 columns
 extern uint8_t colLeveled[NUM_COLUMNS]; // Column values adjusted for levels
+
+extern uint16_t light_level;
+extern uint16_t knob_level;
 
 void sound_initialize();
 boolean check_sound();

@@ -17,6 +17,9 @@
 
 #include "SoundUnit.h"
 
+uint16_t light_level;
+uint16_t knob_level;
+
 int16_t       capture[FFT_N];    // Audio capture buffer
 volatile byte samplePos = 0;     // Buffer position counter
 
@@ -111,20 +114,28 @@ void sound_initialize() {
   setupFreeRun();
 }
 
+volatile byte current_pin = SOUND_PIN;
+volatile int ready_pin = -1;
 
 /*
  * Setup ADC free-run mode
  */
 void setupFreeRun() {
   // Init ADC free-run mode; f = ( 16MHz/prescaler ) / 13 cycles/conversion
-  ADMUX  = ADC_CHANNEL; // Channel sel, right-adj, use AREF pin
+  if (current_pin == SOUND_PIN) {
+    ADMUX  = current_pin; // Channel sel, right-adj, use AREF pin
+  } else {
+    ADMUX  = bit (REFS0) | current_pin; // Channel sel, right-adj, use 5V
+  }
   ADCSRA = _BV(ADEN)  | // ADC enable
            _BV(ADSC)  | // ADC start
            _BV(ADATE) | // Auto trigger
            _BV(ADIE)  | // Interrupt enable
            _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0); // 128:1 / 13 = 9615 Hz
   ADCSRB = 0;                // Free run mode, no high MUX bit
-  DIDR0  = 1 << ADC_CHANNEL; // Turn off digital input for ADC pin
+  DIDR0  = 1 << SOUND_PIN // Turn off digital input for ADC pin
+         | 1 << LIGHT_PIN 
+         | 1 << KNOB_PIN;
   TIMSK0 = 0;                // Timer0 off
 
   sei(); // Enable interrupts
@@ -133,19 +144,45 @@ void setupFreeRun() {
 /*
  * Audio-sampling interrupt
  */
+
 ISR(ADC_vect) {
-  static const int16_t noiseThreshold = 4;
-  int16_t              sample         = ADC; // 0-1023
+  int16_t sample = ADC; // 0-1023
+  boolean done = false;
 
- // XXX: Why ignore values between 508-516?
-  capture[samplePos] =
-    ((sample > (512 - noiseThreshold)) &&
-     (sample < (512 + noiseThreshold))) ? 0 :
-    sample - 512; // Sign-convert for FFT; -512 to +511
+  if (current_pin == SOUND_PIN) {
+    static const int16_t noiseThreshold = 4;
 
-  if(++samplePos >= FFT_N) ADCSRA &= ~_BV(ADIE); // Buffer full, interrupt off
+    // XXX: Why ignore values between 508-516?
+    capture[samplePos] =
+      ((sample > (512 - noiseThreshold)) &&
+       (sample < (512 + noiseThreshold))) ? 0 :
+      sample - 512; // Sign-convert for FFT; -512 to +511
+
+    if (++samplePos >= FFT_N) done = true;
+  } else if (current_pin == LIGHT_PIN) {
+    light_level = sample; // Does there need to be input pullup or pull down resistor?
+    done = true;
+  } else if (current_pin == KNOB_PIN) {
+    knob_level = sample;
+    done = true;
+  }
+
+  if (done) {
+    // Record which pin is done sampling
+    ready_pin = current_pin;
+
+    // Turn off interrupts to report back and switch pins
+    ADCSRA &= ~_BV(ADIE);
+    
+    // Switch pins
+    switch (current_pin) {
+      case SOUND_PIN: current_pin = KNOB_PIN; break;
+      case KNOB_PIN: current_pin = LIGHT_PIN; break;
+      case LIGHT_PIN: current_pin = SOUND_PIN; break;
+    }
+    ADMUX  = current_pin;
+  }
 }
-
 
 void processSound() {
 
@@ -206,10 +243,15 @@ void processSound() {
 
 
 boolean check_sound() {
-  if (!(ADCSRA & _BV(ADIE))) { // Check if audio sampling has finished
-    processSound();
-    return true;
-  } else {
-    return false;
+  if (!(ADCSRA & _BV(ADIE))) {
+    // Current sample is complete
+    if (ready_pin == SOUND_PIN) {
+      processSound(); // Sampling is re-enabled in processSound()
+      return true;
+    } else {
+      ADCSRA |= _BV(ADIE); // Resume sampling interrupt
+    }
   }
+
+  return false;
 }

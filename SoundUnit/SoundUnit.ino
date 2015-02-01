@@ -14,7 +14,7 @@
 // than Spectro, which requires FFT_N be 64 in that file when compiling.
 
 
-#define DEBUG_LEVEL DEBUG_HIGH
+#define DEBUG_LEVEL 4
 #include <Debug.h>
 
 #include <avr/pgmspace.h>
@@ -186,7 +186,9 @@ uint16_t print_timer = 0;
 void output_data() {
   uint16_t total;
 
-  if ((print_timer > output_period) || sentResponse) {
+  print_timer++;
+
+  if ((print_timer >= output_period) || sentResponse) {
     print_timer = 0;
 
     if (verbosity >= 2) {
@@ -215,13 +217,21 @@ void output_data() {
         total += colLeveled[c];
       }
       DEBUG4_VALUE(" +", total);
+
+      DEBUG4_VALUE(" l:", light_level);
+      DEBUG4_VALUE(" k:", knob_level);
+    }
+
+    if (verbosity >= 3) {
+      DEBUG4_PRINT(" raw:");
+      for (uint16_t x = 0; x < FFT_N; x++) {
+        DEBUG4_VALUE(" ", capture[x]);
+      }
     }
 
     if (sentResponse) {
       DEBUG4_PRINT(" Sent");
     }
-  } else {
-    print_timer++;
   }
 
   DEBUG_PRINT_END();
