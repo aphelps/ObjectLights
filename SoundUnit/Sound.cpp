@@ -122,11 +122,7 @@ volatile int ready_pin = -1;
  */
 void setupFreeRun() {
   // Init ADC free-run mode; f = ( 16MHz/prescaler ) / 13 cycles/conversion
-  if (current_pin == SOUND_PIN) {
-    ADMUX  = current_pin; // Channel sel, right-adj, use AREF pin
-  } else {
-    ADMUX  = bit (REFS0) | current_pin; // Channel sel, right-adj, use 5V
-  }
+  ADMUX  = current_pin; // Channel sel, right-adj, use AREF pin
   ADCSRA = _BV(ADEN)  | // ADC enable
            _BV(ADSC)  | // ADC start
            _BV(ADATE) | // Auto trigger
@@ -142,9 +138,10 @@ void setupFreeRun() {
 }
 
 /*
- * Audio-sampling interrupt
+ * Sampling interupt
+ *   - Cycles through the sensor pins, taking FFT_N audio samples and a single
+ *     sample of all others.
  */
-
 ISR(ADC_vect) {
   int16_t sample = ADC; // 0-1023
   boolean done = false;

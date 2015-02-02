@@ -53,7 +53,7 @@ RS485Socket rs485(4, 7, 5, false);
  * For sending sound data back over RS485.  Set the buffer size large enough
  * to allow for all spectrum data
  */
-#define SEND_BUFFER_SIZE RS485_BUFFER_TOTAL(sizeof (uint16_t) * NUM_COLUMNS + 1)
+#define SEND_BUFFER_SIZE RS485_BUFFER_TOTAL(sizeof (uint16_t) * (NUM_COLUMNS + 2) + 1)
 byte rs485_buffer[SEND_BUFFER_SIZE];
 byte *send_buffer; // Pointer to use for start of send data
 #define MY_ADDR 0x01
@@ -162,6 +162,15 @@ boolean handleMessages() {
           break;
         }
       }
+
+      /* Add the light and knob levels */
+      uint16_t *sendPtr = (uint16_t *)(send_buffer + response_len);
+      *sendPtr = light_level;
+      response_len += sizeof (uint16_t);
+
+      sendPtr++;
+      *sendPtr = knob_level;
+      response_len += sizeof (uint16_t);
     }
 
     if (response_len > 0) {
