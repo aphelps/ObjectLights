@@ -21,7 +21,7 @@ Square::Square(unsigned int _id) {
 
   for (int v = 0; v < NUM_VERTICES; v++) {
     for (int o = 0; o < VERTEX_ORDER; o++) {
-      vertices[v][o] = NULL;
+      vertices[v][o] = NO_VERTEX;
     }
   }
 

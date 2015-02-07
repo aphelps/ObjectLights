@@ -14,7 +14,7 @@
 #include "Wire.h"
 #include "FastLED.h"
 
-//#define DEBUG_LEVEL DEBUG_MID
+//#define DEBUG_LEVEL DEBUG_TRACE
 #include "Debug.h"
 
 #include "GeneralUtils.h"
@@ -54,11 +54,12 @@ void initializeConnect() {
 }
 
 
-#define DEST_ADDR 1 // XXX - Currently hard-coded
-
 void sendByte(byte value, byte address) {
   send_buffer[0] = value;
   rs485.sendMsgTo(address, send_buffer, sizeof (int));
+  DEBUG5_HEXVAL("sendInt: to=0x", address);
+  DEBUG5_HEXVALLN(" val=", value);
+
 }
 
 void sendInt(int value, byte address) {
