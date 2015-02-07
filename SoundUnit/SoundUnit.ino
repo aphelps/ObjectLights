@@ -26,13 +26,6 @@
 #include "SPI.h"
 #include "FastLED.h"
 
-/* TODO: Factoring out MPR121 from HMTLTypes.h will probably allow these to be
-   included.
-#include "HMTLTypes.h"
-#include "HMTLMessaging.h"
-#include "HMTLProtocol.h"
-*/
-
 #include "SerialCLI.h"
 
 #include "PixelUtil.h"
@@ -42,12 +35,24 @@
 
 #include "SoundUnit.h"
 
-#define LED_RED   10
-#define LED_GREEN 11
-#define LED_BLUE  13
+// Note: These are only needed for ArduinoIDE compilation.  With this environment
+// make sure to set DISABLE_MPR121 in the HMTLTypes.h, otherwise the static
+// memory allocation (blame Wire.h) will exceed some limit and this won't work
+#include "EEPROM.h"
+#include "GeneralUtils.h"
+#include "EEPromUtils.h"
+#include "Wire.h"
+#include "MPR121.h"
+// End note
 
-PixelUtil pixels; //(4, 12, 8, RGB);
-RS485Socket rs485(4, 7, 5, false);
+#include "HMTLTypes.h"
+#include "HMTLMessaging.h"
+#include "HMTLProtocol.h"
+
+#define NUM_OUTPUTS 3
+config_rgb_t rgb_output;
+RS485Socket rs485;
+PixelUtil pixels;
 
 /*
  * For sending sound data back over RS485.  Set the buffer size large enough
@@ -66,11 +71,14 @@ void setup() {
   Serial.begin(115200);
   DEBUG2_PRINTLN("*** SoundUnit starting ***");
 
-  pinMode(LED_RED, OUTPUT);
-  pinMode(LED_GREEN, OUTPUT);
-  pinMode(LED_BLUE, OUTPUT);
+  config_hdr_t config;
+  config_max_t readoutputs[NUM_OUTPUTS];
+  int32_t outputs_found = hmtl_setup(&config, readoutputs,
+                                     NULL, NULL, NUM_OUTPUTS,
+                                     &rs485, &pixels, NULL,
+                                     &rgb_output, NULL,
+                                     NULL);
 
-  pixels = PixelUtil(5, 12, 8, RGB); //pixels.init(5, 12, 8, RGB);
   pixels.setAllRGB(128, 0, 128);
   pixels.update();
 
@@ -101,12 +109,12 @@ void loop() {
 
     sentResponse = false;
 
-    digitalWrite(LED_RED, 255);
+    digitalWrite(rgb_output.pins[0], 255);
     lastData = millis();
   }
 
   if (millis() - lastData > 5) {
-    digitalWrite(LED_RED, 0);
+    digitalWrite(rgb_output.pins[0], 0);
   }
 
   serialcli.checkSerial();
