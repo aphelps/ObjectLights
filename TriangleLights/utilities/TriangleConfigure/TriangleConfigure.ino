@@ -24,6 +24,7 @@
 #include "Wire.h"
 #include "MPR121.h"
 #include "SerialCLI.h"
+#include "Socket.h"
 #include "RS485Utils.h"
 
 #include "ObjectConfiguration.h"

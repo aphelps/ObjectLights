@@ -103,7 +103,8 @@ void updateTrianglePixels(Triangle *triangles, int numTriangles,
 			  PixelUtil *pixels);
 
 
-#define TRI_ARRAY_SIZE 30
+// XXX: This should not be hard coded
+#define TRI_ARRAY_SIZE 35
 Triangle* initTriangles(int triangleCount);
 
 /* Allocate and return a fully connected icosohedron */

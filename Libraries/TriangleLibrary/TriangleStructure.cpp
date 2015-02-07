@@ -304,22 +304,20 @@ Triangle *Triangle::rightOfVertex(byte vertex) {
  * Print a representation of the triangle
  */
 void Triangle::print() {
-#if DEBUG_LEVEL >= 3
-  DEBUG3_VALUE(" Tri:", id);
+  DEBUG2_VALUE(" Tri:", id);
   for (int e = 0; e < NUM_EDGES; e++) {
-    DEBUG3_VALUE("\te:", edges[e]);
+    DEBUG2_VALUE("\te:", edges[e]);
   }
 
   for (int v = 0; v < NUM_VERTICES; v++) {
-    DEBUG3_VALUE("\tv:", leds[v].pixel);
+    DEBUG2_VALUE("\tv:", leds[v].pixel);
 
     for (int o = 0; o < VERTEX_ORDER; o++) {
-      DEBUG3_VALUE("-", getVertexID(v, o));
+      DEBUG2_VALUE("-", getVertexID(v, o));
     }
   }
 
-  DEBUG3_PRINTLN(level, "");
-#endif
+  DEBUG2_PRINTLN("");
 }
 
 
@@ -837,7 +835,7 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
 
     DEBUG2_VALUE(" - face=", face);
     DEBUG2_VALUE(" offset=", offset);
-    triangles[face].print();
+    DEBUG2_COMMAND(triangles[face].print();)
   }
   DEBUG_PRINT_END();
 

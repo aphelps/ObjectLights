@@ -195,7 +195,7 @@ void movementCornerCW(Triangle *currentTriangle, byte vertex,
                       Triangle **nextTriangle, byte *nextVertex) {
   *nextTriangle = currentTriangle->leftOfVertex(vertex);
   if (*nextTriangle == NULL) {
-    *nextVertex = NULL;
+    *nextVertex = Triangle::NO_VERTEX;
   } else {
     *nextVertex = (*nextTriangle)->matchVertexRight(currentTriangle, vertex);
   }
@@ -205,7 +205,7 @@ void movementCornerCCW(Triangle *currentTriangle, byte vertex,
                        Triangle **nextTriangle, byte *nextVertex) {
   *nextTriangle = currentTriangle->rightOfVertex(vertex);
   if (*nextTriangle == NULL) {
-    *nextVertex = NULL;
+    *nextVertex = Triangle::NO_VERTEX;
   } else {
     *nextVertex = (*nextTriangle)->matchVertexLeft(currentTriangle, vertex);
   }
@@ -974,13 +974,13 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
 }
 
 /* Run a snake randomly around the light */
-#define SNAKE_LENGTH 12
+#define SNAKE2_LENGTH 12
 void trianglesSnake2(Triangle *triangles, int size, int periodms,
 			  boolean init, pattern_args_t *arg) {
   pattern_args_t *config = (pattern_args_t *)arg;
-  static byte snakeTriangles[SNAKE_LENGTH];
-  static byte snakeVertices[SNAKE_LENGTH];
-  uint32_t values[SNAKE_LENGTH] = {
+  static byte snakeTriangles[SNAKE2_LENGTH];
+  static byte snakeVertices[SNAKE2_LENGTH];
+  uint32_t values[SNAKE2_LENGTH] = {
     255, 128, 64, 32, 16, 8, 4//, 2, 1
   };
   static byte currentIndex = (byte)-1;
@@ -990,7 +990,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     DEBUG4_PRINT("Initializing:");
     next_time = millis();
     setAllTriangles(triangles, size, config->bgColor);
-    for (int i = 0; i < SNAKE_LENGTH; i++) {
+    for (int i = 0; i < SNAKE2_LENGTH; i++) {
       snakeTriangles[i] = Triangle::NO_ID;
       snakeVertices[i] = Triangle::NO_VERTEX;
     }
@@ -1014,34 +1014,34 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     /* Determine which colors to use for the snake */
     switch (colorMode % 1) {
       case 0: {
-        for (int i = 0; i < SNAKE_LENGTH; i++) {
-          values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
+          values[i] = pixel_wheel(map(i, 0, SNAKE2_LENGTH - 1, 0, 255));
         }
         break;
       }
       case 1: {
-        for (int i = 0; i < SNAKE_LENGTH; i++) {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
           byte red = 255 >> i;
           values[i] = pixel_color(red, 0, 0);
         }
         break;
       }
       case 2: {
-        for (int i = 0; i < SNAKE_LENGTH; i++) {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
           byte green = 255 >> i;
           values[i] = pixel_color(0, green, 0);
         }
         break;
       }
       case 3: {
-        for (int i = 0; i < SNAKE_LENGTH; i++) {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
           byte blue = 255 >> i;
           values[i] = pixel_color(0, 0, blue);
         }
         break;
       }
       case 4: {
-        for (int i = 0; i < SNAKE_LENGTH; i++) {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
           byte color = 255 >> i;
           values[i] = pixel_color(color, color, color);
         }
@@ -1055,8 +1055,8 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     boolean found = false;
 
     /* Choose the next location */
-    for (byte i = 0; i < SNAKE_LENGTH; i++) {
-      byte activeIndex = (currentIndex + SNAKE_LENGTH - i) % SNAKE_LENGTH;
+    for (byte i = 0; i < SNAKE2_LENGTH; i++) {
+      byte activeIndex = (currentIndex + SNAKE2_LENGTH - i) % SNAKE2_LENGTH;
       if (snakeTriangles[activeIndex] ==  Triangle::NO_ID) continue;
       Triangle *current = &triangles[snakeTriangles[activeIndex]];
       byte currentVertex = snakeVertices[activeIndex];
@@ -1117,7 +1117,7 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     }
 
     if (currentIndex == 0) {
-      nextIndex = SNAKE_LENGTH - 1;
+      nextIndex = SNAKE2_LENGTH - 1;
     } else {
       nextIndex = currentIndex - 1;
     }
@@ -1132,8 +1132,8 @@ void trianglesSnake2(Triangle *triangles, int size, int periodms,
     snakeVertices[currentIndex] = vert;
 
     /* Set the led values */
-    for (byte i = 0; i < SNAKE_LENGTH; i++) {
-      byte valueIndex = (i + SNAKE_LENGTH - currentIndex) % SNAKE_LENGTH;
+    for (byte i = 0; i < SNAKE2_LENGTH; i++) {
+      byte valueIndex = (i + SNAKE2_LENGTH - currentIndex) % SNAKE2_LENGTH;
       if (snakeTriangles[i] != (byte)-1) {
 	
         triangles[snakeTriangles[i]].setColor(snakeVertices[i],
