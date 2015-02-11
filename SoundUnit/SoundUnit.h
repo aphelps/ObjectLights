@@ -49,4 +49,7 @@ void cliHandler(char **tokens, byte numtokens);
 extern byte verbosity;
 extern uint16_t output_period;
 
+void messaging_init();
+boolean messaging_handle();
+
 #endif // SOUNDUNIT_H

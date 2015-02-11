@@ -15,7 +15,6 @@ Serial.print(F(" \n"
                ));
 }             
 void cliHandler(char **tokens, byte numtokens) {
-
   switch (tokens[0][0]) {
     case 'v': {
       if (numtokens < 2) return;
