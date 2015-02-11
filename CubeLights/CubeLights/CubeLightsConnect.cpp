@@ -114,3 +114,7 @@ void sendHMTLTimedChange(uint16_t address, uint8_t output,
 			 start_color,
 			 stop_color);
 }
+
+void sendHMTLSensorRequest(uint16_t address) {
+  hmtl_send_sensor_request(&rs485, send_buffer, SEND_BUFFER_SIZE, address);
+}

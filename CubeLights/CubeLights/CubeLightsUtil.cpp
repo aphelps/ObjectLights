@@ -9,6 +9,8 @@
 //#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
+#include "HMTLMessaging.h"
+
 #include "CubeConfig.h"
 #include "CubeLights.h"
 
@@ -899,10 +901,9 @@ void squaresSoundTest(Square *squares, int size, pattern_args_t *arg) {
 }
 
 /*
- * Example mode to fetch sound samples from a remote module
+ * This is the same sound test, just using the HMTL sensor messaging
  */
-#define SOUND_TEST_TIMEOUT 500 // Max milliseconds to wait on a response
-void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
+void squaresSoundHMTL(Square *squares, int size, pattern_args_t *arg) {
   static unsigned long lastSend = 0;
 
   if (arg->next_time == 0) {
@@ -913,43 +914,81 @@ void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg) {
     // Send the data request
     arg->next_time += arg->periodms;
 
-    sendByte('S', ADDRESS_SOUND_UNIT);
+    sendHMTLSensorRequest(ADDRESS_SOUND_UNIT);
+
     lastSend = millis();
 
-    DEBUG4_PRINT("SoundTest: Sent request...");
+    DEBUG5_PRINT("SoundTest: Sent request...");
   } else if (lastSend != 0) {
     // Check for a response
     unsigned long elapsed = millis() - lastSend;
     unsigned int msglen;
-    const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
-    if (data != NULL) {
+
+    msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen, my_address);
+    if (msg_hdr != NULL) {
+      DEBUG5_PRINT(" value:");
+
+      if (msg_hdr->type != MSG_TYPE_SENSOR) {
+        DEBUG4_PRINT("SoundTest: non-sense message");
+        return;
+      }
+
+      msg_sensor_data_t *sense = (msg_sensor_data_t *)(msg_hdr + 1);
+      if (sense->sensor_type != HMTL_SENSOR_SOUND) {
+        DEBUG4_PRINT("SoundTest: wrong sensor");
+        return;
+      }
+      
       // Data should be an array of 8 uint16_t
-      DEBUG4_PRINT(" value:");
-      uint16_t *valptr = (uint16_t *)data;
+      uint16_t *values = (uint16_t *)&sense->data;
 
       byte face = 0;
-      byte led = 0;
-      while ((unsigned int)valptr - (unsigned int)data < msglen) {
-        uint16_t val = *valptr;
+      byte col = 0;
+      uint32_t total = 0;
+      for (byte i = 0; i < sense->data_len / sizeof (uint16_t); i++) {
+        uint16_t val = values[i];
 
-        DEBUG4_HEXVAL(" ", val);
+        DEBUG5_HEXVAL(" ", val);
 
-        byte heat = (val > 15 ? 255 : val * val);
-        uint32_t newcolor = pixel_heat(heat);
+        /* Shift the new value into each column */
+        uint32_t newcolor;
+        if (val) {
+          byte heat = (val > 15 ? 255 : val * val);
+          newcolor = pixel_heat(heat);
+        } else {
+          newcolor = 0;
+        }
+        squares[face].shiftColumnDown(col % Square::SQUARE_LED_COLS, newcolor);
 
-        squares[face].setColor(led, newcolor);
-
-        led++;
-        if (led == Square::NUM_LEDS) {
-          led = 0;
+        col++;
+        if (col % Square::SQUARE_LED_COLS == 0) {
           face++;
         }
-        if (face > size)
-          break;
 
-        valptr++;
+        total += val;
       }
-      DEBUG4_VALUELN(" Elapsed:", elapsed);
+      DEBUG5_VALUE(" Elapsed:", elapsed);
+
+      /* Set the top to the average */
+      total = total / col;
+
+      byte heat = total > 15 ? 255 : total * total;
+
+      squares[CUBE_TOP].setColor(pixel_heat(heat));
+      DEBUG5_VALUE(" avg:", total);
+      DEBUG_PRINT_END();
+
+#if 0
+      // XXX - Trigger if over
+      if (heat > 250) {
+        static unsigned long last_send = 0;
+        if (millis() - last_send > 100) {
+          sendHMTLTimedChange(ADDRESS_POOFER_UNIT, 2,
+                              250, 0xFFFFFFFF, 0);
+          last_send = millis();
+        }
+      }
+#endif
 
       lastSend = 0; // Reset the lastSend time so another request can be sent
     } else {

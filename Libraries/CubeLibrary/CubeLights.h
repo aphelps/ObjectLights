@@ -141,6 +141,8 @@ void sendHMTLBlink(uint16_t address, uint8_t output,
 void sendHMTLTimedChange(uint16_t address, uint8_t output,
 			 uint32_t change_period,
 			 uint32_t start_color, uint32_t stop_color);
+void sendHMTLSensorRequest(uint16_t address);
+
 /***** Cube light modes *******************************************************/
 
 /* Return the current mode value */
@@ -196,7 +198,7 @@ extern uint16_t followupPeriods[];
 #define MODE_VECTORS        15
 #define MODE_SIMPLE_LIFE    16
 #define MODE_SOUND_TEST     17
-#define MODE_SOUND_TEST2    18
+#define MODE_SOUND_HMTL     18
 #define MODE_STROBE         19
 
 void squaresTestPattern(Square *squares, int size, pattern_args_t *arg);
@@ -215,7 +217,7 @@ void squaresOrbitTest(Square *squares, int size, pattern_args_t *arg);
 void squaresVectors(Square *squares, int size, pattern_args_t *arg);
 void squaresSimpleLife(Square *squares, int size, pattern_args_t *arg);
 void squaresSoundTest(Square *squares, int size, pattern_args_t *arg);
-void squaresSoundTest2(Square *squares, int size, pattern_args_t *arg);
+void squaresSoundHMTL(Square *squares, int size, pattern_args_t *arg);
 void squaresStrobe(Square *squares, int size, pattern_args_t *arg);
 
 
