@@ -104,7 +104,7 @@ uint32_t sensor_state = 0;
 sensor_mode_t sensorFunctions[] = {
   sensor_mode_basic_control,
   //sensor_mode_mode_control
-  sensor_mode_poofer_control
+  //sensor_mode_poofer_control
 };
 #define NUM_UI_MODES (sizeof (sensorFunctions) / sizeof (sensor_mode_t))
 
@@ -261,6 +261,7 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
     increment_mode(0);
   }
 
+#if 0
   if (CHECK_RANGE_SHORT()) {
     //if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {
     if (get_current_mode(FINAL_MODE) != MODE_STATIC_NOISE) {
@@ -274,6 +275,7 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
       restore_mode(FINAL_MODE);
     }
   }
+#endif
 }
 
 void sensor_mode_poofer_control(boolean entered, boolean exited) {
