@@ -39,6 +39,13 @@ uint16_t my_address = 0;
 byte databuffer[SEND_BUFFER_SIZE];
 byte *send_buffer; // Pointer to use for start of send data
 
+/*
+ * There appears to be some time needed between sending a message and checking
+ * for received data.
+ */
+#define MIN_SEND_TO_READ_MS 10
+unsigned long last_sent_time = 0;
+
 void initializeConnect() {
   /* Setup the RS485 connection */
   if (!rs485.initialized()) {
@@ -59,7 +66,7 @@ void sendByte(byte value, byte address) {
   rs485.sendMsgTo(address, send_buffer, sizeof (int));
   DEBUG5_HEXVAL("sendInt: to=0x", address);
   DEBUG5_HEXVALLN(" val=", value);
-
+  last_sent_time = millis();
 }
 
 void sendInt(int value, byte address) {
@@ -68,6 +75,7 @@ void sendInt(int value, byte address) {
   rs485.sendMsgTo(address, send_buffer, sizeof (int));
   DEBUG5_HEXVAL("sendInt: to=0x", address);
   DEBUG5_HEXVALLN(" val=", value);
+  last_sent_time = millis();
 }
 
 void sendLong(long value, byte address) {
@@ -78,6 +86,7 @@ void sendLong(long value, byte address) {
   rs485.sendMsgTo(address, send_buffer, sizeof (long));
   DEBUG5_HEXVAL("sendLong: to=0x", address);
   DEBUG5_HEXVALLN(" val=", value);
+  last_sent_time = millis();
 }
 
 void recvData() {
@@ -86,35 +95,75 @@ void recvData() {
   //  const byte *data = rs485.getMsg(my_address, &msglen);
   const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
   if (data != NULL) {
-    DEBUG4_VALUELN("recvData: len=", msglen);
+    DEBUG5_VALUELN("recvData: len=", msglen);
   }
 }
 
 void sendHMTLValue(uint16_t address, uint8_t output, int value) {
+  DEBUG5_PRINTLN("sendHMTLValue");
   hmtl_send_value(&rs485, send_buffer, SEND_BUFFER_SIZE,
 		  address, output, value);
+  last_sent_time = millis();
 }
 
 void sendHMTLBlink(uint16_t address, uint8_t output,
 		   uint16_t on_period, uint32_t on_color,
 		   uint16_t off_period, uint32_t off_color) {
+  DEBUG5_PRINTLN("sendHMTLBlink");
   hmtl_send_blink(&rs485, send_buffer, SEND_BUFFER_SIZE,
 		  address, output,
 		  on_period, on_color,
 		  off_period, off_color);
+  last_sent_time = millis();
 }
 
 void sendHMTLTimedChange(uint16_t address, uint8_t output,
 			 uint32_t change_period,
 			 uint32_t start_color,
 			 uint32_t stop_color) {
+  DEBUG5_PRINTLN("sendHMTLTimedChange");
   hmtl_send_timed_change(&rs485, send_buffer, SEND_BUFFER_SIZE,
 			 address, output,
 			 change_period,
 			 start_color,
 			 stop_color);
+  last_sent_time = millis();
 }
 
 void sendHMTLSensorRequest(uint16_t address) {
+  DEBUG5_PRINTLN("sendHMTLSensorRequest");
   hmtl_send_sensor_request(&rs485, send_buffer, SEND_BUFFER_SIZE, address);
+  last_sent_time = millis();
+}
+
+
+unsigned long sensor_check_time = 0;
+msg_hdr_t *sensor_msg = NULL;
+
+/*
+ * RS485 Message handling
+ */
+void handle_messages() {
+  unsigned long now = millis();
+  sensor_msg = NULL;
+
+  if (now - last_sent_time > MIN_SEND_TO_READ_MS) {
+    /* Check for messages */
+    unsigned int msglen;
+    msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen, my_address);
+    if (msg_hdr) {
+      DEBUG4_VALUE("Recv type:", msg_hdr->type);
+      if (msg_hdr->type == MSG_TYPE_SENSOR) {
+        sensor_msg = msg_hdr;
+      }
+    }
+    DEBUG_PRINT_END();
+  }
+
+  /* Send sensor check */
+  if (now >= sensor_check_time) {
+    sendHMTLSensorRequest(ADDRESS_SOUND_UNIT);
+    sensor_check_time = now + 1000;
+    last_sent_time = now;
+  }
 }

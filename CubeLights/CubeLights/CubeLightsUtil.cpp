@@ -6,7 +6,7 @@
 
 #include <Arduino.h>
 
-//#define DEBUG_LEVEL DEBUG_HIGH
+//#define DEBUG_LEVEL DEBUG_TRACE
 #include "Debug.h"
 
 #include "HMTLMessaging.h"
@@ -911,91 +911,76 @@ void squaresSoundHMTL(Square *squares, int size, pattern_args_t *arg) {
   }
 
   if ((millis() > arg->next_time) && (lastSend == 0)) {
-    // Send the data request
+    // Trigger the next sensor check
+    sensor_check_time = millis();
+
     arg->next_time += arg->periodms;
-
-    sendHMTLSensorRequest(ADDRESS_SOUND_UNIT);
-
     lastSend = millis();
+    DEBUG5_PRINT("SoundTest: Trigger sensor...");
+  } 
 
-    DEBUG5_PRINT("SoundTest: Sent request...");
-  } else if (lastSend != 0) {
-    // Check for a response
-    unsigned long elapsed = millis() - lastSend;
-    unsigned int msglen;
+  // Check for a response
+  unsigned long elapsed = millis() - lastSend;
 
-    msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen, my_address);
-    if (msg_hdr != NULL) {
-      DEBUG5_PRINT(" value:");
+  if (sensor_msg != NULL) {
+    DEBUG5_PRINT(" value:");
 
-      if (msg_hdr->type != MSG_TYPE_SENSOR) {
-        DEBUG4_PRINT("SoundTest: non-sense message");
-        return;
-      }
+    if (sensor_msg->type != MSG_TYPE_SENSOR) {
+      DEBUG4_PRINT("SoundTest: non-sense message");
+      return;
+    }
 
-      msg_sensor_data_t *sense = (msg_sensor_data_t *)(msg_hdr + 1);
-      if (sense->sensor_type != HMTL_SENSOR_SOUND) {
-        DEBUG4_PRINT("SoundTest: wrong sensor");
-        return;
-      }
+    // TODO: Find sound message in data
+    msg_sensor_data_t *sense = (msg_sensor_data_t *)(sensor_msg + 1);
+    if (sense->sensor_type != HMTL_SENSOR_SOUND) {
+      DEBUG4_PRINT("SoundTest: wrong sensor");
+      return;
+    }
       
-      // Data should be an array of 8 uint16_t
-      uint16_t *values = (uint16_t *)&sense->data;
+    // Data should be an array of 8 uint16_t
+    uint16_t *values = (uint16_t *)&sense->data;
 
-      byte face = 0;
-      byte col = 0;
-      uint32_t total = 0;
-      for (byte i = 0; i < sense->data_len / sizeof (uint16_t); i++) {
-        uint16_t val = values[i];
+    byte face = 0;
+    byte col = 0;
+    uint32_t total = 0;
+    for (byte i = 0; i < sense->data_len / sizeof (uint16_t); i++) {
+      uint16_t val = values[i];
 
-        DEBUG5_HEXVAL(" ", val);
+      DEBUG5_HEXVAL(" ", val);
 
-        /* Shift the new value into each column */
-        uint32_t newcolor;
-        if (val) {
-          byte heat = (val > 15 ? 255 : val * val);
-          newcolor = pixel_heat(heat);
-        } else {
-          newcolor = 0;
-        }
-        squares[face].shiftColumnDown(col % Square::SQUARE_LED_COLS, newcolor);
-
-        col++;
-        if (col % Square::SQUARE_LED_COLS == 0) {
-          face++;
-        }
-
-        total += val;
+      /* Shift the new value into each column */
+      uint32_t newcolor;
+      if (val) {
+        byte heat = (val > 15 ? 255 : val * val);
+        newcolor = pixel_heat(heat);
+      } else {
+        newcolor = 0;
       }
-      DEBUG5_VALUE(" Elapsed:", elapsed);
+      squares[face].shiftColumnDown(col % Square::SQUARE_LED_COLS, newcolor);
 
-      /* Set the top to the average */
-      total = total / col;
-
-      byte heat = total > 15 ? 255 : total * total;
-
-      squares[CUBE_TOP].setColor(pixel_heat(heat));
-      DEBUG5_VALUE(" avg:", total);
-      DEBUG_PRINT_END();
-
-#if 0
-      // XXX - Trigger if over
-      if (heat > 250) {
-        static unsigned long last_send = 0;
-        if (millis() - last_send > 100) {
-          sendHMTLTimedChange(ADDRESS_POOFER_UNIT, 2,
-                              250, 0xFFFFFFFF, 0);
-          last_send = millis();
-        }
+      col++;
+      if (col % Square::SQUARE_LED_COLS == 0) {
+        face++;
       }
-#endif
 
+      total += val;
+    }
+    DEBUG5_VALUE(" Elapsed:", elapsed);
+
+    /* Set the top to the average */
+    total = total / col;
+
+    byte heat = total > 15 ? 255 : total * total;
+
+    squares[CUBE_TOP].setColor(pixel_heat(heat));
+    DEBUG5_VALUE(" avg:", total);
+    DEBUG_PRINT_END();
+
+    lastSend = 0; // Reset the lastSend time so another request can be sent
+  } else {
+    if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
+      DEBUG4_VALUELN("SoundTest: No response after ", elapsed);
       lastSend = 0; // Reset the lastSend time so another request can be sent
-    } else {
-      if (elapsed > (unsigned long)SOUND_TEST_TIMEOUT) {
-        DEBUG4_VALUELN("SoundTest: No response after ", elapsed);
-        lastSend = 0; // Reset the lastSend time so another request can be sent
-      }
     }
   }
 }

@@ -4,7 +4,7 @@
  * Copyright: 2014
  ******************************************************************************/
 
-//#define DEBUG_LEVEL DEBUG_TRACE
+//#define DEBUG_LEVEL DEBUG_LOW
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -259,6 +259,24 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
 
   if (CHECK_DOUBLE_BOTH()) {
     increment_mode(0);
+  }
+
+  if (sensor_msg) {
+    /*
+     * If sensor data was received then look for a sensor level and set the
+     * LED brightness based on that.
+     */
+    byte *curr_ptr = (uint8_t *)(sensor_msg + 1);
+    do {
+        msg_sensor_data_t *sense = (msg_sensor_data_t *)(curr_ptr);
+        curr_ptr += sizeof (msg_sensor_data_t) + sense->data_len;
+        if (sense->sensor_type == HMTL_SENSOR_POT) {
+          uint16_t level = *((uint16_t *)&sense->data);
+          DEBUG5_VALUELN("Set brightness:", level);
+          FastLED.setBrightness(map(level, 0, 1023, 0, 255));
+          break;
+        }
+    } while (curr_ptr < (byte *)sensor_msg + sensor_msg->length);
   }
 
 #if 0

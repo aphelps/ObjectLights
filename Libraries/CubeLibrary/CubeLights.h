@@ -8,6 +8,9 @@
 
 #include "RS485Utils.h"
 #include "MPR121.h"
+
+#include "HMTLMessaging.h"
+
 #include "SquareStructure.h"
 
 /* Setup all pins */
@@ -126,7 +129,7 @@ extern uint16_t my_address;
 #define ADDRESS_SOUND_UNIT  0x01
 //#define ADDRESS_TRIANGLES  0x10
 
-#define ADDRESS_POOFER_UNIT 0x41
+#define ADDRESS_POOFER_UNIT 66
 #define ADDRESS_LIGHT_UNIT ADDRESS_POOFER_UNIT //0x41
 
 void initializeConnect();
@@ -142,6 +145,10 @@ void sendHMTLTimedChange(uint16_t address, uint8_t output,
 			 uint32_t change_period,
 			 uint32_t start_color, uint32_t stop_color);
 void sendHMTLSensorRequest(uint16_t address);
+
+extern unsigned long sensor_check_time;
+extern msg_hdr_t *sensor_msg;
+void handle_messages();
 
 /***** Cube light modes *******************************************************/
 
