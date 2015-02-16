@@ -47,7 +47,6 @@ boolean messaging_handle() {
   msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen, MY_ADDR);
   if (msg_hdr != NULL) {
 
-#if 1
     uint16_t source_address = RS485_SOURCE_FROM_DATA(msg_hdr);
     DEBUG5_VALUE("Recv type:", msg_hdr->type);
     DEBUG5_VALUE(" len:", msglen);
@@ -63,7 +62,7 @@ boolean messaging_handle() {
 
         uint8_t *dataptr;
         uint16_t len = hmtl_sensor_fmt(send_buffer, SEND_BUFFER_SIZE, 
-                                       source_address, datalen, &dataptr);
+                                       RS485_ADDR_ANY /*source_address*/, datalen, &dataptr);
         
         msg_sensor_data_t *sense = (msg_sensor_data_t *)dataptr;
         sense->sensor_type = HMTL_SENSOR_SOUND;
@@ -111,76 +110,6 @@ boolean messaging_handle() {
       }
     }
   }
-
-#else
-
-  uint16_t msglen;
-  const byte *data = rs485.getMsg(MY_ADDR, &msglen);
-  if (data != NULL) {
-    uint16_t response_len = 0;
-
-    DEBUG5_VALUE("Recv: command=", data[0]);
-    DEBUG5_VALUE(" len=", msglen);
-    DEBUG5_VALUE(" data=", (char)data[0]);
-
-    if (RS485_ADDRESS_FROM_DATA(data) = MY_ADDR) {
-      switch (data[0]) {
-        /* TODO: Spectrum data is too big to justify the additional send buffer,
-           send in multiple packets instead.
-           case 'S': {
-           // Return the entire spectrum array
-           uint16_t *sendPtr = (uint16_t *)send_buffer;
-           for (byte x = 0; x < FFT_N/2; x++) {
-           *sendPtr = spectrum[x];
-           sendPtr++;
-           }
-           response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
-           break;
-           }
-        */
-        case 'C': {
-          // Return the current raw column values
-          uint16_t *sendPtr = (uint16_t *)send_buffer;
-          for (byte c = 0; c < NUM_COLUMNS; c++) {
-            *sendPtr = col[c][colCount];
-            sendPtr++;
-          }
-          response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
-          break;
-        }
-        case 'L': {
-          // Return the current leveled column values
-          uint8_t *sendPtr = (uint8_t *)send_buffer;
-          for (byte c = 0; c < NUM_COLUMNS; c++) {
-            *sendPtr = colLeveled[c];
-            sendPtr++;
-          }
-          response_len = ((uint16_t)sendPtr - (uint16_t)send_buffer);
-          break;
-        }
-      }
-
-      /* Add the light and knob levels */
-      uint16_t *sendPtr = (uint16_t *)(send_buffer + response_len);
-      *sendPtr = light_level;
-      response_len += sizeof (uint16_t);
-
-      sendPtr++;
-      *sendPtr = knob_level;
-      response_len += sizeof (uint16_t);
-    }
-
-    if (response_len > 0) {
-      DEBUG5_VALUE(" retlen=", response_len);
-      uint16_t source_address = RS485_SOURCE_FROM_DATA(data);
-      DEBUG5_VALUE(" retaddr=", source_address);
-      rs485.sendMsgTo(source_address, send_buffer, response_len);
-    }
-
-    DEBUG_PRINT_END();
-    return true;
-  }
-#endif
 
   return false;
 }
