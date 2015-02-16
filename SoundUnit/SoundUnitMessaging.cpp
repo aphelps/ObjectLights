@@ -61,8 +61,10 @@ boolean messaging_handle() {
         uint8_t datalen = MAX_DATA_LEN;
 
         uint8_t *dataptr;
+
+        /* Broadcast sensor data rather than sending just to the source */
         uint16_t len = hmtl_sensor_fmt(send_buffer, SEND_BUFFER_SIZE, 
-                                       RS485_ADDR_ANY /*source_address*/, datalen, &dataptr);
+                                       RS485_ADDR_ANY, datalen, &dataptr);
         
         msg_sensor_data_t *sense = (msg_sensor_data_t *)dataptr;
         sense->sensor_type = HMTL_SENSOR_SOUND;

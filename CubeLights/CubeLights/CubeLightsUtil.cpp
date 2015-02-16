@@ -925,25 +925,24 @@ void squaresSoundHMTL(Square *squares, int size, pattern_args_t *arg) {
   if (sensor_msg != NULL) {
     DEBUG5_PRINT(" value:");
 
-    if (sensor_msg->type != MSG_TYPE_SENSOR) {
-      DEBUG4_PRINT("SoundTest: non-sense message");
-      return;
+    msg_sensor_data_t *sensor = NULL;
+    while (sensor = hmtl_next_sensor(sensor_msg, sensor)) {
+      if (sensor->sensor_type == HMTL_SENSOR_SOUND) {
+        break;
+      }
     }
-
-    // TODO: Find sound message in data
-    msg_sensor_data_t *sense = (msg_sensor_data_t *)(sensor_msg + 1);
-    if (sense->sensor_type != HMTL_SENSOR_SOUND) {
+    if (sensor == NULL) {
       DEBUG4_PRINT("SoundTest: wrong sensor");
       return;
     }
       
     // Data should be an array of 8 uint16_t
-    uint16_t *values = (uint16_t *)&sense->data;
+    uint16_t *values = (uint16_t *)&sensor->data;
 
     byte face = 0;
     byte col = 0;
     uint32_t total = 0;
-    for (byte i = 0; i < sense->data_len / sizeof (uint16_t); i++) {
+    for (byte i = 0; i < sensor->data_len / sizeof (uint16_t); i++) {
       uint16_t val = values[i];
 
       DEBUG5_HEXVAL(" ", val);
