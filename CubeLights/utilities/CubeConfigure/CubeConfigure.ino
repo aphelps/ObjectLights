@@ -20,10 +20,12 @@
 #include "GeneralUtils.h"
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
+#include "HMTLMessaging.h"
 #include "PixelUtil.h"
 #include "Wire.h"
 #include "MPR121.h"
 #include "SerialCLI.h"
+#include "Socket.h"
 #include "RS485Utils.h"
 
 #include "Geometry.h"
