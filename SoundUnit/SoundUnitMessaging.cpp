@@ -30,7 +30,6 @@ extern RS485Socket rs485;
 #define SEND_BUFFER_SIZE (HMTL_MSG_SENSOR_MIN_LEN + MAX_DATA_LEN + 1)
 byte rs485_buffer[RS485_BUFFER_TOTAL(SEND_BUFFER_SIZE)];
 byte *send_buffer; // Pointer to use for start of send data
-#define MY_ADDR 0x01
 
 void messaging_init() {
   /* Setup the RS485 connection */
@@ -44,7 +43,7 @@ void messaging_init() {
 boolean messaging_handle() {
   /* Check for message over RS485 */
   unsigned int msglen;
-  msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen, MY_ADDR);
+  msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen);
   if (msg_hdr != NULL) {
 
     uint16_t source_address = RS485_SOURCE_FROM_DATA(msg_hdr);
@@ -62,9 +61,11 @@ boolean messaging_handle() {
 
         uint8_t *dataptr;
 
+        uint16_t reply_addr = RS485_ADDR_ANY;
+
         /* Broadcast sensor data rather than sending just to the source */
         uint16_t len = hmtl_sensor_fmt(send_buffer, SEND_BUFFER_SIZE, 
-                                       RS485_ADDR_ANY, datalen, &dataptr);
+                                       reply_addr, datalen, &dataptr);
         
         msg_sensor_data_t *sense = (msg_sensor_data_t *)dataptr;
         sense->sensor_type = HMTL_SENSOR_SOUND;
@@ -102,7 +103,7 @@ boolean messaging_handle() {
                        }
                        );
 
-        rs485.sendMsgTo(source_address, send_buffer, len);
+        rs485.sendMsgTo(reply_addr, send_buffer, len);
         return true;
         break;
       }
