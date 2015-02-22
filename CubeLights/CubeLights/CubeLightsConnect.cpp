@@ -43,7 +43,7 @@ byte *send_buffer; // Pointer to use for start of send data
  * There appears to be some time needed between sending a message and checking
  * for received data.
  */
-#define MIN_SEND_TO_READ_MS 10
+#define MIN_SEND_TO_READ_MS 5
 unsigned long last_sent_time = 0;
 
 void initializeConnect() {
@@ -89,16 +89,6 @@ void sendLong(long value, byte address) {
   last_sent_time = millis();
 }
 
-void recvData() {
-  unsigned int msglen;
-
-  //  const byte *data = rs485.getMsg(my_address, &msglen);
-  const byte *data = rs485.getMsg(RS485_ADDR_ANY, &msglen);
-  if (data != NULL) {
-    DEBUG5_VALUELN("recvData: len=", msglen);
-  }
-}
-
 void sendHMTLValue(uint16_t address, uint8_t output, int value) {
   DEBUG5_PRINTLN("sendHMTLValue");
   hmtl_send_value(&rs485, send_buffer, SEND_BUFFER_SIZE,
@@ -131,7 +121,7 @@ void sendHMTLTimedChange(uint16_t address, uint8_t output,
 }
 
 void sendHMTLSensorRequest(uint16_t address) {
-  DEBUG5_PRINTLN("sendHMTLSensorRequest");
+  DEBUG5_VALUELN("sendHMTLSensorRequest:", millis());
   hmtl_send_sensor_request(&rs485, send_buffer, SEND_BUFFER_SIZE, address);
   last_sent_time = millis();
 }

@@ -29,7 +29,7 @@ uint8_t validModes[] = {
   , MODE_SWITCH_RANDOM
   //  , MODE_LIGHT_CENTER
   //  , MODE_BAR_CIRCLE
-  , MODE_CRAWL
+  //  , MODE_CRAWL
   , MODE_BLINK_PATTERN
   // , MODE_ORBIT_TEST
   , MODE_VECTORS
@@ -53,7 +53,7 @@ square_mode_t modeFunctions[] = {
   squaresSwitchRandom,
   NULL, //squaresLightCenter,
   NULL, //squaresBarCircle,
-  squaresCrawl,
+  NULL, //squaresCrawl,
   squaresBlinkPattern,
   NULL, //squaresOrbitTest,
   squaresVectors,
@@ -88,8 +88,16 @@ uint16_t modePeriods[] = {
   1     // MODE_STROBE
 };
 
+#ifndef CUBE_START_MODE
+#define CUBE_START_MODE 0 // VALID_MODES - 2
+#else
+#if CUBE_START_MODE > VALID_MODES
+#error Invalid start mode
+#endif
+#endif
+
 uint8_t current_modes[MAX_MODES] = {
-  VALID_MODES - 1,  // This is the starting mode
+  CUBE_START_MODE,  // This is the starting mode
   MODE_NONE,
   MODE_NONE
 };

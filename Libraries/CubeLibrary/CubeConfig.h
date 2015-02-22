@@ -1,12 +1,6 @@
 #ifndef CUBE_CONFIG_H
 #define CUBE_CONFIG_H
 
-/*
- * If CONFIG_ENABLED is defined then the configuration for this light will be
- * read in from EEPROM.
- */
-#define CONFIG_ENABLED
-
 #define NUM_SQUARES 6
 
 #define ADAM_CUBE   0
@@ -17,11 +11,11 @@
 
 #define BIG_CUBE    5
 
+#ifndef CUBE_NUMBER
 #define CUBE_NUMBER ADAM_CUBE
+#endif
 
 #define CUBE_VERSION 1
-
-#define CAP_TOUCH_IRQ 2
 
 // Touch sensor trigger and release values
 #if CUBE_NUMBER == BIG_CUBE

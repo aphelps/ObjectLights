@@ -47,7 +47,7 @@ void  Triangle::setEdge(byte edge, byte neighbor) {
  *      ______
  *    /\      /
  *   /  \  1 /
- *  /  0 \  /
+ *  /  0 \  /...
  * /______\/______
  * \     c/\      /
  *  \  L /V \ E  /

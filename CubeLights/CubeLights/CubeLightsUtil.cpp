@@ -926,7 +926,7 @@ void squaresSoundHMTL(Square *squares, int size, pattern_args_t *arg) {
     DEBUG5_PRINT(" value:");
 
     msg_sensor_data_t *sensor = NULL;
-    while (sensor = hmtl_next_sensor(sensor_msg, sensor)) {
+    while ((sensor = hmtl_next_sensor(sensor_msg, sensor))) {
       if (sensor->sensor_type == HMTL_SENSOR_SOUND) {
         break;
       }
@@ -1089,21 +1089,27 @@ void squaresStrobe(Square *squares, int size,
 
   /* Handle the sensors with an independent timer */
   if (millis() > strobe->next_sense) {
+#ifdef STROBE_PROGRAM
     boolean update = false;
+#endif
     strobe->next_sense += 10;
 
     if (CHECK_TOUCH_1()) {
       if (strobe->on_period > 0) {
-	strobe->on_period--;
-	strobe->off_period--;
-	update = true;
+        strobe->on_period--;
+        strobe->off_period--;
+#ifdef STROBE_PROGRAM
+        update = true;
+#endif
       }
     }
     if (CHECK_TOUCH_2()) {
       if (strobe->on_period < 2000) {
-	strobe->on_period++;
-	strobe->off_period++;
-	update = true;
+        strobe->on_period++;
+        strobe->off_period++;
+#ifdef STROBE_PROGRAM
+        update = true;
+#endif
       }
     }
 

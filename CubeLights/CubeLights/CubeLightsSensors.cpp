@@ -4,7 +4,7 @@
  * Copyright: 2014
  ******************************************************************************/
 
-//#define DEBUG_LEVEL DEBUG_LOW
+//#define DEBUG_LEVEL DEBUG_TRACE
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -102,9 +102,16 @@ void sensor_cap(void)
 uint32_t sensor_state = 0;
 
 sensor_mode_t sensorFunctions[] = {
+#ifdef CUBE_LIGHT_BASIC_CONTROL
   sensor_mode_basic_control,
+#endif
   //sensor_mode_mode_control
-  sensor_mode_poofer_control
+#ifdef CUBE_LIGHT_POOFER_CONTROL
+  sensor_mode_poofer_control,
+#endif
+#ifdef CUBE_LIGHT_BIGCUBE_CONTROL
+
+#endif
 };
 #define NUM_UI_MODES (sizeof (sensorFunctions) / sizeof (sensor_mode_t))
 
@@ -116,7 +123,6 @@ void handle_sensors() {
   /****************************************************************************
    * State determination
    */
-  uint32_t prev_state = sensor_state;
   sensor_state = 0;
 
   // Short range detected
@@ -267,11 +273,11 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
      * LED brightness based on that.
      */
     msg_sensor_data_t *sensor = NULL;
-    while (sensor = hmtl_next_sensor(sensor_msg, sensor)) {
+    while ((sensor = hmtl_next_sensor(sensor_msg, sensor))) {
       if (sensor->sensor_type == HMTL_SENSOR_POT) {
-        uint16_t level = *((uint16_t *)&sensor->data);
-        DEBUG5_VALUELN("Set brightness:", level);
-        FastLED.setBrightness(map(level, 0, 1023, 0, 255));
+        uint16_t *level = ((uint16_t *)&sensor->data);
+        DEBUG5_VALUELN("Set brightness:", *level);
+        FastLED.setBrightness(map(*level, 0, 1023, 0, 255));
         break;
       }
     }
