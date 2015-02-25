@@ -148,12 +148,13 @@ void handle_messages() {
       }
     }
     DEBUG_PRINT_END();
+    // XXX - Should this update the time to avoid frequent checks?
   }
 
   /* Send sensor check */
   if (now >= sensor_check_time) {
     sendHMTLSensorRequest(ADDRESS_SOUND_UNIT);
-    sensor_check_time = now + 1000;
+    sensor_check_time = now + 250;
     last_sent_time = now;
   }
 }

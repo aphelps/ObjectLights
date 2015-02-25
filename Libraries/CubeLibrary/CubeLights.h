@@ -13,6 +13,30 @@
 
 #include "SquareStructure.h"
 
+
+/***** #defines used to enable various sensor modes */
+#ifndef PLATFORMIO
+
+// Sensors
+#define CUBE_LIGHT_BASIC_CONTROL
+#define CUBE_LIGHT_POOFER_CONTROL
+
+// Addresses
+#endif
+
+#ifndef ADDRESS_SOUND_UNIT
+  #define ADDRESS_SOUND_UNIT  0x08
+#endif
+
+#ifndef ADDRESS_POOFER_UNIT
+  #define ADDRESS_POOFER_UNIT 66
+#endif
+
+#ifndef ADDRESS_LIGHT_UNIT
+  #define ADDRESS_LIGHT_UNIT ADDRESS_POOFER_UNIT //0x41
+#endif
+
+
 /* Setup all pins */
 void initializePins();
 
@@ -21,14 +45,6 @@ extern PixelUtil pixels;
 extern Square *squares;
 
 /***** Sensor info ********************************************************** */
-
-/*
- * #defines used to enable various sensor modes
- */
-#ifndef PLATFORMIO
-#define CUBE_LIGHT_BASIC_CONTROL
-#define CUBE_LIGHT_POOFER_CONTROL
-#endif
 
 /* All sensor info is recorded in a bit mask */
 extern uint32_t sensor_state;
@@ -132,10 +148,6 @@ void sensor_mode_mode_control(boolean entered, boolean exited);
 
 extern RS485Socket rs485;
 extern uint16_t my_address;
-
-#define ADDRESS_SOUND_UNIT  0x08
-#define ADDRESS_POOFER_UNIT 66
-#define ADDRESS_LIGHT_UNIT ADDRESS_POOFER_UNIT //0x41
 
 void initializeConnect();
 
