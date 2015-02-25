@@ -126,6 +126,9 @@ void set_mode(uint8_t place, uint8_t new_mode) {
 
     DEBUG3_VALUE("Set mode ", place);
     DEBUG3_VALUELN("=", current_modes[place]);
+
+    // Reset the brightness
+    FastLED.setBrightness(255);
   }
 }
 

@@ -267,22 +267,6 @@ void sensor_mode_basic_control(boolean entered, boolean exited) {
     increment_mode(0);
   }
 
-  if (sensor_msg) {
-    /*
-     * If sensor data was received then look for a sensor level and set the
-     * LED brightness based on that.
-     */
-    msg_sensor_data_t *sensor = NULL;
-    while ((sensor = hmtl_next_sensor(sensor_msg, sensor))) {
-      if (sensor->sensor_type == HMTL_SENSOR_POT) {
-        uint16_t *level = ((uint16_t *)&sensor->data);
-        DEBUG5_VALUELN("Set brightness:", *level);
-        FastLED.setBrightness(map(*level, 0, 1023, 0, 255));
-        break;
-      }
-    }
-  }
-
 #if 0
   if (CHECK_RANGE_SHORT()) {
     //if (get_current_mode(FINAL_MODE) != MODE_LIGHT_CENTER) {

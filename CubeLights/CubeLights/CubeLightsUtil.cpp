@@ -377,13 +377,30 @@ void squaresFadeCycle(Square *squares, int size,
 }
 
 void squaresAllOn(Square *squares, int size,
-		  pattern_args_t *arg) {
+                  pattern_args_t *arg) {
   if (arg->next_time == 0) {
     arg->next_time = millis();
   }
 
   if (millis() > arg->next_time) {
     arg->next_time += arg->periodms;
+
+    if (sensor_msg) {
+      /*
+       * If sensor data was received then look for a sensor level and set the
+       * LED brightness based on that.
+       */
+      msg_sensor_data_t *sensor = NULL;
+      while ((sensor = hmtl_next_sensor(sensor_msg, sensor))) {
+        if (sensor->sensor_type == HMTL_SENSOR_POT) {
+          uint16_t *level = ((uint16_t *)&sensor->data);
+          DEBUG5_VALUELN("Set brightness:", *level);
+          FastLED.setBrightness(map(*level, 0, 1023, 0, 255));
+          break;
+        }
+      }
+    }
+
     setAllSquares(squares, size, arg->fgColor);
   }
 }
