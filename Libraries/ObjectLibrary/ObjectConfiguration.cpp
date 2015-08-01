@@ -34,7 +34,7 @@ int readHMTLConfiguration(config_hdr_t *config,
 
   uint32_t outputs_found = hmtl_setup(config, readoutputs, outputs,
                                       NULL, max_outputs,
-                                      rs485, pixels, mpr121, 
+                                      rs485, NULL, pixels, mpr121, 
                                       NULL, NULL, &offset);
 
   if ((rs485 != NULL) && !(outputs_found & (1 << HMTL_OUTPUT_RS485))) {

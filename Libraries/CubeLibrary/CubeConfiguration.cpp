@@ -42,7 +42,7 @@ void readHMTLConfiguration(config_hdr_t *config,
 
   uint32_t outputs_found = hmtl_setup(config, readoutputs, outputs,
                                       NULL, max_outputs,
-                                      &rs485, &pixels, &touch_sensor,
+                                      &rs485, NULL, &pixels, &touch_sensor,
                                       NULL, NULL, &offset);
 
   if (!(outputs_found & (1 << HMTL_OUTPUT_RS485))) {

@@ -4,11 +4,12 @@
  * Copyright: 2014
  ******************************************************************************/
 
-#include <Arduino.h>
 #include "EEPROM.h"
 #include <NewPing.h>
 #include <Wire.h>
 #include <SPI.h>
+#include <XBee.h>
+
 #include <FastLED.h>
 #include <SoftwareSerial.h>
 #include <RS485_non_blocking.h>
@@ -25,6 +26,9 @@
 #include "HMTLTypes.h"
 #include "HMTLMessaging.h"
 
+
+#include "XBeeSocket.h"
+
 #include "CubeConfig.h"
 #include "CubeConfiguration.h"
 #include "SquareStructure.h"
@@ -35,7 +39,7 @@
 #define DEBUG_LED 13
 
 /* Auto update build number */
-#define CUBE_LIGHT_BUILD 26 // %META INCR
+#define CUBE_LIGHT_BUILD 29 // %META INCR
 
 pattern_args_t modeConfigs[MAX_MODES] = {
   {

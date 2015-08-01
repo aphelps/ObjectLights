@@ -66,7 +66,7 @@ void setup() {
   config_max_t readoutputs[NUM_OUTPUTS];
   int32_t outputs_found = hmtl_setup(&config, readoutputs,
                                      NULL, NULL, NUM_OUTPUTS,
-                                     &rs485, &pixels, NULL,
+                                     &rs485, NULL, &pixels, NULL,
                                      &rgb_output, NULL,
                                      NULL);
 

@@ -23,7 +23,10 @@
 #include "PixelUtil.h"
 #include "Socket.h"
 #include "RS485Utils.h"
+#include "XBeeSocket.h"
 #include "MPR121.h" // XXX This needs to go
+
+#include "NewPing.h" // XXX This also needs to go, can be compiled out
 
 #include "ObjectConfiguration.h"
 #include "TriangleStructure.h"
