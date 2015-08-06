@@ -10,6 +10,7 @@
 #include "EEPROM.h"
 #include <RS485_non_blocking.h>
 #include <SoftwareSerial.h>
+#include <NewPing.h>
 
 #include "SPI.h"
 #include "FastLED.h"
@@ -24,6 +25,7 @@
 #include "Wire.h"
 #include "MPR121.h"
 #include "SerialCLI.h"
+#include "XBeeSocket.h"
 #include "Socket.h"
 #include "RS485Utils.h"
 
@@ -133,7 +135,7 @@ Serial.print(F(" \n"
   " \n"
   "  s <face> <led> - Set the geometry of the current pixel \n"
   "  S <face> <led> <pixel> - Set the geometry to a given pixel\n"
-  "  T <face> <led> - Sequence starting from face and led\n"
+  "  T <face> <pixel> - Sequence starting from face and led\n"
   "  R <face> - Reverse the 2nd and 3rd leds (common after T)\n"
   "  e <face> <edge> <neighbor> - Set the neighboring face\n"
   " \n"
@@ -272,6 +274,7 @@ void cliHandler(char **tokens, byte numtokens) {
       geo_led_t led2 = triangles[face].getLED(2)->pixel;
       triangles[face].setLedPixel(1, led2);
       triangles[face].setLedPixel(2, led1);
+      setTriangleFace(face, pixel_color(255, 255, 255), false);
       break;
     }
     case 'e': {
