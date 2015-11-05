@@ -133,14 +133,14 @@ void loop() {
   static byte prev_mode = -1;
   byte mode;
 
-  mode = getButtonValue() % NUM_MODES;
+  mode = get_button_value() % NUM_MODES;
   if (mode != prev_mode) {
     DEBUG4_VALUELN("mode=", mode);
     DEBUG_MEMORY(DEBUG_HIGH);
   }
 
-  /* Check for update of light sensor value */
-  sensor_photo();
+  /* Check for update of the sensor values */
+  update_sensors();
 
   /* Run the current mode and update the triangles */
   modeFunctions[mode](triangles, numTriangles, modePeriods[mode],

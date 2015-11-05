@@ -5,61 +5,7 @@
 
 #include "TriangleLights.h"
 
-void initializePins() {
-  /* Configure the mode toggle switch */
-  pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
 
-  attachInterrupt(PUSH_BUTTON_INTERRUPT, buttonInterrupt, CHANGE);
-
-  /* Turn on input pullup on analog light sensor pin */
-  digitalWrite(PHOTO_PIN, HIGH);
-}
-
-volatile uint16_t buttonValue = 0;
-void buttonInterrupt(void) 
-{
-  static unsigned long prevTime = 0;
-  static int prevValue = LOW;
-  long now = millis();
-  int value = digitalRead(PUSH_BUTTON_PIN);
-
-  /* Provide a debounce to only change on the first interrupt */
-  if ((value == HIGH) && (prevValue == LOW) && (now - prevTime > 500)) {
-    buttonValue++;
-    prevTime = now;
-    // WARNING: Its unsafe to put print statements in an interrupt handler
-  }
-
-  prevValue = value;
-}
-
-int getButtonValue() {
-  return buttonValue;
-}
-
-
-/* ***** Photo sensor *********************************************************/
-
-uint16_t photo_value = 1024;
-boolean photo_dark = false;
-void sensor_photo(void)
-{
-  static unsigned long next_photo_sense = millis();
-  unsigned long now = millis();
-
-  if (now > next_photo_sense) {
-    next_photo_sense = now + PHOTO_DELAY_MS;
-
-    photo_value = analogRead(PHOTO_PIN);
-    if ((photo_value > PHOTO_THRESHOLD_HIGH) && (!photo_dark)) {
-      DEBUG4_VALUELN(" Photo dark:", photo_value);
-      photo_dark = true;
-    } else if ((photo_value < PHOTO_THRESHOLD_LOW) && (photo_dark)) {
-      photo_dark = false;
-      DEBUG4_VALUELN(" Photo light:", photo_value);
-    }
-  }
-}
 
 /*******************************************************************************
  * Triangle light patterns
