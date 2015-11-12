@@ -121,6 +121,12 @@ void loop() {
     prev_pot_value = pot_value;
   }
 
+  static uint16_t prev_photo_value = 0;
+  uint16_t photo_value = get_photo_value();
+  if (abs(photo_value - prev_photo_value) > 5) {
+    prev_photo_value = photo_value;
+  }
+
   /*
    * Change the display mode periodically
    */
@@ -130,12 +136,17 @@ void loop() {
     DEBUG1_VALUE("- button:", button_value);
     DEBUG1_VALUE(" pot:", pot_value);
     DEBUG1_PRINT(" ");
+    DEBUG1_VALUE(" photo:", photo_value);
+    DEBUG1_PRINT(" ");
 
     // Set LED colors
     switch (cycle % 4) {
       case 0: {
         DEBUG1_PRINT("White");
         if (has_value) digitalWrite(value_output.pin, HIGH);
+        digitalWrite(rgb_output.pins[0], HIGH);
+        digitalWrite(rgb_output.pins[1], HIGH);
+        digitalWrite(rgb_output.pins[2], HIGH);
         if (has_pixels) {
           for (unsigned int i=0; i < pixels.numPixels(); i++) 
             pixels.setPixelRGB(i, 255, 255, 255);  
@@ -148,6 +159,8 @@ void loop() {
         DEBUG1_PRINT("Red  ");
         if (has_value) digitalWrite(value_output.pin, LOW);
         digitalWrite(rgb_output.pins[0], HIGH);
+        digitalWrite(rgb_output.pins[1], LOW);
+        digitalWrite(rgb_output.pins[2], LOW);
         if (has_pixels) {
           for (unsigned int i=0; i < pixels.numPixels(); i++) 
             pixels.setPixelRGB(i, 255, 0, 0);  
@@ -160,6 +173,7 @@ void loop() {
         DEBUG1_PRINT("Green");
         digitalWrite(rgb_output.pins[0], LOW);
         digitalWrite(rgb_output.pins[1], HIGH);
+        digitalWrite(rgb_output.pins[2], LOW);
         if (has_pixels) {
           for (unsigned int i=0; i < pixels.numPixels(); i++) 
             pixels.setPixelRGB(i, 0, 255, 0);  
@@ -170,6 +184,7 @@ void loop() {
 
       case 3: {
         DEBUG1_PRINT("Blue ");
+        digitalWrite(rgb_output.pins[0], LOW);
         digitalWrite(rgb_output.pins[1], LOW);
         digitalWrite(rgb_output.pins[2], HIGH);
         if (has_pixels) {

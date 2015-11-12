@@ -25,6 +25,7 @@
 #include "Wire.h"
 #include "MPR121.h"
 #include "SerialCLI.h"
+#include "XBee.h"
 #include "XBeeSocket.h"
 #include "Socket.h"
 #include "RS485Utils.h"
@@ -71,7 +72,6 @@ void setup()
                                        &pixels, &rs485, NULL);
 
 
-  //  triangles = buildIcosohedron(&numTriangles, pixels.numPixels());
   numTriangles = TRI_ARRAY_SIZE;
   triangles = initTriangles(numTriangles);
 
@@ -136,15 +136,17 @@ Serial.print(F(" \n"
   "  s <face> <led> - Set the geometry of the current pixel \n"
   "  S <face> <led> <pixel> - Set the geometry to a given pixel\n"
   "  T <face> <pixel> - Sequence starting from face and led\n"
-  "  R <face> - Reverse the 2nd and 3rd leds (common after T)\n"
+  "  R [face] - Reverse the 2nd and 3rd leds (common after T)\n"
   "  e <face> <edge> <neighbor> - Set the neighboring face\n"
+  "  E <face> <neighbor> <neighbor> <neighbor> - Set all neighbors of face\n"
   " \n"
   "  l <face> <led> - Toggle the state of an LED on the indicated face\n"
   "  f <face> - Light the indicated face\n"
   "  F <face> - Light the indicate face and all neighbors\n"
   "  N - Advance to the next face\n"
+  "  P - Go back to previous face\n"
   "\n"
-  "  P - Print the current configuration\n"
+  "  D - Print the current configuration\n"
   "  v - Verify the current configuration\n"
   "  read  - Read in the configuration\n"
   "  write - Write out the configuration\n"
@@ -265,8 +267,13 @@ void cliHandler(char **tokens, byte numtokens) {
       break;
     }
     case 'R': {
-      if (numtokens < 2) return;
-      byte face = atoi(tokens[1]);
+      if (numtokens < 1) return;
+      byte face;
+      if (numtokens >= 2) {
+        face = atoi(tokens[1]);
+        if (face > numTriangles) break;
+      } else 
+        face = current_face;
 
       DEBUG2_VALUELN("Reversing face:", face);
 
@@ -290,6 +297,25 @@ void cliHandler(char **tokens, byte numtokens) {
 
       triangles[face].setEdge(edge, neighbor);
 
+      break;
+    }
+    case 'E': {
+      if (numtokens < 5) return;
+      byte face = atoi(tokens[1]);
+      byte red = atoi(tokens[2]);
+      byte green = atoi(tokens[3]);
+      byte blue = atoi(tokens[4]);
+
+      DEBUG2_VALUE("Set face:", face);
+      DEBUG2_VALUE(" neighbors:", red);
+      DEBUG2_VALUE(",", green);
+      DEBUG2_VALUELN(",", blue);
+      
+      triangles[face].setEdge(0, red);
+      triangles[face].setEdge(1, green);
+      triangles[face].setEdge(2, blue);
+
+      setTriangleFace(face, pixel_color(255, 255, 255), true);
       break;
     }
 
@@ -335,6 +361,17 @@ void cliHandler(char **tokens, byte numtokens) {
 
       break;
     }
+    case 'P': {
+      byte face = (current_face + numTriangles - 1) % numTriangles;
+
+      DEBUG2_PRINT("Light Face:");
+      triangles[face].print();
+
+      setTriangleFace(face, pixel_color(255, 255, 255), true);
+
+      break;
+    }
+
 
     /*
      * Verification
@@ -350,7 +387,7 @@ void cliHandler(char **tokens, byte numtokens) {
       break;
     }
 
-    case 'P': {
+    case 'D': {
       output_data = false;
       break;
     }
