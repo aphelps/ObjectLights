@@ -106,7 +106,7 @@ void setup()
   randomSeed(analogRead(3) + analogRead(4) + micros());
 
   //Wire.begin(); // Needed for MPR121
- #define MAX_OUTPUTS 4
+ #define MAX_OUTPUTS 7
   config_hdr_t config;
   output_hdr_t *outputs[MAX_OUTPUTS];
   config_max_t readoutputs[MAX_OUTPUTS];
