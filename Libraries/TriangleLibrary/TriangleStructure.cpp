@@ -344,6 +344,7 @@ void setLeds(Triangle *triangles, int tri, int led1, int led2, int led3) {
 
 /* Initialize the triangle array */
 Triangle triangleArray[TRI_ARRAY_SIZE];
+
 Triangle* initTriangles(int triangleCount) {
   if (triangleCount > TRI_ARRAY_SIZE) {
     DEBUG_ERR("initTriangles: Too many triangles specified");
@@ -839,7 +840,7 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
   }
   DEBUG_PRINT_END();
 
-  triangles_ptr = &triangles;
+  *triangles_ptr = triangles;
   *numTriangles = readTriangles;
 
   DEBUG2_PRINTLN("Completed reading");
