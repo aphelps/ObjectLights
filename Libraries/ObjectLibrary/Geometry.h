@@ -67,7 +67,7 @@ class Geometry {
   /*
    * Variables - be careful of object size
    */
-  byte id;
+  geo_id_t id;
 
   PRGB leds[];
   byte mark;

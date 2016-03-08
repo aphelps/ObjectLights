@@ -15,7 +15,7 @@
 #include <SoftwareSerial.h>
 
 #ifndef DEBUG_LEVEL
-#define DEBUG_LEVEL DEBUG_HIGH
+  #define DEBUG_LEVEL DEBUG_HIGH
 #endif
 #include "Debug.h"
 
@@ -34,12 +34,22 @@
 #include "ObjectConfiguration.h"
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
+#include "TriangleLightsModes.h"
 
 
 extern SerialCLI serialcli;
 
 PixelUtil pixels;
+
+
 RS485Socket rs485;
+
+#define SEND_BUFFER_SIZE 64 // The data size for transmission buffers
+byte rs485_data_buffer[RS485_BUFFER_TOTAL(SEND_BUFFER_SIZE)];
+
+#define MAX_SOCKETS 1
+Socket *sockets[MAX_SOCKETS] = { NULL };
+
 
 int numTriangles = 0;
 Triangle *triangles;
@@ -48,21 +58,29 @@ Triangle *triangles;
 
 #define DEBUG_LED 13
 
+/* Module configuration */
+#define MAX_OUTPUTS 7
+config_hdr_t config;
+output_hdr_t *outputs[MAX_OUTPUTS];
+config_max_t readoutputs[MAX_OUTPUTS];
+void *objects[MAX_OUTPUTS];
+
+
 #define MODE_PERIOD 50
 triangle_mode_t modeFunctions[] = {
-  trianglesSetAll,
-  trianglesVertexMergeFade,
+  //trianglesSetAll,
+  // trianglesVertexMergeFade,
   //  trianglesVertexMerge,
-  trianglesVertexShift,
+  //trianglesVertexShift,
   trianglesSnake2,
-  trianglesLooping,
+  //trianglesLooping,
   //trianglesCircle,
   //  trianglesCircleCorner2,
   //  trianglesRandomNeighbor,
   //trianglesLifePattern,
   //  trianglesLifePattern2,
   //  trianglesBuildup,
-  trianglesStaticNoise,
+  //trianglesStaticNoise,
 //  trianglesSwapPattern
 //  trianglesTestPattern,
 //  trianglesCircleCorner,
@@ -70,25 +88,24 @@ triangle_mode_t modeFunctions[] = {
 #define NUM_MODES (sizeof (modeFunctions) / sizeof (triangle_mode_t))
 
 uint16_t modePeriods[] = {
-  1000,
-  MODE_PERIOD,
-  //  MODE_PERIOD,
-  MODE_PERIOD * 2,
-  MODE_PERIOD,
+  //1000,
+  // MODE_PERIOD,
+  // MODE_PERIOD,
+  //MODE_PERIOD * 2,
   MODE_PERIOD,
   //MODE_PERIOD,
-  //  MODE_PERIOD,
-  //  MODE_PERIOD,
+  // MODE_PERIOD,
+  // MODE_PERIOD,
+  // MODE_PERIOD,
   // 500,
+  // 500,
+  // MODE_PERIOD,
+  //MODE_PERIOD,
+  //  10
   //  500,
   //  MODE_PERIOD,
-  MODE_PERIOD,
-//  10
-//  500,
-//  MODE_PERIOD,
 };
 #define NUM_PERIODS (sizeof (modePeriods) / sizeof (uint16_t))
-
 
 pattern_args_t patternConfig = {
   pixel_color(0, 0, 0), // bgColor
@@ -97,7 +114,7 @@ pattern_args_t patternConfig = {
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(57600);
 
   if (NUM_PERIODS != NUM_MODES) {
     DEBUG_ERR("NUM_MODES != NUM_PERIODS");
@@ -112,13 +129,19 @@ void setup()
   randomSeed(analogRead(3) + analogRead(4) + micros());
 
   //Wire.begin(); // Needed for MPR121
- #define MAX_OUTPUTS 7
-  config_hdr_t config;
-  output_hdr_t *outputs[MAX_OUTPUTS];
-  config_max_t readoutputs[MAX_OUTPUTS];
-  int configOffset = readHMTLConfiguration(&config, 
-                                           outputs, readoutputs, MAX_OUTPUTS,
+  int configOffset = readHMTLConfiguration(&config,
+                                           outputs, readoutputs, objects,
+                                           MAX_OUTPUTS,
                                            &pixels, &rs485, NULL);
+
+
+  /* Setup the RS485 connection */
+  byte num_sockets = 0;
+  rs485.setup();
+  rs485.initBuffer(rs485_data_buffer, SEND_BUFFER_SIZE);
+  sockets[num_sockets++] = &rs485;
+
+  init_modes(sockets, num_sockets);
 
   /* Setup the sensors */
   initializePins();
@@ -129,29 +152,28 @@ void setup()
                         &numTriangles);
 
   DEBUG2_VALUELN("Inited with numTriangles:", numTriangles);
+
+  // Send the ready signal to the serial port
+  Serial.println(F(HMTL_READY));
 }
 
 void loop() {
 
-  serialcli.checkSerial();
+  //serialcli.checkSerial();
 
   static byte prev_mode = -1;
   byte mode;
 
+  // TODO: This should be changing the program
   mode = get_button_value() % NUM_MODES;
   if (mode != prev_mode) {
     DEBUG4_VALUELN("mode=", mode);
     DEBUG_MEMORY(DEBUG_HIGH);
   }
+  prev_mode = mode;
 
   /* Check for update of the sensor values */
   update_sensors();
-
-  /* Run the current mode and update the triangles */
-  modeFunctions[mode](triangles, numTriangles, modePeriods[mode],
-		      prev_mode != mode, &patternConfig);
-  updateTrianglePixels(triangles, numTriangles, &pixels);
-  prev_mode = mode;
 
   DEBUG_COMMAND(DEBUG_HIGH,
 		static unsigned long next_millis = 0;
@@ -164,4 +186,10 @@ void loop() {
 		  next_millis += 251;
 		}
 		);
+
+  /*
+   * Check for messages and handle output states
+   */
+  boolean updated = messages_and_modes();
+
 }

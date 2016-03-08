@@ -26,6 +26,7 @@
 int readHMTLConfiguration(config_hdr_t *config, 
                           output_hdr_t *outputs[],
                           config_max_t readoutputs[],
+                          void *objects[],
                           byte max_outputs,
                           PixelUtil *pixels, 
                           RS485Socket *rs485,
@@ -33,24 +34,28 @@ int readHMTLConfiguration(config_hdr_t *config,
   int offset;
 
   uint32_t outputs_found = hmtl_setup(config, readoutputs, outputs,
-                                      NULL, max_outputs,
+                                      objects, max_outputs,
                                       rs485, NULL, pixels, mpr121, 
                                       NULL, NULL, &offset);
 
+#ifndef DISABLE_RS485
   if ((rs485 != NULL) && !(outputs_found & (1 << HMTL_OUTPUT_RS485))) {
     DEBUG_ERR("No RS485 config found");
     DEBUG_ERR_STATE(1);
   }
+#endif
 
   if ((pixels != NULL) && !(outputs_found & (1 << HMTL_OUTPUT_PIXELS))) {
     DEBUG_ERR("No pixels config found");
     DEBUG_ERR_STATE(2);
   }
 
+#ifndef DISABLE_MPR121
   if ((mpr121 != NULL) && !(outputs_found & (1 << HMTL_OUTPUT_MPR121))) {
     DEBUG_ERR("No mpr121 config found");
     DEBUG_ERR_STATE(3);
   }
+#endif
 
   return offset;
 }

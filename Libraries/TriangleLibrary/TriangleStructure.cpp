@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
-#define DEBUG_LEVEL DEBUG_LOW
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_LOW
+#endif
 #include "Debug.h"
 
 #include "EEPromUtils.h"
@@ -11,7 +13,7 @@
 // XXX: Relying on an array allocated by the main sketch feels icky
 extern Triangle *triangles;
 
-Triangle::Triangle(unsigned int _id) {
+Triangle::Triangle(geo_id_t _id) {
   updated = false;
   mark = 0;
   id = _id;
@@ -823,13 +825,17 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
 
   // Copy relevant data from config before next read
   uint16_t readTriangles = config->num_objects;
+  if (readTriangles > TRI_ARRAY_SIZE) {
+    // Override the configured size if it is over the limit
+    readTriangles = TRI_ARRAY_SIZE;
+  }
 
   // TODO: Triangles should be allocated here.
   //Triangle *triangles = (Triangle *)calloc(config->num_objects,
   //                                         sizeof (Triangle));
   Triangle *triangles = initTriangles(readTriangles);
 
-  for (int face = 0; face < readTriangles; face++) {
+  for (byte face = 0; face < readTriangles; face++) {
     offset = EEPROM_safe_read(offset, bytes, MAX_CONFIG_SZ);
     triangles[face].fromBytes(bytes, MAX_CONFIG_SZ, 
                               triangles, readTriangles);
@@ -959,7 +965,7 @@ boolean Triangle::verifyTriangleStructure(Triangle *triangles,
 }
 
 /* Send updated values to a Pixel chain */
-void updateTrianglePixels(Triangle *triangles, int numTriangles,
+boolean updateTrianglePixels(Triangle *triangles, int numTriangles,
                           PixelUtil *pixels) {
   boolean update = false;
   int updated = 0;
@@ -978,4 +984,6 @@ void updateTrianglePixels(Triangle *triangles, int numTriangles,
     pixels->update();
     DEBUG4_VALUELN("Updated triangles:", updated);
   }
+
+  return update;
 }

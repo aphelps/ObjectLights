@@ -1,11 +1,234 @@
 #include <Arduino.h>
+#include <FastLED.h>
 
-//#define DEBUG_LEVEL DEBUG_HIGH
-#include "Debug.h"
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_MID
+#endif
+#include <Debug.h>
+
+#include <GeneralUtils.h>
+
+#include <ProgramManager.h>
+#include <HMTLMessaging.h>
+#include <HMTLPrograms.h>
+#include <HMTLProtocol.h>
+
+#include <TimeSync.h>
+#include <MessageHandler.h>
 
 #include "TriangleLights.h"
+#include "TriangleLightsModes.h"
+
+extern config_hdr_t config;
+extern output_hdr_t *outputs[HMTL_MAX_OUTPUTS];
+extern void *objects[HMTL_MAX_OUTPUTS];
+
+extern RS485Socket rs485;
+extern int numTriangles;
+extern PixelUtil pixels;
+
+/* List of available programs */
+hmtl_program_t program_functions[] = {
+        // Programs from HMTLPrograms
+        { HMTL_PROGRAM_NONE, NULL, NULL},
+        { HMTL_PROGRAM_BLINK, program_blink, program_blink_init },
+        { HMTL_PROGRAM_TIMED_CHANGE, program_timed_change, program_timed_change_init },
+        { HMTL_PROGRAM_FADE, program_fade, program_fade_init },
+
+        // Custom programs
+        { TRIANGLES_SET_ALL, mode_set_all, mode_generic_init},
+        { TRIANGLES_STATIC_NOISE, mode_static_noise, mode_generic_init},
+};
+#define NUM_PROGRAMS (sizeof (program_functions) / sizeof (hmtl_program_t))
+
+program_tracker_t *active_programs[HMTL_MAX_OUTPUTS];
+ProgramManager manager;
+MessageHandler handler;
+
+/*
+ * Execute initial commands
+ */
+void startup_commands() {
+//  const byte data[] = { // This turns on PENDANT_TEST_PIXELS for all outputs
+//          0xfc,0x00,0x02,0x17,0x01,0x00,0xff,0xff,
+//          0x03,0xfe,0x20,0x32,0x00,0x00,0x00,0x00,
+//          0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+//  memcpy(rs485.send_buffer, data, sizeof (data));
+//
+//  handler.process_msg((msg_hdr_t *)rs485.send_buffer, &rs485,
+//                      NULL, &config);
+}
+
+void init_modes(Socket **sockets, byte num_sockets) {
+  /* Setup the program manager */
+  manager = ProgramManager(outputs, active_programs, objects, HMTL_MAX_OUTPUTS,
+                           program_functions, NUM_PROGRAMS);
+
+  /* Setup a message handler with the program manager */
+  handler = MessageHandler(config.address, &manager, sockets, num_sockets);
+
+  /* Execute any initial commands */
+  startup_commands();
+}
+
+/*
+ * Check for and handle incoming messages
+ */
+boolean messages_and_modes(void) {
+  // Check and send a serial-ready message if needed
+  handler.serial_ready();
+
+  /*
+   * Check the serial device and all sockets for messages, forwarding them and
+   * processing them if they are for this module.
+   */
+  boolean update = handler.check(&config);
+
+  /* Execute any active programs */
+  if (manager.run()) {
+    update = true;
+  }
+
+  if (update) {
+    /*
+     * An output may have been updated by message or active program,
+     * update all output states.
+     */
+    for (byte i = 0; i < config.num_outputs; i++) {
+      hmtl_update_output(outputs[i], objects[i]);
+    }
+
+    /*
+     * TODO:
+     * If a program is a triangle-specific one then update the triangles,
+     * otherwise perform generic output updates
+     */
+
+    updateTrianglePixels(triangles, numTriangles, &pixels);
+  }
+
+  return update;
+}
+
+typedef struct {
+  uint32_t fgColor;   // 4B
+  uint32_t bgColor;   // 4B
+  uint16_t period_ms; // 2B
+  uint8_t  data[4];   // 4B
+
+               // Total: 10B
+
+  unsigned long last_change_ms;
+} mode_data_t;
+
+mode_data_t triangle_mode_state;
+
+/*
+ * This initializes any of the triangle modes
+ */
+boolean mode_generic_init(msg_program_t *msg,
+                          program_tracker_t *tracker,
+                          output_hdr_t *output) {
+  if ((output == NULL) || (output->type != HMTL_OUTPUT_PIXELS)) {
+    return false;
+  }
+
+  mode_data_t *state = &triangle_mode_state;
+
+  memset(state, 0, sizeof(mode_data_t));
+  memcpy(state, msg->values, min(sizeof(mode_data_t), MAX_PROGRAM_VAL));
+
+  state->last_change_ms = millis();
+  if (state->period_ms == 0)
+    state->period_ms = 100;
+
+  tracker->state = state;
+
+  DEBUG3_HEXVAL("INIT: Generic per=", state->period_ms);
+  DEBUG3_HEXVAL(" fg:", state->fgColor);
+  DEBUG3_HEXVAL(" bg:", state->bgColor);
+  DEBUG4_PRINT(" ");
+  DEBUG4_COMMAND(
+          print_hex_string((byte *)state, sizeof(mode_data_t))
+  );
+  DEBUG_ENDLN();
+
+  return true;
+}
 
 
+/*
+ * Just set all triangles to the indicate foreground color
+ */
+boolean mode_set_all(output_hdr_t *output, void *object,
+                     program_tracker_t *tracker) {
+
+  mode_data_t *state = (mode_data_t *)tracker->state;
+  unsigned long now = time.ms();
+
+  if (now - state->last_change_ms >= state->period_ms) {
+    setAllTriangles(triangles, numTriangles, state->fgColor);
+    state->last_change_ms = now;
+
+    DEBUG5_HEXVAL("set=", state->fgColor);
+    DEBUG5_HEXVALLN(" getColor=", triangles[0].getColor());
+
+    return true;
+  }
+
+  return false;
+}
+
+
+/*
+ * Blend between two colors
+ */
+CRGB interpolate_color(uint32_t color1, uint32_t color2, byte index){
+
+  CRGB start = CRGB(pixel_red(color1),
+                    pixel_green(color1),
+                    pixel_blue(color1));
+  CRGB stop = CRGB(pixel_red(color2),
+                    pixel_green(color2),
+                    pixel_blue(color2));
+
+  CRGB rgb =  blend(start, stop, index);
+
+  return rgb;
+}
+
+/*
+ * This iterates through the triangles, lighting the ones with leds
+ */
+boolean mode_static_noise(output_hdr_t *output, void *object,
+                          program_tracker_t *tracker) {
+  mode_data_t *state = (mode_data_t *)tracker->state;
+  unsigned long now = time.ms();
+
+  if (now - state->last_change_ms >= state->period_ms) {
+    state->last_change_ms += state->period_ms;
+
+    /* Set the leds randomly to on off in white */
+    for (int tri = 0; tri < numTriangles; tri++) {
+      for (byte led = 0; led < Triangle::NUM_LEDS; led++) {
+        if (random(0, 100) < state->data[0]) {
+          triangles[tri].setColor(led, state->bgColor);
+        } else {
+          CRGB color = interpolate_color(state->fgColor, state->bgColor,
+                                         (byte)random(0, 255));
+          triangles[tri].setColor(led, color.r, color.g, color.b);
+        }
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+
+/*********************** OLD STUFF ********************************************/
 
 /*******************************************************************************
  * Triangle light patterns

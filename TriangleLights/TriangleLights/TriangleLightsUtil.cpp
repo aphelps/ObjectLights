@@ -713,7 +713,7 @@ void trianglesBuildup(Triangle *triangles, int size, int periodms,
       Triangle *next = NULL;
       byte edge;
       do {
-	edge = random(0, 3);
+	      edge = (byte)random(0, 3);
       } while (!current->getEdge(edge)->hasLeds());
       next = current->getEdge(edge);
 
@@ -802,14 +802,14 @@ void trianglesSnake(Triangle *triangles, int size, int periodms,
     switch (colorMode % 5) {
     case 0: {
       for (int i = 0; i < SNAKE_LENGTH; i++) {
-	values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
+	      values[i] = pixel_wheel(map(i, 0, SNAKE_LENGTH - 1, 0, 255));
       }
       break;
     }
     case 1: {
-      for (int i = 0; i < SNAKE_LENGTH; i++) {
-	byte red = 255 >> i;
-	values[i] = pixel_color(red, 0, 0);
+      for (byte i = 0; i < SNAKE_LENGTH; i++) {
+        byte red = (byte)255 >> i;
+        values[i] = pixel_color(red, 0, 0);
       }
       break;
     }

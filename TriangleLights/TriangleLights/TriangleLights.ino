@@ -111,7 +111,7 @@ void setup()
   output_hdr_t *outputs[MAX_OUTPUTS];
   config_max_t readoutputs[MAX_OUTPUTS];
   int configOffset = readHMTLConfiguration(&config, 
-                                           outputs, readoutputs, MAX_OUTPUTS,
+                                           outputs, readoutputs, NULL, MAX_OUTPUTS,
                                            &pixels, &rs485, NULL);
 
   /* Setup the sensors */

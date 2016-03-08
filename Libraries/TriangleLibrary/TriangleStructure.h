@@ -40,7 +40,7 @@ class Triangle : public Geometry {
   static const byte NUM_LEDS = 3;
 
   Triangle() {};
-  Triangle(unsigned int id);
+  Triangle(geo_id_t id);
 
   Triangle *getEdge(byte edge);
   void setEdge(byte edge, Triangle *tri);
@@ -99,12 +99,15 @@ class Triangle : public Geometry {
 };
 
 /* Send updated values to a Pixel chain */
-void updateTrianglePixels(Triangle *triangles, int numTriangles,
+boolean updateTrianglePixels(Triangle *triangles, int numTriangles,
 			  PixelUtil *pixels);
 
 
 // XXX: This should not be hard coded
-#define TRI_ARRAY_SIZE 35
+#ifndef TRI_ARRAY_SIZE
+  #define TRI_ARRAY_SIZE 20
+  #warning Using default triangle array size of 20
+#endif
 Triangle* initTriangles(int triangleCount);
 
 /* Allocate and return a fully connected icosohedron */

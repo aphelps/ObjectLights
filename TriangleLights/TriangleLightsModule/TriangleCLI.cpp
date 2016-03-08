@@ -9,7 +9,7 @@
 #include <Arduino.h>
 
 #ifndef DEBUG_LEVEL
-#define DEBUG_LEVEL DEBUG_HIGH
+  #define DEBUG_LEVEL DEBUG_HIGH
 #endif
 #include "Debug.h"
 
