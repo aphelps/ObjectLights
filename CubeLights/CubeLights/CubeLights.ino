@@ -25,7 +25,7 @@
 #include "EEPromUtils.h"
 #include "HMTLTypes.h"
 #include "HMTLMessaging.h"
-
+#include "HMTLProtocol.h""
 
 #include "XBeeSocket.h"
 
