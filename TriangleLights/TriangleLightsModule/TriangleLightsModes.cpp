@@ -15,6 +15,7 @@
 
 #include <TimeSync.h>
 #include <MessageHandler.h>
+#include <HMTLTypes.h>
 
 #include "TriangleLights.h"
 #include "TriangleLightsModes.h"
@@ -61,7 +62,7 @@ void startup_commands() {
 
 void init_modes(Socket **sockets, byte num_sockets) {
   /* Setup the program manager */
-  manager = ProgramManager(outputs, active_programs, objects, HMTL_MAX_OUTPUTS,
+  manager = ProgramManager(outputs, active_programs, objects, config.num_outputs,
                            program_functions, NUM_PROGRAMS);
 
   /* Setup a message handler with the program manager */

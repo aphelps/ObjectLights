@@ -175,7 +175,8 @@ void loop() {
   /* Check for update of the sensor values */
   update_sensors();
 
-  DEBUG_COMMAND(DEBUG_HIGH,
+  /* When nothing else is working you can always blink and LED */
+  DEBUG_COMMAND(DEBUG_TRACE,
 		static unsigned long next_millis = 0;
 		if (millis() > next_millis) {
 		  if (next_millis % 2 == 0) {
@@ -185,7 +186,7 @@ void loop() {
 		  }
 		  next_millis += 251;
 		}
-		);
+  );
 
   /*
    * Check for messages and handle output states

@@ -1,8 +1,6 @@
 #include <Arduino.h>
 
-#ifndef DEBUG_LEVEL
-  #define DEBUG_LEVEL DEBUG_LOW
-#endif
+#define DEBUG_LEVEL DEBUG_LOW
 #include "Debug.h"
 
 #include "EEPromUtils.h"
@@ -835,7 +833,7 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
   //                                         sizeof (Triangle));
   Triangle *triangles = initTriangles(readTriangles);
 
-  for (byte face = 0; face < readTriangles; face++) {
+  for (int face = 0; face < readTriangles; face++) {
     offset = EEPROM_safe_read(offset, bytes, MAX_CONFIG_SZ);
     triangles[face].fromBytes(bytes, MAX_CONFIG_SZ, 
                               triangles, readTriangles);
@@ -982,7 +980,7 @@ boolean updateTrianglePixels(Triangle *triangles, int numTriangles,
 
   if (update) {
     pixels->update();
-    DEBUG4_VALUELN("Updated triangles:", updated);
+    DEBUG5_VALUELN("Updated triangles:", updated);
   }
 
   return update;
