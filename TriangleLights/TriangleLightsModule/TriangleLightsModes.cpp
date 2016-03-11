@@ -32,13 +32,14 @@ extern PixelUtil pixels;
 hmtl_program_t program_functions[] = {
         // Programs from HMTLPrograms
         { HMTL_PROGRAM_NONE, NULL, NULL},
-        { HMTL_PROGRAM_BLINK, program_blink, program_blink_init },
-        { HMTL_PROGRAM_TIMED_CHANGE, program_timed_change, program_timed_change_init },
-        { HMTL_PROGRAM_FADE, program_fade, program_fade_init },
+        //{ HMTL_PROGRAM_BLINK, program_blink, program_blink_init },
+        //{ HMTL_PROGRAM_TIMED_CHANGE, program_timed_change, program_timed_change_init },
+        //{ HMTL_PROGRAM_FADE, program_fade, program_fade_init },
 
         // Custom programs
         { TRIANGLES_SET_ALL, mode_set_all, mode_generic_init},
         { TRIANGLES_STATIC_NOISE, mode_static_noise, mode_generic_init},
+        { TRIANGLES_SNAKES_2, mode_snakes_2, mode_snakes_init}
 };
 #define NUM_PROGRAMS (sizeof (program_functions) / sizeof (hmtl_program_t))
 
@@ -112,9 +113,16 @@ boolean messages_and_modes(void) {
 }
 
 typedef struct {
+  uint16_t period_ms; // 2B
+
+  uint8_t data[0];
+} mode_hdr_t;
+
+typedef struct {
+  mode_hdr_t hdr;  // 2B
+
   uint32_t fgColor;   // 4B
   uint32_t bgColor;   // 4B
-  uint16_t period_ms; // 2B
   uint8_t  data[4];   // 4B
 
                // Total: 10B
@@ -140,12 +148,12 @@ boolean mode_generic_init(msg_program_t *msg,
   memcpy(state, msg->values, min(sizeof(mode_data_t), MAX_PROGRAM_VAL));
 
   state->last_change_ms = millis();
-  if (state->period_ms == 0)
-    state->period_ms = 100;
+  if (state->hdr.period_ms == 0)
+    state->hdr.period_ms = 100;
 
   tracker->state = state;
 
-  DEBUG3_HEXVAL("INIT: Generic per=", state->period_ms);
+  DEBUG3_HEXVAL("INIT: Generic per=", state->hdr.period_ms);
   DEBUG3_HEXVAL(" fg:", state->fgColor);
   DEBUG3_HEXVAL(" bg:", state->bgColor);
   DEBUG4_PRINT(" ");
@@ -157,7 +165,6 @@ boolean mode_generic_init(msg_program_t *msg,
   return true;
 }
 
-
 /*
  * Just set all triangles to the indicate foreground color
  */
@@ -167,7 +174,7 @@ boolean mode_set_all(output_hdr_t *output, void *object,
   mode_data_t *state = (mode_data_t *)tracker->state;
   unsigned long now = time.ms();
 
-  if (now - state->last_change_ms >= state->period_ms) {
+  if (now - state->last_change_ms >= state->hdr.period_ms) {
     setAllTriangles(triangles, numTriangles, state->fgColor);
     state->last_change_ms = now;
 
@@ -206,8 +213,8 @@ boolean mode_static_noise(output_hdr_t *output, void *object,
   mode_data_t *state = (mode_data_t *)tracker->state;
   unsigned long now = time.ms();
 
-  if (now - state->last_change_ms >= state->period_ms) {
-    state->last_change_ms += state->period_ms;
+  if (now - state->last_change_ms >= state->hdr.period_ms) {
+    state->last_change_ms += state->hdr.period_ms;
 
     /* Set the leds randomly to on off in white */
     for (int tri = 0; tri < numTriangles; tri++) {
@@ -227,6 +234,218 @@ boolean mode_static_noise(output_hdr_t *output, void *object,
 
   return false;
 }
+
+/*
+ * Initializer for the snakes
+ */
+boolean mode_snakes_init(msg_program_t *msg,
+                         program_tracker_t *tracker,
+                         output_hdr_t *output) {
+  if (mode_generic_init(msg, tracker, output)) {
+    mode_data_t *state = (mode_data_t *)tracker->state;
+    state->data[0] = 1;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+#define SNAKE2_LENGTH 12
+
+typedef struct {
+  byte snakeTriangles[SNAKE2_LENGTH];
+  byte snakeVertices[SNAKE2_LENGTH]; // TODO: These values are 0-2, reduce size!
+  byte currentIndex = (byte)-1;
+  byte colorMode = 0;
+} mode_snake_data_t;
+//XXX;
+
+/* Run a snake randomly around the light */
+boolean mode_snakes_2(output_hdr_t *output, void *object,
+                        program_tracker_t *tracker) {
+  mode_data_t *state = (mode_data_t *)tracker->state;
+  unsigned long now = time.ms();
+
+  // XXX - Convert to something in the state
+  static byte snakeTriangles[SNAKE2_LENGTH];
+  static byte snakeVertices[SNAKE2_LENGTH];
+  uint32_t values[SNAKE2_LENGTH] = { // TODO: Can these be eliminated?
+          255, 128, 64, 32, 16, 8, 4//, 2, 1
+  };
+  static byte currentIndex = (byte)-1;
+  static byte colorMode = 0;
+
+  if (state->data[0] || (currentIndex == (byte)-1)) {
+    state->data[0] = 0;
+
+    DEBUG4_PRINT("Initializing:");
+    setAllTriangles(triangles, numTriangles, state->bgColor);
+    for (int i = 0; i < SNAKE2_LENGTH; i++) {
+      snakeTriangles[i] = Triangle::NO_ID;
+      snakeVertices[i] = Triangle::NO_VERTEX;
+    }
+
+    /* Start from a random triangle */
+    byte tri;
+    do {
+      tri = random(0, numTriangles);
+    } while (!triangles[tri].hasLeds());
+    currentIndex = 0;
+    snakeTriangles[currentIndex] = tri;
+    snakeVertices[currentIndex] = random(0, Triangle::NUM_EDGES);
+
+    colorMode++;
+    DEBUG4_VALUELN(" mode=", colorMode);
+    DEBUG_MEMORY(DEBUG_MID);
+
+    return true;
+  }
+
+  if (now - state->last_change_ms >= state->hdr.period_ms) {
+    state->last_change_ms += state->hdr.period_ms;
+
+    /* Determine which colors to use for the snake */
+    switch (colorMode % 1) {
+      case 0: {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
+          values[i] = pixel_wheel(map(i, 0, SNAKE2_LENGTH - 1, 0, 255));
+        }
+        break;
+      }
+      case 1: {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
+          byte red = 255 >> i;
+          values[i] = pixel_color(red, 0, 0);
+        }
+        break;
+      }
+      case 2: {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
+          byte green = 255 >> i;
+          values[i] = pixel_color(0, green, 0);
+        }
+        break;
+      }
+      case 3: {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
+          byte blue = 255 >> i;
+          values[i] = pixel_color(0, 0, blue);
+        }
+        break;
+      }
+      case 4: {
+        for (int i = 0; i < SNAKE2_LENGTH; i++) {
+          byte color = 255 >> i;
+          values[i] = pixel_color(color, color, color);
+        }
+        break;
+      }
+    }
+
+    /* Clear the tail */
+    byte tri, vert;
+    byte nextIndex;
+    boolean found = false;
+
+    /* Choose the next location */
+    for (byte i = 0; i < SNAKE2_LENGTH; i++) {
+      byte activeIndex = (currentIndex + SNAKE2_LENGTH - i) % SNAKE2_LENGTH;
+      if (snakeTriangles[activeIndex] ==  Triangle::NO_ID) continue;
+      Triangle *current = &triangles[snakeTriangles[activeIndex]];
+      byte currentVertex = snakeVertices[activeIndex];
+      if (currentVertex == Triangle::NO_VERTEX) continue;
+      tri = Triangle::NO_ID;
+
+      byte startDirection = random(0, 4);
+      for (byte direction = 0; direction < 4; direction++) {
+        switch ((startDirection + direction) % 4) {
+          case 0:
+          default: {
+            // Triangle to the left
+            Triangle *t = current->leftOfVertex(currentVertex);
+            if (t == NULL) continue;
+            tri = t->id;
+            vert = triangles[tri].matchVertexRight(current,
+                                                   currentVertex);
+            break;
+          }
+          case 1: {
+            // Triangle to the right
+            Triangle *t = current->rightOfVertex(currentVertex);
+            if (t == NULL) continue;
+            tri = t->id;
+            vert = triangles[tri].matchVertexLeft(current,
+                                                  currentVertex);
+            break;
+          }
+          case 2: {
+            // Same triangle, vertex to the left
+            vert = (currentVertex + Triangle::NUM_EDGES - 1) % Triangle::NUM_EDGES;
+            tri = snakeTriangles[activeIndex];
+            break;
+          }
+          case 3: {
+            // Same triangle, vertex to the right
+            vert = (currentVertex + 1) % Triangle::NUM_EDGES;
+            tri = snakeTriangles[activeIndex];
+            break;
+          }
+        }
+
+        if ((triangles[tri].hasLeds()) &&
+            (triangles[tri].leds[vert].color() == state->bgColor)) {
+          // Verify that the choosen vertex is dark
+          found = true;
+          goto FOUND;
+        }
+      }
+    }
+
+    FOUND:
+
+    if (!found) {
+      currentIndex = (byte)-1;
+      DEBUG4_PRINTLN("End of snake");
+      return false;
+    }
+
+    if (currentIndex == 0) {
+      nextIndex = SNAKE2_LENGTH - 1;
+    } else {
+      nextIndex = currentIndex - 1;
+    }
+    if ((snakeTriangles[nextIndex] < numTriangles) &&
+        (snakeVertices[nextIndex] < Triangle::NUM_VERTICES)) {
+      triangles[snakeTriangles[nextIndex]].setColor(snakeVertices[nextIndex],
+                                                    state->bgColor);
+    }
+
+    /* Move the array index*/
+    currentIndex = nextIndex;
+    snakeTriangles[currentIndex] = tri;
+    snakeVertices[currentIndex] = vert;
+
+    /* Set the led values */
+    for (byte i = 0; i < SNAKE2_LENGTH; i++) {
+      byte valueIndex = (i + SNAKE2_LENGTH - currentIndex) % SNAKE2_LENGTH;
+      if (snakeTriangles[i] != (byte)-1) {
+
+        triangles[snakeTriangles[i]].setColor(snakeVertices[i],
+                                              values[valueIndex]);
+      }
+    }
+
+    DEBUG5_VALUE(" i:", currentIndex);
+    DEBUG5_VALUE(" tri:", tri);
+    DEBUG5_VALUELN(" vert:", vert);
+
+    return true;
+  }
+
+  return false;
+}
+
+
 
 
 /*********************** OLD STUFF ********************************************/
@@ -322,6 +541,8 @@ void incrementAll(Triangle *triangles, int size,
   }
 }
 
+
+#if 0
 /******************************************************************************
  * Color modes
  */
@@ -1455,3 +1676,4 @@ void trianglesVertexMergeFade(Triangle *triangles, int size, int periodms,
   }
 }
 
+#endif

@@ -19,6 +19,7 @@
 /* Wireless pendant programs */
 #define TRIANGLES_SET_ALL      0x20
 #define TRIANGLES_STATIC_NOISE 0x21
+#define TRIANGLES_SNAKES_2     0x22
 
 /* Initialize the message and mode handlers */
 void init_modes(Socket **sockets, byte num_sockets);
@@ -29,9 +30,14 @@ boolean messages_and_modes(void);
 boolean mode_set_all(output_hdr_t *output, void *object,
                      program_tracker_t *tracker);
 boolean mode_static_noise(output_hdr_t *output, void *object,
-                     program_tracker_t *tracker);
+                          program_tracker_t *tracker);
+boolean mode_snakes_2(output_hdr_t *output, void *object,
+                          program_tracker_t *tracker);
 
 boolean mode_generic_init(msg_program_t *msg,
+                          program_tracker_t *tracker,
+                          output_hdr_t *output);
+boolean mode_snakes_init(msg_program_t *msg,
                           program_tracker_t *tracker,
                           output_hdr_t *output);
 
