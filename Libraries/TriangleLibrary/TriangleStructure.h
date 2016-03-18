@@ -50,13 +50,15 @@ class Triangle : public Geometry {
   geo_id_t getVertexID(byte vertex, byte index);
 
   PRGB* getLED(byte vertex);
-  void setLedPixel(uint8_t led, uint16_t pixel);
+  void setLedPixel(geo_led_t led, uint16_t pixel);
   void setLedPixels(uint16_t p0, uint16_t p1, uint16_t p2);
 
+  void setColor(CRGB rgb);
   void setColor(byte r, byte g, byte b);
   void setColor(uint32_t c);
-  void setColor(byte led, byte r, byte g, byte b);
-  void setColor(byte led, uint32_t c);
+  void setColor(geo_led_t led, CRGB rgb);
+  void setColor(geo_led_t led, byte r, byte g, byte b);
+  void setColor(geo_led_t led, uint32_t c);
 
   uint32_t getColor();
   uint32_t getColor(byte vertex);

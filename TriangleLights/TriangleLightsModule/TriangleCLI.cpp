@@ -18,7 +18,6 @@
 #include "TriangleLights.h"
 
 extern volatile uint16_t buttonValue;
-extern pattern_args_t patternConfig;
 
 void cliHandler(char **tokens, byte numtokens);
 
@@ -52,6 +51,7 @@ void cliHandler(char **tokens, byte numtokens) {
       break;
     }
 
+#if 0
     case 'b': {
       if (numtokens < 2) return;
       uint32_t color = strtol(tokens[1], NULL, 16);
@@ -66,7 +66,7 @@ void cliHandler(char **tokens, byte numtokens) {
       patternConfig.fgColor = color;
       DEBUG3_HEXVALLN("Set fgcolor to", color);
       break;
-
     }
+#endif
   }
 }

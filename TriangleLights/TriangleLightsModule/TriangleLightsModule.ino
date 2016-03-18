@@ -59,67 +59,19 @@ Triangle *triangles;
 #define DEBUG_LED 13
 
 /* Module configuration */
-#define MAX_OUTPUTS 7
+#ifndef MAX_OUTPUTS
+  #define MAX_OUTPUTS 7
+  #warning Using default MAX_OUTPUTS value!
+#endif
 config_hdr_t config;
 output_hdr_t *outputs[MAX_OUTPUTS];
-config_max_t readoutputs[MAX_OUTPUTS];
+config_max_t readoutputs[MAX_OUTPUTS]; // TODO: Keeping them all like this is BIG
 void *objects[MAX_OUTPUTS];
 
-
-#define MODE_PERIOD 50
-triangle_mode_t modeFunctions[] = {
-  //trianglesSetAll,
-  // trianglesVertexMergeFade,
-  //  trianglesVertexMerge,
-  //trianglesVertexShift,
-  trianglesSnake2,
-  //trianglesLooping,
-  //trianglesCircle,
-  //  trianglesCircleCorner2,
-  //  trianglesRandomNeighbor,
-  //trianglesLifePattern,
-  //  trianglesLifePattern2,
-  //  trianglesBuildup,
-  //trianglesStaticNoise,
-//  trianglesSwapPattern
-//  trianglesTestPattern,
-//  trianglesCircleCorner,
-};
-#define NUM_MODES (sizeof (modeFunctions) / sizeof (triangle_mode_t))
-
-uint16_t modePeriods[] = {
-  //1000,
-  // MODE_PERIOD,
-  // MODE_PERIOD,
-  //MODE_PERIOD * 2,
-  MODE_PERIOD,
-  //MODE_PERIOD,
-  // MODE_PERIOD,
-  // MODE_PERIOD,
-  // MODE_PERIOD,
-  // 500,
-  // 500,
-  // MODE_PERIOD,
-  //MODE_PERIOD,
-  //  10
-  //  500,
-  //  MODE_PERIOD,
-};
-#define NUM_PERIODS (sizeof (modePeriods) / sizeof (uint16_t))
-
-pattern_args_t patternConfig = {
-  pixel_color(0, 0, 0), // bgColor
-  pixel_color(0xFF, 0xFF, 0xFF) // fgColor
-};
 
 void setup()
 {
   Serial.begin(57600);
-
-  if (NUM_PERIODS != NUM_MODES) {
-    DEBUG_ERR("NUM_MODES != NUM_PERIODS");
-    DEBUG_ERR_STATE(1);
-  }
 
   DEBUG4_PRINTLN("*** TriangleLights Initializing ***");
 
@@ -159,16 +111,17 @@ void setup()
 
 void loop() {
 
-  //serialcli.checkSerial();
+  // TODO: How to read HTML commands and CLI commands
+  // serialcli.checkSerial();
 
   static byte prev_mode = -1;
   byte mode;
 
   // TODO: This should be changing the program
-  mode = get_button_value() % NUM_MODES;
+  mode = get_button_value();
   if (mode != prev_mode) {
-    DEBUG4_VALUELN("mode=", mode);
-    DEBUG_MEMORY(DEBUG_HIGH);
+    DEBUG3_VALUELN("mode=", mode);
+    DEBUG_MEMORY(DEBUG_MID);
   }
   prev_mode = mode;
 

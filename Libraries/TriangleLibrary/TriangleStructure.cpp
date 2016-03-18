@@ -105,6 +105,9 @@ void Triangle::setColor(byte r, byte g, byte b) {
   }
 }
 
+void Triangle::setColor(CRGB rgb) {
+  setColor(rgb.r, rgb.g, rgb.b);
+}
 
 
 void Triangle::setColor(byte led, byte r, byte g, byte b) {
@@ -113,6 +116,11 @@ void Triangle::setColor(byte led, byte r, byte g, byte b) {
     updated = true;
   }
 }
+
+void Triangle::setColor(byte led, CRGB rgb) {
+  setColor(led, rgb.r, rgb.g, rgb.b);
+}
+
 
 void Triangle::setColor(uint32_t c) {
   if (hasLeds()) {
@@ -833,7 +841,7 @@ int readTriangleStructure(int offset, Triangle **triangles_ptr,
   //                                         sizeof (Triangle));
   Triangle *triangles = initTriangles(readTriangles);
 
-  for (int face = 0; face < readTriangles; face++) {
+  for (byte face = 0; face < readTriangles; face++) {
     offset = EEPROM_safe_read(offset, bytes, MAX_CONFIG_SZ);
     triangles[face].fromBytes(bytes, MAX_CONFIG_SZ, 
                               triangles, readTriangles);
