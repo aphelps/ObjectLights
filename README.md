@@ -24,6 +24,7 @@ Notes:
 1) Initialize by sequencing the faces
 ’T 0 0’
 * This assumes that the pixels are used sequentially.  If there is a gap or this doesn’t work for some other reason then use c/p/n and set the individual pixels.
+* If there are LEDs before the first one in the triangle (ie for an additional display or such) then the second argument is the first LED to work with.
 
 2) Iterate over the faces correcting out of order LEDs
 ‘f 0’ to go to first face

@@ -26,21 +26,16 @@
 #include "Socket.h"
 #include "RS485Utils.h"
 #include "XBeeSocket.h"
-#include "MPR121.h" // XXX This needs to go
 #include "SerialCLI.h"
-
-#include "NewPing.h" // XXX This also needs to go, can be compiled out
 
 #include "ObjectConfiguration.h"
 #include "TriangleStructure.h"
 #include "TriangleLights.h"
 #include "TriangleLightsModes.h"
 
-
 extern SerialCLI serialcli;
 
 PixelUtil pixels;
-
 
 RS485Socket rs485;
 
@@ -111,19 +106,11 @@ void setup()
 
 void loop() {
 
-  // TODO: How to read HTML commands and CLI commands
+  // TODO: How to read HTML commands and CLI commands at the same time
   // serialcli.checkSerial();
 
-  static byte prev_mode = -1;
-  byte mode;
-
   // TODO: This should be changing the program
-  mode = get_button_value();
-  if (mode != prev_mode) {
-    DEBUG3_VALUELN("mode=", mode);
-    DEBUG_MEMORY(DEBUG_MID);
-  }
-  prev_mode = mode;
+  update_mode_from_button();
 
   /* Check for update of the sensor values */
   update_sensors();

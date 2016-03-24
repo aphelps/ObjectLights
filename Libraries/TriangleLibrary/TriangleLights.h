@@ -21,7 +21,7 @@ extern Triangle *triangles;
 #define PUSH_BUTTON_INTERRUPT 1
 #define PUSH_BUTTON_PIN       3
 
-int get_button_value();
+byte get_button_value();
 
 /* Photo sensor */
 #define PHOTO_PIN A0

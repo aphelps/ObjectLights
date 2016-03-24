@@ -20,6 +20,7 @@
 #include "TriangleLights.h"
 #include "TriangleLightsModes.h"
 #include "Utilities.h"
+#include "Peripherals.h"
 
 extern config_hdr_t config;
 extern output_hdr_t *outputs[];
@@ -44,24 +45,16 @@ hmtl_program_t program_functions[] = {
 };
 #define NUM_PROGRAMS (sizeof (program_functions) / sizeof (hmtl_program_t))
 
+#define FIRST_TRIANGLE_MODE   (byte)1
+#define NUM_TRIANGLE_PROGRAMS (byte)3
+
 program_tracker_t *active_programs[HMTL_MAX_OUTPUTS];
 ProgramManager manager;
 MessageHandler handler;
 
 /*
- * Execute initial commands
+ * Initialize the program and message handling
  */
-void startup_commands() {
-//  const byte data[] = { // This turns on PENDANT_TEST_PIXELS for all outputs
-//          0xfc,0x00,0x02,0x17,0x01,0x00,0xff,0xff,
-//          0x03,0xfe,0x20,0x32,0x00,0x00,0x00,0x00,
-//          0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-//  memcpy(rs485.send_buffer, data, sizeof (data));
-//
-//  handler.process_msg((msg_hdr_t *)rs485.send_buffer, &rs485,
-//                      NULL, &config);
-}
-
 void init_modes(Socket **sockets, byte num_sockets) {
   /* Setup the program manager */
   manager = ProgramManager(outputs, active_programs, objects, config.num_outputs,
@@ -73,6 +66,7 @@ void init_modes(Socket **sockets, byte num_sockets) {
   /* Execute any initial commands */
   startup_commands();
 }
+
 
 /*
  * Check for and handle incoming messages
@@ -113,40 +107,83 @@ boolean messages_and_modes(void) {
   return update;
 }
 
-typedef struct {
-  uint16_t period_ms; // 2B
 
-  uint8_t data[0];
-} mode_hdr_t;
+/*
+ * Execute initial commands
+ */
+void startup_commands() {
+  set_mode(TRIANGLES_SNAKES_2, false);
+}
 
-typedef struct {
-  mode_hdr_t hdr;     // 2B
+/*
+ * Create a message to set the mode for the indicated value
+ */
+boolean set_mode(byte mode, boolean broadcast) {
 
-  CRGB bgColor;       // 3B
-  CRGB fgColor;       // 3B
-  uint8_t  data[4];   // 4B
+  msg_hdr_t *msg_hdr = (msg_hdr_t *) rs485.send_buffer;
+  msg_hdr->startcode = HMTL_MSG_START;
+  msg_hdr->crc = 00; // TODO: If I ever implement msg level CRC
+  msg_hdr->version = 0x02; // TODO: VERSION????!!!!
+  msg_hdr->length = 0x17; // TODO: Calculate
+  msg_hdr->type = MSG_TYPE_OUTPUT;
+  msg_hdr->flags = 0x00;
+  msg_hdr->address = SOCKET_ADDR_ANY;
 
-               // Total: 10B
+  msg_program_t *program = (msg_program_t *) (msg_hdr + 1);
+  program->hdr.type = HMTL_OUTPUT_PROGRAM;
+  program->hdr.output = HMTL_ALL_OUTPUTS;
 
-  unsigned long last_change_ms;
-} mode_data_t;
+  DEBUG3_VALUELN("set_mode:", mode);
 
-#define SNAKE2_LENGTH 12
-typedef struct {
-  mode_hdr_t hdr; // 2B
+  program->type = mode;
+  switch (mode) {
+    case TRIANGLES_SNAKES_2: {
+      mode_snake_data_t *data = (mode_snake_data_t *)&program->values[0];
+      data->hdr.period_ms = 100;
+      data->bgColor = CRGB(0, 0, 0);
+      data->colorMode = 4;
 
-  CRGB bgColor;   // 3B
-  byte colorMode; // 1B
+      memcpy(rs485.send_buffer, data, sizeof(data));
+      break;
+    }
+    case TRIANGLES_SET_ALL:
+    case TRIANGLES_STATIC_NOISE: {
+      mode_data_t *data = (mode_data_t *)&program->values[0];
+      data->hdr.period_ms = 100;
+      data->bgColor = CRGB(0, 0, 0);
+      data->fgColor = CRGB(255, 255, 255);
+      data->data[0] = 60; // Static threshold
+      break;
+    }
+    default: {
+      DEBUG3_VALUELN("Invalid mode:", mode);
+      return false;
+    }
+  }
 
-  byte snakeTriangles[SNAKE2_LENGTH];
-  byte snakeVertices[SNAKE2_LENGTH]; // TODO: These values are 0-2, reduce size!
-  byte currentIndex;
+  if (broadcast) {
+    handler.check_and_forward((msg_hdr_t *) rs485.send_buffer, &rs485);
+  }
+  return handler.process_msg((msg_hdr_t *) rs485.send_buffer, &rs485,
+                             NULL, &config);
+}
 
-  unsigned long last_change_ms;
-} mode_snake_data_t;
+byte current_mode_index = ProgramManager::NO_PROGRAM;
+void update_mode_from_button() {
+  byte button = get_button_value() % NUM_TRIANGLE_PROGRAMS;
+  if (button != (current_mode_index - FIRST_TRIANGLE_MODE)) {
+    current_mode_index = button + FIRST_TRIANGLE_MODE;
+    DEBUG3_VALUELN("mode=", current_mode_index);
+    DEBUG_MEMORY(DEBUG_MID);
 
+    set_mode(program_functions[current_mode_index].type, true);
+  }
+}
+
+// TODO: This is icky.
 mode_snake_data_t triangle_mode_state;
 #define MAX_MODE_DATA (sizeof (triangle_mode_state))
+
 /*
  * This initializes any of the triangle modes
  */
@@ -193,6 +230,8 @@ boolean mode_set_all(output_hdr_t *output, void *object,
   unsigned long now = time.ms();
 
   if (now - state->last_change_ms >= state->hdr.period_ms) {
+    FastLED.setBrightness(get_pot_byte());
+
     set_all_triangles(triangles, numTriangles, state->fgColor);
     state->last_change_ms = now;
 
@@ -259,6 +298,10 @@ boolean mode_snakes_init(msg_program_t *msg,
     mode_snake_data_t *state = (mode_snake_data_t *)tracker->state;
 
     DEBUG4_PRINT("Initializing:");
+
+    // TODO: If this was already running then don't clear the state, just start
+    //       from wherever it was.
+
     set_all_triangles(triangles, numTriangles, state->bgColor);
     for (int i = 0; i < SNAKE2_LENGTH; i++) {
       state->snakeTriangles[i] = Triangle::NO_ID;

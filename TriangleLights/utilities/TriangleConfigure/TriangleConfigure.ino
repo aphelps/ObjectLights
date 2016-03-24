@@ -38,7 +38,7 @@ boolean wrote_config = false;
 
 #define PIN_DEBUG_LED 13
 
-#define MAX_OUTPUTS 4
+#define MAX_OUTPUTS 8
 config_hdr_t config;
 output_hdr_t *outputs[MAX_OUTPUTS];
 config_max_t readoutputs[MAX_OUTPUTS];
@@ -68,7 +68,8 @@ void setup()
 
   /* Read the current configuration from EEProm */
   configOffset = readHMTLConfiguration(&config,
-                                       outputs, readoutputs, MAX_OUTPUTS,
+                                       outputs, readoutputs, NULL,
+                                       MAX_OUTPUTS,
                                        &pixels, &rs485, NULL);
 
 
@@ -234,7 +235,7 @@ void cliHandler(char **tokens, byte numtokens) {
 
       if (face > numTriangles) return;
       if (led > Triangle::NUM_LEDS) return;
-      if (pixel > pixels.numPixels()) return;
+      if ((pixel != (byte)-1) && (pixel > pixels.numPixels())) return;
 
       triangles[face].setLedPixel(led, pixel);
       setTriangleLED(face, led, pixel_color(255, 0, 0));

@@ -11,7 +11,7 @@
 //#define DEBUG_LEVEL DEBUG_HIGH
 #include "Debug.h"
 
-#include "TriangleLights.h"
+#include "../../Libraries/TriangleLibrary/TriangleLights.h"
 
 void button_interrupt(void);
 
@@ -45,7 +45,7 @@ void button_interrupt(void)
   prevValue = value;
 }
 
-int get_button_value() {
+byte get_button_value() {
   return buttonValue;
 }
 

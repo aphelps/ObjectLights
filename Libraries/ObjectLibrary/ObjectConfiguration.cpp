@@ -6,7 +6,6 @@
 
 #include <Arduino.h>
 #include "EEPROM.h"
-#include <NewPing.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <FastLED.h>
