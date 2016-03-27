@@ -39,15 +39,16 @@ typedef struct {
   unsigned long last_change_ms;
 } mode_data_t;
 
-#define SNAKE2_LENGTH 12
+#define SNAKE_MAX_LENGTH 12
 typedef struct {
   mode_hdr_t hdr; // 2B
 
   CRGB bgColor;   // 3B
   byte colorMode; // 1B
+  byte length;    // 1B
 
-  byte snakeTriangles[SNAKE2_LENGTH];
-  byte snakeVertices[SNAKE2_LENGTH]; // TODO: These values are 0-2, reduce size!
+  byte snakeTriangles[SNAKE_MAX_LENGTH];
+  byte snakeVertices[SNAKE_MAX_LENGTH]; // TODO: These values are 0-2, reduce size!
   byte currentIndex;
 
   unsigned long last_change_ms;

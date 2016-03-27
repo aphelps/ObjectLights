@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Author: Adam Phelps
+ * License: Create Commons Attribution-Non-Commercial
+ * Copyright: 2016
+ ******************************************************************************/
+
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -246,18 +252,6 @@ boolean mode_set_all(output_hdr_t *output, void *object,
   return false;
 }
 
-
-/*
- * Blend between two colors
- */
-CRGB interpolate_color(CRGB color1, CRGB color2, byte index){
-
-
-  CRGB rgb =  blend(color1, color2, index);
-
-  return rgb;
-}
-
 /*
  * This iterates through the triangles, lighting the ones with leds
  */
@@ -267,7 +261,7 @@ boolean mode_static_noise(output_hdr_t *output, void *object,
   unsigned long now = time.ms();
 
   if (now - state->last_change_ms >= state->hdr.period_ms) {
-    state->last_change_ms += state->hdr.period_ms;
+    state->last_change_ms = now;
 
     /* Set the leds randomly to on off in white */
     for (int tri = 0; tri < numTriangles; tri++) {
@@ -297,13 +291,17 @@ boolean mode_snakes_init(msg_program_t *msg,
   if (mode_generic_init(msg, tracker, output)) {
     mode_snake_data_t *state = (mode_snake_data_t *)tracker->state;
 
+    if ((state->length == 0) || (state->length > SNAKE_MAX_LENGTH)) {
+      state->length = SNAKE_MAX_LENGTH;
+    }
+
     DEBUG4_PRINT("Initializing:");
 
     // TODO: If this was already running then don't clear the state, just start
     //       from wherever it was.
 
     set_all_triangles(triangles, numTriangles, state->bgColor);
-    for (int i = 0; i < SNAKE2_LENGTH; i++) {
+    for (int i = 0; i < state->length; i++) {
       state->snakeTriangles[i] = Triangle::NO_ID;
       state->snakeVertices[i] = Triangle::NO_VERTEX;
     }
@@ -335,7 +333,7 @@ boolean mode_snakes_2(output_hdr_t *output, void *object,
   unsigned long now = time.ms();
 
   if (now - state->last_change_ms >= state->hdr.period_ms) {
-    state->last_change_ms += state->hdr.period_ms;
+    state->last_change_ms = now;
 
     /* Clear the tail */
     byte tri, vert;
@@ -343,8 +341,8 @@ boolean mode_snakes_2(output_hdr_t *output, void *object,
     boolean found = false;
 
     /* Choose the next location */
-    for (byte i = 0; i < SNAKE2_LENGTH; i++) {
-      byte activeIndex = (state->currentIndex + SNAKE2_LENGTH - i) % SNAKE2_LENGTH;
+    for (byte i = 0; i < state->length; i++) {
+      byte activeIndex = (state->currentIndex + state->length - i) % state->length;
       if (state->snakeTriangles[activeIndex] ==  Triangle::NO_ID) continue;
       Triangle *current = &triangles[state->snakeTriangles[activeIndex]];
       byte currentVertex = state->snakeVertices[activeIndex];
@@ -405,7 +403,7 @@ boolean mode_snakes_2(output_hdr_t *output, void *object,
     }
 
     if (state->currentIndex == 0) {
-      nextIndex = SNAKE2_LENGTH - 1;
+      nextIndex = state->length - 1;
     } else {
       nextIndex = state->currentIndex - 1;
     }
@@ -421,14 +419,14 @@ boolean mode_snakes_2(output_hdr_t *output, void *object,
     state->snakeVertices[state->currentIndex] = vert;
 
     /* Set the led values */
-    for (byte i = 0; i < SNAKE2_LENGTH; i++) {
-      byte valueIndex = (i + SNAKE2_LENGTH - state->currentIndex) % SNAKE2_LENGTH;
+    for (byte i = 0; i < state->length; i++) {
+      byte valueIndex = (i + state->length - state->currentIndex) % state->length;
 
       uint32_t color;
       switch (state->colorMode % 5) {
         default:
         case 0: {
-          color = pixel_wheel((byte)map(valueIndex, 0, SNAKE2_LENGTH - 1, 0, 255));
+          color = pixel_wheel((byte)map(valueIndex, 0, state->length - 1, 0, 255));
           break;
         }
         case 1: {
@@ -457,7 +455,7 @@ boolean mode_snakes_2(output_hdr_t *output, void *object,
       }
     }
 
-    DEBUG5_VALUE(" i:", currentIndex);
+    DEBUG5_VALUE(" i:", state->currentIndex);
     DEBUG5_VALUE(" tri:", tri);
     DEBUG5_VALUELN(" vert:", vert);
 
