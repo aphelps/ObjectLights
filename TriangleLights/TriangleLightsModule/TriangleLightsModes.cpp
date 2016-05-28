@@ -40,9 +40,11 @@ extern PixelUtil pixels;
 hmtl_program_t program_functions[] = {
         // Programs from HMTLPrograms
         { HMTL_PROGRAM_NONE, NULL, NULL},
-        //{ HMTL_PROGRAM_BLINK, program_blink, program_blink_init },
-        //{ HMTL_PROGRAM_TIMED_CHANGE, program_timed_change, program_timed_change_init },
-        //{ HMTL_PROGRAM_FADE, program_fade, program_fade_init },
+        { HMTL_PROGRAM_BLINK, program_blink, program_blink_init },
+        { HMTL_PROGRAM_TIMED_CHANGE, program_timed_change, program_timed_change_init },
+        { HMTL_PROGRAM_FADE, program_fade, program_fade_init },
+        { HMTL_PROGRAM_SPARKLE, program_sparkle, program_sparkle_init },
+        //{ PROGRAM_BRIGHTNESS, NULL,  program_brightness },
 
         // Custom programs
         { TRIANGLES_SET_ALL, mode_set_all, mode_generic_init}, // This is the same as the default handler
