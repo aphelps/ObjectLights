@@ -12,6 +12,7 @@ Serial.print(F(" \n"
   "Usage:\n"
   "  v <num> - Set verbosity level\n"
   "  p <ms>  - Period in milliseconds\n"
+  "  m - Print the current milliseconds\n"
                ));
 }             
 void cliHandler(char **tokens, byte numtokens) {

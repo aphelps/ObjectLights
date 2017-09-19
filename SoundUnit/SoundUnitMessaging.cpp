@@ -34,7 +34,7 @@ byte *send_buffer; // Pointer to use for start of send data
 void messaging_init() {
   /* Setup the RS485 connection */
   rs485.setup();
-  send_buffer = rs485.initBuffer(rs485_buffer);
+  send_buffer = rs485.initBuffer(rs485_buffer, SEND_BUFFER_SIZE);
 }
 
 /*
@@ -43,7 +43,7 @@ void messaging_init() {
 boolean messaging_handle() {
   /* Check for message over RS485 */
   unsigned int msglen;
-  msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen);
+  msg_hdr_t *msg_hdr = hmtl_socket_getmsg(&rs485, &msglen);
   if (msg_hdr != NULL) {
 
     uint16_t source_address = RS485_SOURCE_FROM_DATA(msg_hdr);

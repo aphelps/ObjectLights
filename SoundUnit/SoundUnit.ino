@@ -32,6 +32,7 @@
 
 #include "Socket.h"
 #include "RS485Utils.h"
+#include "TimeSync.h"
 
 #include "SoundUnit.h"
 
@@ -68,7 +69,7 @@ void setup() {
                                      NULL, NULL, NUM_OUTPUTS,
                                      &rs485, NULL, &pixels, NULL,
                                      &rgb_output, NULL,
-                                     NULL);
+                                      NULL);
 
   pixels.setAllRGB(128, 0, 128);
   pixels.update();
@@ -80,7 +81,7 @@ void setup() {
   sound_initialize();
 
   DEBUG2_PRINTLN("*** SoundUnit initialized ***");
-  //  Serial.println(F(HMTL_READY));
+  Serial.println(F(HMTL_READY));
 }
 
 boolean sentResponse = false;
@@ -125,44 +126,44 @@ void print_data() {
 
     if (verbosity >= 2) {
       total = 0;
-      DEBUG4_PRINT("Post eq:");
+      DEBUG1_PRINT("Post eq:");
       for(uint16_t x = 0; x < FFT_N / 2; x++) {
-        DEBUG4_VALUE(" ", spectrum[x]);
+        DEBUG1_VALUE(" ", spectrum[x]);
         total += spectrum[x];
       }
-      DEBUG4_VALUE(" +", total);
+      DEBUG1_VALUE(" +", total);
     }
 
     if (verbosity >= 1) {
       total = 0;
-      DEBUG4_PRINT(" col:");
+      DEBUG1_PRINT(" col:");
       for (byte c = 0; c < NUM_COLUMNS; c++) {
-        DEBUG4_VALUE(" ", col[c][colCount]);
+        DEBUG1_VALUE(" ", col[c][colCount]);
         total += col[c][colCount];
       }
-      DEBUG4_VALUE(" +", total);
+      DEBUG1_VALUE(" +", total);
 
       total = 0;
-      DEBUG4_PRINT(" lvl:");
+      DEBUG1_PRINT(" lvl:");
       for (byte c = 0; c < NUM_COLUMNS; c++) {
-        DEBUG4_VALUE(" ", colLeveled[c]);
+        DEBUG1_VALUE(" ", colLeveled[c]);
         total += colLeveled[c];
       }
-      DEBUG4_VALUE(" +", total);
+      DEBUG1_VALUE(" +", total);
 
-      DEBUG4_VALUE(" l:", light_level);
-      DEBUG4_VALUE(" k:", knob_level);
+      DEBUG1_VALUE(" l:", light_level);
+      DEBUG1_VALUE(" k:", knob_level);
     }
 
     if (verbosity >= 3) {
-      DEBUG4_PRINT(" raw:");
+      DEBUG1_PRINT(" raw:");
       for (uint16_t x = 0; x < FFT_N; x++) {
-        DEBUG4_VALUE(" ", capture[x]);
+        DEBUG1_VALUE(" ", capture[x]);
       }
     }
 
     if (sentResponse) {
-      DEBUG4_PRINT(" Sent");
+      DEBUG1_PRINT(" Sent");
     }
   }
 
