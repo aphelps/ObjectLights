@@ -170,32 +170,12 @@ void print_data() {
         }
 
         case OUTPUT_MODE_BINARY: {
-#if 0
-          for (uint16_t x = 0; x < FFT_N / 2; x++) {
-            Serial.write(spectrum[x]);
-          }
-
-          for (byte c = 0; c < NUM_COLUMNS; c++) {
-            Serial.write(col[c][colCount]);
-          }
-#else
+          // Write the transmit-formatted data to the serial devide
           byte *data;
           uint16_t bufflen;
           uint16_t len = format_sensor_data(SOCKET_ADDR_ANY, &data, &bufflen);
 
-#if 0
-          extern byte *send_buffer;
-          DEBUG1_VALUE("XXX len:", len);
-          DEBUG1_VALUE(" data:", (uint16_t)data);
-          DEBUG1_VALUE(" buff:", (uint16_t)send_buffer);
-
-          print_hex_buffer(data, len);
-          Serial.println("TEST");
-#endif
-
           Serial.write(data, len);
-#endif
-
           break;
         }
 
