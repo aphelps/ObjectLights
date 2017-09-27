@@ -3,7 +3,11 @@
  * License: Create Commons Attribution-Non-Commercial
  * Copyright: 2014
  ******************************************************************************/
-#define DEBUG_LEVEL DEBUG_HIGH
+
+
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_HIGH
+#endif
 #include <Debug.h>
 
 #include <Arduino.h>

@@ -4,7 +4,9 @@
  * Copyright: 2014
  ******************************************************************************/
 
-//#define DEBUG_LEVEL DEBUG_TRACE
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_MID
+#endif
 #include <Debug.h>
 
 #include <Arduino.h>
@@ -86,12 +88,12 @@ void sensor_cap(void)
 #endif
 
   if (touch_sensor.readTouchInputs()) {
-    DEBUG5_COMMAND(
-                   DEBUG5_PRINT("Cap:");
+    DEBUG4_COMMAND(
+                   DEBUG4_PRINT("Cap:");
                    for (byte i = 0; i < MPR121::MAX_SENSORS; i++) {
-                     DEBUG5_VALUE(" ", touch_sensor.touched(i));
+                     DEBUG4_VALUE(" ", touch_sensor.touched(i));
                    }
-                   DEBUG5_VALUELN(" ms:", millis());
+                   DEBUG4_VALUELN(" ms:", millis());
                    );
   }
 }

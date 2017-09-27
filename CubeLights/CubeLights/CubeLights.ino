@@ -14,7 +14,9 @@
 #include <SoftwareSerial.h>
 #include <RS485_non_blocking.h>
 
-#define DEBUG_LEVEL DEBUG_HIGH
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_HIGH
+#endif
 #include <Debug.h>
 
 #include "GeneralUtils.h"

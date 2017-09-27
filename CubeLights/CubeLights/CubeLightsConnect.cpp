@@ -14,7 +14,9 @@
 #include "Wire.h"
 #include "FastLED.h"
 
-//#define DEBUG_LEVEL DEBUG_TRACE
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_MID
+#endif
 #include "Debug.h"
 
 #include "GeneralUtils.h"
@@ -141,7 +143,7 @@ void handle_messages() {
   if (now - last_sent_time > MIN_SEND_TO_READ_MS) {
     /* Check for messages */
     unsigned int msglen;
-    msg_hdr_t *msg_hdr = hmtl_rs485_getmsg(&rs485, &msglen, my_address);
+    msg_hdr_t *msg_hdr = hmtl_socket_getmsg(&rs485, &msglen, my_address);
     if (msg_hdr) {
       DEBUG4_VALUE("Recv type:", msg_hdr->type);
       if (msg_hdr->type == MSG_TYPE_SENSOR) {

@@ -6,7 +6,9 @@
 
 #include <Arduino.h>
 
-//#define DEBUG_LEVEL DEBUG_TRACE
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_MID
+#endif
 #include "Debug.h"
 
 #include "HMTLMessaging.h"
