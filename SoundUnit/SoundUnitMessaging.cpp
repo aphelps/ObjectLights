@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
-#define DEBUG_LEVEL 4
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_HIGH
+#endif
 #include "Debug.h"
 
 #include "Socket.h"
@@ -37,6 +39,63 @@ void messaging_init() {
   send_buffer = rs485.initBuffer(rs485_buffer, SEND_BUFFER_SIZE);
 }
 
+uint16_t format_sensor_data(uint16_t reply_addr, byte **send_data,
+                            uint16_t *bufflen) {
+  /*
+ * This data length is the unleveled column values plus the two
+ * additional sensors.
+ */
+  uint8_t datalen = MAX_DATA_LEN;
+
+  uint8_t *dataptr;
+
+  /* Broadcast sensor data rather than sending just to the source */
+  uint16_t len = hmtl_sensor_fmt(send_buffer, SEND_BUFFER_SIZE,
+                                 reply_addr, datalen, &dataptr);
+
+  msg_sensor_data_t *sense = (msg_sensor_data_t *)dataptr;
+  sense->sensor_type = HMTL_SENSOR_SOUND;
+  sense->data_len = NUM_COLUMNS * sizeof (uint16_t);
+
+  uint16_t *sendptr = (uint16_t *)&sense->data;
+
+  /* Set the column values */
+  for (byte c = 0; c < NUM_COLUMNS; c++) {
+    *sendptr = col[c][colCount];
+    sendptr++;
+  }
+
+  /* Add the light and knob levels */
+  sense = (msg_sensor_data_t *)sendptr;
+  sense->sensor_type = HMTL_SENSOR_LIGHT;
+  sense->data_len = sizeof (uint16_t);
+  sendptr = (uint16_t *)&sense->data;
+  *sendptr = light_level;
+  sendptr++;
+
+  sense = (msg_sensor_data_t *)sendptr;
+  sense->sensor_type = HMTL_SENSOR_POT;
+  sense->data_len = sizeof (uint16_t);
+  sendptr = (uint16_t *)&sense->data;
+  *sendptr = knob_level;
+  sendptr++;
+
+  DEBUG1_COMMAND(
+          if ((uint16_t)sendptr - (uint16_t)send_buffer != len) {
+            DEBUG1_VALUE("Wrong len:",
+                         ((uint16_t)sendptr -
+                          (uint16_t)send_buffer));
+            DEBUG1_VALUELN(" not:", len);
+          }
+  );
+
+
+  *send_data = send_buffer;
+  *bufflen = len;
+
+  return (uint16_t)(sendptr - (uint16_t *)send_buffer);
+}
+
 /*
  * Listen for RS485 messages and respond with sound data
  */
@@ -53,57 +112,18 @@ boolean messaging_handle() {
     
     switch (msg_hdr->type) {
       case MSG_TYPE_SENSOR: {
-        /*
-         * This data length is the unleveled column values plus the two
-         * additional sensors.
-         */
-        uint8_t datalen = MAX_DATA_LEN;
+        /* This is a request to respond with sensor data */
 
-        uint8_t *dataptr;
-
+        // Reply as a broadcast so that any device that wants to use the sensor
+        // data will receive it, not just the requester.
         uint16_t reply_addr = RS485_ADDR_ANY;
 
-        /* Broadcast sensor data rather than sending just to the source */
-        uint16_t len = hmtl_sensor_fmt(send_buffer, SEND_BUFFER_SIZE, 
-                                       reply_addr, datalen, &dataptr);
-        
-        msg_sensor_data_t *sense = (msg_sensor_data_t *)dataptr;
-        sense->sensor_type = HMTL_SENSOR_SOUND;
-        sense->data_len = NUM_COLUMNS * sizeof (uint16_t);
+        byte *data_ptr;
+        uint16_t buff_len;
+        uint16_t len = format_sensor_data(reply_addr, &data_ptr, &buff_len);
 
-        uint16_t *sendptr = (uint16_t *)&sense->data;
-        
-        /* Set the column values */
-        for (byte c = 0; c < NUM_COLUMNS; c++) {
-          *sendptr = col[c][colCount];
-          sendptr++;
-        }
-
-        /* Add the light and knob levels */
-        sense = (msg_sensor_data_t *)sendptr;
-        sense->sensor_type = HMTL_SENSOR_LIGHT;
-        sense->data_len = sizeof (uint16_t);
-        sendptr = (uint16_t *)&sense->data;
-        *sendptr = light_level;
-        sendptr++;
-
-        sense = (msg_sensor_data_t *)sendptr;
-        sense->sensor_type = HMTL_SENSOR_POT;
-        sense->data_len = sizeof (uint16_t);
-        sendptr = (uint16_t *)&sense->data;
-        *sendptr = knob_level;
-        sendptr++;
-
-        DEBUG1_COMMAND(
-                       if ((uint16_t)sendptr - (uint16_t)send_buffer != len) {
-                         DEBUG1_VALUE("Wrong len:", 
-                                      ((uint16_t)sendptr - 
-                                       (uint16_t)send_buffer));
-                         DEBUG1_VALUELN(" not:", len);
-                       }
-                       );
-
-        rs485.sendMsgTo(reply_addr, send_buffer, len);
+        // XXX: If len > 256, what should this be doing?
+        rs485.sendMsgTo(reply_addr, data_ptr, buff_len);
         return true;
         break;
       }

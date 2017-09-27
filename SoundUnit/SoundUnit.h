@@ -49,7 +49,17 @@ void cliHandler(char **tokens, byte numtokens);
 extern byte verbosity;
 extern uint16_t output_period;
 
+#define OUTPUT_MODE_NONE 0
+#define OUTPUT_MODE_TEXT 1
+#define OUTPUT_MODE_BINARY 2
+extern byte output_mode;
+
+uint16_t format_sensor_data(uint16_t reply_addr, byte **send_data,
+                            uint16_t *bufflen);
 void messaging_init();
 boolean messaging_handle();
+
+void print_data();
+void set_leds();
 
 #endif // SOUNDUNIT_H

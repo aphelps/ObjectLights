@@ -2,19 +2,16 @@
  * Author: Adam Phelps
  * License: Create Commons Attribution-Non-Commercial
  * Copyright: 2014
+ *
+ *
+ * The code for sound detection, equilization, and ffft is largely taken from
+ * the Adafruit PICCOLO project: https://github.com/adafruit/piccolo
  ******************************************************************************/
 
-/*
- *  The code for sound detection and equilization is largely taken from the
- *  Adafruit PICCOLO project:
- *     https://github.com/adafruit/piccolo
- */
 
-// IMPORTANT: FFT_N should be #defined as 128 in ffft.h.  This is different
-// than Spectro, which requires FFT_N be 64 in that file when compiling.
-
-
-#define DEBUG_LEVEL 4
+#ifndef DEBUG_LEVEL
+  #define DEBUG_LEVEL DEBUG_HIGH
+#endif
 #include <Debug.h>
 
 #include <avr/pgmspace.h>
@@ -124,47 +121,85 @@ void print_data() {
   if ((print_timer >= output_period) || sentResponse) {
     print_timer = 0;
 
-    if (verbosity >= 2) {
-      total = 0;
-      DEBUG1_PRINT("Post eq:");
-      for(uint16_t x = 0; x < FFT_N / 2; x++) {
-        DEBUG1_VALUE(" ", spectrum[x]);
-        total += spectrum[x];
+    switch (output_mode)
+      {
+        case OUTPUT_MODE_TEXT: {
+          if (verbosity >= 2) {
+            total = 0;
+            DEBUG1_PRINT("Post eq:");
+            for (uint16_t x = 0; x < FFT_N / 2; x++) {
+              DEBUG1_VALUE(" ", spectrum[x]);
+              total += spectrum[x];
+            }
+            DEBUG1_VALUE(" +", total);
+          }
+
+          if (verbosity >= 1) {
+            total = 0;
+            DEBUG1_PRINT(" col:");
+            for (byte c = 0; c < NUM_COLUMNS; c++) {
+              DEBUG1_VALUE(" ", col[c][colCount]);
+              total += col[c][colCount];
+            }
+            DEBUG1_VALUE(" +", total);
+
+            total = 0;
+            DEBUG1_PRINT(" lvl:");
+            for (byte c = 0; c < NUM_COLUMNS; c++) {
+              DEBUG1_VALUE(" ", colLeveled[c]);
+              total += colLeveled[c];
+            }
+            DEBUG1_VALUE(" +", total);
+
+            DEBUG1_VALUE(" l:", light_level);
+            DEBUG1_VALUE(" k:", knob_level);
+          }
+
+          if (verbosity >= 3) {
+            DEBUG1_PRINT(" raw:");
+            for (uint16_t x = 0; x < FFT_N; x++) {
+              DEBUG1_VALUE(" ", capture[x]);
+            }
+          }
+
+          if (sentResponse) {
+            DEBUG1_PRINT(" Sent");
+          }
+
+          break;
+        }
+
+        case OUTPUT_MODE_BINARY: {
+#if 0
+          for (uint16_t x = 0; x < FFT_N / 2; x++) {
+            Serial.write(spectrum[x]);
+          }
+
+          for (byte c = 0; c < NUM_COLUMNS; c++) {
+            Serial.write(col[c][colCount]);
+          }
+#else
+          byte *data;
+          uint16_t bufflen;
+          uint16_t len = format_sensor_data(SOCKET_ADDR_ANY, &data, &bufflen);
+
+#if 0
+          extern byte *send_buffer;
+          DEBUG1_VALUE("XXX len:", len);
+          DEBUG1_VALUE(" data:", (uint16_t)data);
+          DEBUG1_VALUE(" buff:", (uint16_t)send_buffer);
+
+          print_hex_buffer(data, len);
+          Serial.println("TEST");
+#endif
+
+          Serial.write(data, len);
+#endif
+
+          break;
+        }
+
       }
-      DEBUG1_VALUE(" +", total);
-    }
-
-    if (verbosity >= 1) {
-      total = 0;
-      DEBUG1_PRINT(" col:");
-      for (byte c = 0; c < NUM_COLUMNS; c++) {
-        DEBUG1_VALUE(" ", col[c][colCount]);
-        total += col[c][colCount];
-      }
-      DEBUG1_VALUE(" +", total);
-
-      total = 0;
-      DEBUG1_PRINT(" lvl:");
-      for (byte c = 0; c < NUM_COLUMNS; c++) {
-        DEBUG1_VALUE(" ", colLeveled[c]);
-        total += colLeveled[c];
-      }
-      DEBUG1_VALUE(" +", total);
-
-      DEBUG1_VALUE(" l:", light_level);
-      DEBUG1_VALUE(" k:", knob_level);
-    }
-
-    if (verbosity >= 3) {
-      DEBUG1_PRINT(" raw:");
-      for (uint16_t x = 0; x < FFT_N; x++) {
-        DEBUG1_VALUE(" ", capture[x]);
-      }
-    }
-
-    if (sentResponse) {
-      DEBUG1_PRINT(" Sent");
-    }
   }
 
   DEBUG_PRINT_END();
@@ -172,6 +207,8 @@ void print_data() {
 
 /*
  * Set the LEDs based on sound levels
+ *
+ * NOTE: This is specific to the physical device running this
  */
 void set_leds() {
   uint32_t total = 0;
